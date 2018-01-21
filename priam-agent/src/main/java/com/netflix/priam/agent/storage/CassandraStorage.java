@@ -12,20 +12,21 @@ public class CassandraStorage implements Storage
     public String getValue(AgentConfiguration configuration, String rowKey, String columnName) throws Exception
     {
         Column<String> result = configuration.getKeyspace()
-            .prepareQuery(configuration.getColumnFamily())
-            .getKey(rowKey)
-            .getColumn(configuration.getThisHostName())
-            .execute()
-            .getResult();
+                .prepareQuery(configuration.getColumnFamily())
+                .getKey(rowKey)
+                .getColumn(configuration.getThisHostName())
+                .execute()
+                .getResult();
         return result.hasValue() ? result.getStringValue() : null;
     }
 
     @Override
-    public void setValue(AgentConfiguration configuration, String rowKey, String columnName, String value) throws Exception
+    public void setValue(AgentConfiguration configuration, String rowKey, String columnName, String value)
+            throws Exception
     {
         configuration.getKeyspace()
-            .prepareColumnMutation(configuration.getColumnFamily(), rowKey, configuration.getThisHostName())
-            .putValue(value, configuration.getCassandraTtl())
-            .execute();
+                .prepareColumnMutation(configuration.getColumnFamily(), rowKey, configuration.getThisHostName())
+                .putValue(value, configuration.getCassandraTtl())
+                .execute();
     }
 }

@@ -1,19 +1,17 @@
 package com.netflix.priam;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
-import com.netflix.priam.IConfiguration;
 import com.netflix.priam.defaultimpl.PriamConfiguration;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Singleton
 public class FakeConfiguration implements IConfiguration
 {
 
-	public static final String FAKE_REGION = "us-east-1";
+    public static final String FAKE_REGION = "us-east-1";
 
     public String region;
     public String appName;
@@ -32,7 +30,7 @@ public class FakeConfiguration implements IConfiguration
         this.appName = appName;
         this.zone = zone;
         this.instance_id = ins_id;
-        this.restorePrefix  = "";
+        this.restorePrefix = "";
     }
 
     @Override
@@ -188,16 +186,17 @@ public class FakeConfiguration implements IConfiguration
     }
 
     @Override
+    public void setDC(String region)
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
     public int getMaxBackupDownloadThreads()
     {
         // TODO Auto-generated method stub
         return 3;
-    }
-
-    public void setRestorePrefix(String prefix)
-    {
-        // TODO Auto-generated method stub
-        restorePrefix = prefix;
     }
 
     @Override
@@ -205,6 +204,12 @@ public class FakeConfiguration implements IConfiguration
     {
         // TODO Auto-generated method stub
         return restorePrefix;
+    }
+
+    public void setRestorePrefix(String prefix)
+    {
+        // TODO Auto-generated method stub
+        restorePrefix = prefix;
     }
 
     @Override
@@ -226,7 +231,7 @@ public class FakeConfiguration implements IConfiguration
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public boolean isIncrBackup()
     {
@@ -247,22 +252,25 @@ public class FakeConfiguration implements IConfiguration
         return 0;
     }
 
-	@Override
-	public boolean isLocalBootstrapEnabled() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean isLocalBootstrapEnabled()
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public int getInMemoryCompactionLimit() {
-		return 8;
-	}
+    @Override
+    public int getInMemoryCompactionLimit()
+    {
+        return 8;
+    }
 
-	@Override
-	public int getCompactionThroughput() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public int getCompactionThroughput()
+    {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 
     @Override
     public String getMaxDirectMemory()
@@ -298,17 +306,15 @@ public class FakeConfiguration implements IConfiguration
         return Lists.newArrayList();
     }
 
-    @Override
-    public long getBackupChunkSize()
-    {        
-        return 5L*1024*1024;
+    public void setRestoreKeySpaces(List<String> keyspaces)
+    {
+
     }
 
     @Override
-    public void setDC(String region)
+    public long getBackupChunkSize()
     {
-        // TODO Auto-generated method stub
-        
+        return 5L * 1024 * 1024;
     }
 
     @Override
@@ -347,7 +353,7 @@ public class FakeConfiguration implements IConfiguration
     {
         return Lists.newArrayList();
     }
-    
+
     public int getMaxHintWindowInMS()
     {
         return 36000;
@@ -413,10 +419,11 @@ public class FakeConfiguration implements IConfiguration
         return "4";
     }
 
-	@Override
-	public String getCassProcessName() {
-		return "CassandraDaemon";
-	}
+    @Override
+    public String getCassProcessName()
+    {
+        return "CassandraDaemon";
+    }
 
     public int getNumTokens()
     {
@@ -439,22 +446,26 @@ public class FakeConfiguration implements IConfiguration
     }
 
     @Override
-	public String getTargetKSName() {
-		return null;
-	}
-
-	@Override
-	public String getTargetCFName() {
-		return null;
-	}
-
-	@Override
-	public boolean doesCassandraStartManually() {
-		return false;
-	}
+    public String getTargetKSName()
+    {
+        return null;
+    }
 
     @Override
-    public boolean isVpcRing() {
+    public String getTargetCFName()
+    {
+        return null;
+    }
+
+    @Override
+    public boolean doesCassandraStartManually()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isVpcRing()
+    {
         return false;
     }
 
@@ -493,13 +504,10 @@ public class FakeConfiguration implements IConfiguration
         return null;
     }
 
-    public void setRestoreKeySpaces(List<String> keyspaces) {
-            
-    }
-
     @Override
-    public int maxCommitLogsRestore() {		
-       return 0;
+    public int maxCommitLogsRestore()
+    {
+        return 0;
     }
 
     public boolean isClientSslEnabled()
@@ -526,10 +534,11 @@ public class FakeConfiguration implements IConfiguration
     {
         return false;
     }
-	
+
     @Override
-    public String getS3EndPoint() {
-	return "s3-external-1.amazonaws.com";
+    public String getS3EndPoint()
+    {
+        return "s3-external-1.amazonaws.com";
     }
 
     public int getConcurrentReadsCnt()
@@ -547,72 +556,86 @@ public class FakeConfiguration implements IConfiguration
         return 1;
     }
 
-	@Override
-	public String getRpcServerType() {
-		return "hsha";
-	}
-
-	@Override
-	public int getIndexInterval() {
-		return 0;
-	}
-	
-	public String getExtraConfigParams() {
-		return null;
-	}
-	
-    public String getCassYamlVal(String priamKey) {
-    	return "";
+    @Override
+    public String getRpcServerType()
+    {
+        return "hsha";
     }
 
     @Override
-    public boolean getAutoBoostrap() {
+    public int getIndexInterval()
+    {
+        return 0;
+    }
+
+    public String getExtraConfigParams()
+    {
+        return null;
+    }
+
+    public String getCassYamlVal(String priamKey)
+    {
+        return "";
+    }
+
+    @Override
+    public boolean getAutoBoostrap()
+    {
         // TODO Auto-generated method stub
         return false;
     }
-    
-	@Override
-	public boolean isCreateNewTokenEnable() {
-		return true;  //allow Junit test to create new tokens
-	}
-	
-	@Override
-	public String getPrivateKeyLocation() {
-		return null;
-	}
 
-	@Override
-	public String getRestoreSourceType() {
-		return null;
-	}
+    @Override
+    public boolean isCreateNewTokenEnable()
+    {
+        return true;  //allow Junit test to create new tokens
+    }
 
-	@Override
-	public boolean isEncryptBackupEnabled() {
-		return false;
-	}
+    @Override
+    public String getPrivateKeyLocation()
+    {
+        return null;
+    }
 
-	@Override
-	public String getAWSRoleAssumptionArn() {
-		return null;
-	}
+    @Override
+    public String getRestoreSourceType()
+    {
+        return null;
+    }
 
-	@Override
-	public String getGcsServiceAccountId() {
-		return null;
-	}
+    @Override
+    public boolean isEncryptBackupEnabled()
+    {
+        return false;
+    }
 
-	@Override
-	public String getGcsServiceAccountPrivateKeyLoc() {
-		return null;
-	}
+    @Override
+    public String getAWSRoleAssumptionArn()
+    {
+        return null;
+    }
 
-	@Override
-	public String getPgpPasswordPhrase() {
-		return null;
-	}
+    @Override
+    public String getGcsServiceAccountId()
+    {
+        return null;
+    }
 
-	@Override
-	public String getPgpPublicKeyLoc() {
-		return null;
-	}
+    @Override
+    public String getGcsServiceAccountPrivateKeyLoc()
+    {
+        return null;
+    }
+
+    @Override
+    public String getPgpPasswordPhrase()
+    {
+        return null;
+    }
+
+    @Override
+    public String getPgpPublicKeyLoc()
+    {
+        return null;
+    }
 }

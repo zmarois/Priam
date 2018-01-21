@@ -1,18 +1,17 @@
 package com.netflix.priam.cassandra.token;
 
-import static org.junit.Assert.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Seems like skip 3 is the magic number.... this test will make sure to test the same.
- * 
  */
 public class TestDoublingLogic
 {
@@ -27,13 +26,13 @@ public class TestDoublingLogic
             for (int j = 0; j < RACS; j++)
                 nodes.add("RAC-" + j);
         //printNodes(nodes);
-        
+
         List<String> newNodes = nodes;
         for (int i = 0; i < 15; i++)
         {
             int count = newNodes.size();
             newNodes = doubleNodes(newNodes);
-            assertEquals(newNodes.size(), count *2);
+            assertEquals(newNodes.size(), count * 2);
             // printNodes(newNodes);
             validate(newNodes, nodes);
         }
@@ -56,15 +55,15 @@ public class TestDoublingLogic
                 count++;
             else
                 count = 0;
-            
+
             if (count == 2)
             {
                 System.out.println("Found an issue.....");
                 throw new RuntimeException();
             }
-            temp = node;   
+            temp = node;
         }
-        
+
         // compare if they are the same set...
         boolean test = true;
         for (int i = 0; i < nodes.size(); i++)
@@ -89,12 +88,12 @@ public class TestDoublingLogic
         {
             if (0 == i % 2)
             {
-                
+
                 //rotate
                 if (i + 3 >= (nodes.size() * 2))
                 {
-                    int delta = (i+3) - (nodes.size() *2);
-                    return_.put(delta, return_.get(i));    
+                    int delta = (i + 3) - (nodes.size() * 2);
+                    return_.put(delta, return_.get(i));
                 }
                 return_.put(i + 3, return_.get(i));
             }

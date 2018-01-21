@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,27 +15,15 @@
  */
 package com.netflix.priam.aws;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
-import com.amazonaws.services.simpledb.model.Attribute;
-import com.amazonaws.services.simpledb.model.DeleteAttributesRequest;
-import com.amazonaws.services.simpledb.model.Item;
-import com.amazonaws.services.simpledb.model.PutAttributesRequest;
-import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
-import com.amazonaws.services.simpledb.model.SelectRequest;
-import com.amazonaws.services.simpledb.model.SelectResult;
-import com.amazonaws.services.simpledb.model.UpdateCondition;
+import com.amazonaws.services.simpledb.model.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.priam.ICredential;
 import com.netflix.priam.identity.PriamInstance;
+
+import java.util.*;
 
 /**
  * DAO for handling Instance identity information such as token, zone, region
@@ -43,33 +31,22 @@ import com.netflix.priam.identity.PriamInstance;
 @Singleton
 public class SDBInstanceData
 {
-    public static class Attributes
-    {
-        public final static String APP_ID = "appId";
-        public final static String ID = "id";
-        public final static String INSTANCE_ID = "instanceId";
-        public final static String TOKEN = "token";
-        public final static String AVAILABILITY_ZONE = "availabilityZone";
-        public final static String ELASTIC_IP = "elasticIP";
-        public final static String UPDATE_TS = "updateTimestamp";
-        public final static String LOCATION = "location";
-        public final static String HOSTNAME = "hostname";
-    }
     public static final String DOMAIN = "InstanceIdentity";
     public static final String ALL_QUERY = "select * from " + DOMAIN + " where " + Attributes.APP_ID + "='%s'";
-    public static final String INSTANCE_QUERY = "select * from " + DOMAIN + " where " + Attributes.APP_ID + "='%s' and " + Attributes.LOCATION + "='%s' and " + Attributes.ID + "='%d'";
-
+    public static final String INSTANCE_QUERY =
+            "select * from " + DOMAIN + " where " + Attributes.APP_ID + "='%s' and " + Attributes.LOCATION
+                    + "='%s' and " + Attributes.ID + "='%d'";
     private final ICredential provider;
-    
+
     @Inject
     public SDBInstanceData(ICredential provider)
     {
-        this.provider = provider;       
+        this.provider = provider;
     }
 
     /**
      * Get the instance details from SimpleDB
-     * 
+     *
      * @param app Cluster name
      * @param id Node ID
      * @return the node with the given {@code id}, or {@code null} if no such node exists
@@ -86,7 +63,7 @@ public class SDBInstanceData
 
     /**
      * Get the set of all nodes in the cluster
-     * 
+     *
      * @param app Cluster name
      * @return the set of all instances in the given {@code app}
      */
@@ -113,27 +90,29 @@ public class SDBInstanceData
 
     /**
      * Create a new instance entry in SimpleDB
-     * 
+     *
      * @param instance
      * @throws AmazonServiceException
      */
     public void createInstance(PriamInstance instance) throws AmazonServiceException
     {
         AmazonSimpleDBClient simpleDBClient = getSimpleDBClient();
-        PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, getKey(instance), createAttributesToRegister(instance));
+        PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, getKey(instance),
+                createAttributesToRegister(instance));
         simpleDBClient.putAttributes(putReq);
     }
 
     /**
      * Register a new instance. Registration will fail if a prior entry exists
-     * 
+     *
      * @param instance
      * @throws AmazonServiceException
      */
     public void registerInstance(PriamInstance instance) throws AmazonServiceException
     {
         AmazonSimpleDBClient simpleDBClient = getSimpleDBClient();
-        PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, getKey(instance), createAttributesToRegister(instance));
+        PutAttributesRequest putReq = new PutAttributesRequest(DOMAIN, getKey(instance),
+                createAttributesToRegister(instance));
         UpdateCondition expected = new UpdateCondition();
         expected.setName(Attributes.INSTANCE_ID);
         expected.setExists(false);
@@ -143,14 +122,15 @@ public class SDBInstanceData
 
     /**
      * Deregister instance (same as delete)
-     * 
+     *
      * @param instance
      * @throws AmazonServiceException
      */
     public void deregisterInstance(PriamInstance instance) throws AmazonServiceException
     {
         AmazonSimpleDBClient simpleDBClient = getSimpleDBClient();
-        DeleteAttributesRequest delReq = new DeleteAttributesRequest(DOMAIN, getKey(instance), createAttributesToDeRegister(instance));
+        DeleteAttributesRequest delReq = new DeleteAttributesRequest(DOMAIN, getKey(instance),
+                createAttributesToDeRegister(instance));
         simpleDBClient.deleteAttributes(delReq);
     }
 
@@ -187,7 +167,7 @@ public class SDBInstanceData
 
     /**
      * Convert a simpledb item to PriamInstance
-     * 
+     *
      * @param item
      * @return
      */
@@ -224,9 +204,23 @@ public class SDBInstanceData
     {
         return instance.getApp() + "_" + instance.getDC() + "_" + instance.getId();
     }
-    
-    private AmazonSimpleDBClient getSimpleDBClient(){
+
+    private AmazonSimpleDBClient getSimpleDBClient()
+    {
         //Create per request
         return new AmazonSimpleDBClient(provider.getAwsCredentialProvider());
+    }
+
+    public static class Attributes
+    {
+        public final static String APP_ID = "appId";
+        public final static String ID = "id";
+        public final static String INSTANCE_ID = "instanceId";
+        public final static String TOKEN = "token";
+        public final static String AVAILABILITY_ZONE = "availabilityZone";
+        public final static String ELASTIC_IP = "elasticIP";
+        public final static String UPDATE_TS = "updateTimestamp";
+        public final static String LOCATION = "location";
+        public final static String HOSTNAME = "hostname";
     }
 }

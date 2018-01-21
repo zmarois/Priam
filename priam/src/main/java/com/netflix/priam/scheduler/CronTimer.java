@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,12 @@
  */
 package com.netflix.priam.scheduler;
 
-import java.text.ParseException;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.Scheduler;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 
-import org.quartz.*;
+import java.text.ParseException;
 
 /**
  * Runs jobs at the specified absolute time and frequency
@@ -25,11 +28,6 @@ import org.quartz.*;
 public class CronTimer implements TaskTimer
 {
     private String cronExpression;
-
-    public enum DayOfWeek
-    {
-        SUN, MON, TUE, WED, THU, FRI, SAT
-    }
 
     /**
      * Hourly cron.
@@ -65,7 +63,13 @@ public class CronTimer implements TaskTimer
 
     public Trigger getTrigger() throws ParseException
     {
-        return TriggerBuilder.newTrigger().withIdentity("CronTrigger", Scheduler.DEFAULT_GROUP).withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
+        return TriggerBuilder.newTrigger().withIdentity("CronTrigger", Scheduler.DEFAULT_GROUP)
+                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
 
+    }
+
+    public enum DayOfWeek
+    {
+        SUN, MON, TUE, WED, THU, FRI, SAT
     }
 }

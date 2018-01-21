@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,14 +29,14 @@ public class DataPart
     private int partNo;
     private byte[] partData;
     private byte[] md5;
-    
+
     public DataPart(String bucket, String s3key, String mUploadId)
     {
         this.bucketName = bucket;
         this.uploadID = mUploadId;
         this.s3key = s3key;
     }
-    
+
     public DataPart(int partNumber, byte[] data, String bucket, String s3key, String mUploadId)
     {
         this(bucket, s3key, mUploadId);

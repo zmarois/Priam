@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,13 +15,13 @@
  */
 package com.netflix.priam.utils;
 
-import java.util.concurrent.CancellationException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CancellationException;
+
 public abstract class ExponentialRetryCallable<T> extends RetryableCallable<T>
-{    
+{
     public final static long MAX_SLEEP = 240000;
     public final static long MIN_SLEEP = 200;
 
@@ -55,7 +55,7 @@ public abstract class ExponentialRetryCallable<T> extends RetryableCallable<T>
                 throw e;
             }
             catch (Exception e)
-            {                
+            {
                 delay *= 2;
                 if (delay > max)
                 {

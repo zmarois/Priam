@@ -39,6 +39,9 @@ public class DseConfigStub implements IDseConfiguration
 
     public Set<AuditLogCategory> getAuditLogCategories()
     {
-        return new HashSet<AuditLogCategory>(){{ this.add(AuditLogCategory.ALL); }};
+        return new HashSet<AuditLogCategory>()
+        {{
+            this.add(AuditLogCategory.ALL);
+        }};
     }
 }

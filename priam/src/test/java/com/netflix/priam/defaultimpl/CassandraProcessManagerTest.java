@@ -1,14 +1,13 @@
 package com.netflix.priam.defaultimpl;
 
-import java.io.IOException;
-
+import com.netflix.priam.FakeConfiguration;
+import com.netflix.priam.IConfiguration;
 import com.netflix.priam.utils.FakeSleeper;
+import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.netflix.priam.FakeConfiguration;
-import com.netflix.priam.IConfiguration;
-import junit.framework.Assert;
+import java.io.IOException;
 
 public class CassandraProcessManagerTest
 {
@@ -32,9 +31,9 @@ public class CassandraProcessManagerTest
             Assert.assertTrue(0 != exitValue);
             cpm.logProcessOutput(p);
         }
-        catch(IOException ioe)
+        catch (IOException ioe)
         {
-            if(p!=null)
+            if (p != null)
                 cpm.logProcessOutput(p);
         }
     }

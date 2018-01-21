@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,8 @@
  */
 package com.netflix.priam.backup;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -33,6 +24,13 @@ import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.AbstractBackupPath.BackupFileType;
 import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.utils.RetryableCallable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract Backup class for uploading files to backup location
@@ -41,13 +39,14 @@ public abstract class AbstractBackup extends Task
 {
     private static final Logger logger = LoggerFactory.getLogger(AbstractBackup.class);
     protected final List<String> FILTER_KEYSPACE = Arrays.asList("OpsCenter");
-    protected final Map<String, List<String>> FILTER_COLUMN_FAMILY = ImmutableMap.of("system", Arrays.asList("local", "peers", "LocationInfo")); 
+    protected final Map<String, List<String>> FILTER_COLUMN_FAMILY = ImmutableMap
+            .of("system", Arrays.asList("local", "peers", "LocationInfo"));
     protected final Provider<AbstractBackupPath> pathFactory;
     protected IBackupFileSystem fs;
 
     @Inject
     public AbstractBackup(IConfiguration config, @Named("backup") IFileSystemContext backupFileSystemCtx
-    		,Provider<AbstractBackupPath> pathFactory)
+            , Provider<AbstractBackupPath> pathFactory)
     {
         super(config);
         this.pathFactory = pathFactory;
@@ -57,14 +56,15 @@ public abstract class AbstractBackup extends Task
     /*
      * A means to override the type of backup strategy chosen via BackupFileSystemContext
      */
-    protected void setFileSystem(IBackupFileSystem fs) {
-    	this.fs = fs;
-    } 
-    
+    protected void setFileSystem(IBackupFileSystem fs)
+    {
+        this.fs = fs;
+    }
+
     /**
      * Upload files in the specified dir. Does not delete the file in case of
      * error
-     * 
+     *
      * @param parent
      *            Parent dir
      * @param type
@@ -80,27 +80,30 @@ public abstract class AbstractBackup extends Task
             logger.debug(String.format("Uploading file %s for backup", file.getCanonicalFile()));
             try
             {
-                AbstractBackupPath abp = new RetryableCallable<AbstractBackupPath>(3, RetryableCallable.DEFAULT_WAIT_TIME)
+                AbstractBackupPath abp = new RetryableCallable<AbstractBackupPath>(3,
+                        RetryableCallable.DEFAULT_WAIT_TIME)
                 {
                     public AbstractBackupPath retriableCall() throws Exception
                     {
                         final AbstractBackupPath bp = pathFactory.get();
                         bp.parseLocal(file, type);
                         upload(bp);
-                        if(!file.delete())
+                        if (!file.delete())
                             logger.warn(String.format("Failed to delete local file %s.", file));
                         return bp;
                     }
                 }.call();
 
-                if(abp != null)
+                if (abp != null)
                     bps.add(abp);
-                
+
                 addToRemotePath(abp.getRemotePath());
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-            	logger.error(String.format("Failed to upload local file %s within CF %s. Ignoring to continue with rest of backup.", file.getCanonicalFile(), parent.getAbsolutePath()), e);
+                logger.error(String.format(
+                        "Failed to upload local file %s within CF %s. Ignoring to continue with rest of backup.",
+                        file.getCanonicalFile(), parent.getAbsolutePath()), e);
             }
         }
         return bps;
@@ -134,14 +137,15 @@ public abstract class AbstractBackup extends Task
             return false;
         String columnFamilyName = columnFamilyDir.getName();
 
-        if (FILTER_COLUMN_FAMILY.containsKey(keyspaceName) && FILTER_COLUMN_FAMILY.get(keyspaceName).contains(columnFamilyName))
+        if (FILTER_COLUMN_FAMILY.containsKey(keyspaceName) && FILTER_COLUMN_FAMILY.get(keyspaceName)
+                .contains(columnFamilyName))
             return false;
         return true;
     }
-    
+
     /**
      * Adds Remote path to the list of Remote Paths
      */
     protected abstract void addToRemotePath(String remotePath);
-    
+
 }

@@ -1,16 +1,14 @@
 package com.netflix.priam.backup.identity;
 
-import java.util.List;
-
-import com.netflix.priam.utils.ITokenManager;
-
-import org.junit.Test;
-
 import com.google.common.collect.Lists;
 import com.netflix.priam.identity.DoubleRing;
 import com.netflix.priam.identity.InstanceIdentity;
 import com.netflix.priam.identity.PriamInstance;
+import com.netflix.priam.utils.ITokenManager;
 import com.netflix.priam.utils.TokenManager;
+import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,9 +35,9 @@ public class DoubleRingTest extends InstanceTestUtils
         for (int i = 0; i < doubled.size(); i++)
         {
             validator.add(tokenManager.createToken(i, doubled.size(), config.getDC()));
-            
+
         }
-        
+
         for (int i = 0; i < doubled.size(); i++)
         {
             PriamInstance ins = doubled.get(i);

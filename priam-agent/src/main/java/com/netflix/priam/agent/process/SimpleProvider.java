@@ -10,6 +10,14 @@ public class SimpleProvider<T> implements Provider<T>
     private final Class<T> clazz;
 
     /**
+     * @param clazz Provider class
+     */
+    public SimpleProvider(Class<T> clazz)
+    {
+        this.clazz = clazz;
+    }
+
+    /**
      * Return a provider for the given class
      *
      * @param clazz class
@@ -20,14 +28,6 @@ public class SimpleProvider<T> implements Provider<T>
         return new SimpleProvider<T>(clazz);
     }
 
-    /**
-     * @param clazz Provider class
-     */
-    public SimpleProvider(Class<T> clazz)
-    {
-        this.clazz = clazz;
-    }
-
     @Override
     public T get()
     {
@@ -35,11 +35,11 @@ public class SimpleProvider<T> implements Provider<T>
         {
             return clazz.newInstance();
         }
-        catch ( InstantiationException e )
+        catch (InstantiationException e)
         {
             throw new RuntimeException(e);
         }
-        catch ( IllegalAccessException e )
+        catch (IllegalAccessException e)
         {
             throw new RuntimeException(e);
         }

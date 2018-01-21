@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ public class PriamInstance implements Serializable
     private String token;
     //Handles Storage objects
     private Map<String, Object> volumes;
-    
+
     public String getApp()
     {
         return app;
@@ -79,10 +79,15 @@ public class PriamInstance implements Serializable
     {
         return hostname;
     }
-    
+
     public String getHostIP()
     {
         return publicip;
+    }
+
+    public void setHostIP(String publicip)
+    {
+        this.publicip = publicip;
     }
 
     public void setHost(String hostname, String publicip)
@@ -94,11 +99,6 @@ public class PriamInstance implements Serializable
     public void setHost(String hostname)
     {
         this.hostname = hostname;
-    }
-
-    public void setHostIP(String publicip)
-    {
-        this.publicip = publicip;
     }
 
     public String getToken()
@@ -124,7 +124,8 @@ public class PriamInstance implements Serializable
     @Override
     public String toString()
     {
-        return String.format("Hostname: %s, InstanceId: %s, APP_NAME: %s, RAC : %s Location %s, Id: %s: Token: %s", getHostName(), getInstanceId(), getApp(), getRac(), getDC(), getId(),
+        return String.format("Hostname: %s, InstanceId: %s, APP_NAME: %s, RAC : %s Location %s, Id: %s: Token: %s",
+                getHostName(), getInstanceId(), getApp(), getRac(), getDC(), getId(),
                 getToken());
     }
 
@@ -132,7 +133,7 @@ public class PriamInstance implements Serializable
     {
         return location;
     }
-    
+
     public void setDC(String location)
     {
         this.location = location;
@@ -157,6 +158,5 @@ public class PriamInstance implements Serializable
     {
         this.outOfService = outOfService;
     }
-
 
 }

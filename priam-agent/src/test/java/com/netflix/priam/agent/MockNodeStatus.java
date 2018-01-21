@@ -3,12 +3,14 @@ package com.netflix.priam.agent;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.codehaus.jettison.json.JSONObject;
+
 import javax.inject.Provider;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class MockNodeStatus implements NodeStatus, Provider<NodeStatus>
 {
+    private final CountDownLatch flushLatch = new CountDownLatch(1);
     private JSONObject info = new JSONObject();
     private List<String> liveNodes = Lists.newArrayList();
     private List<String> movingNodes = Lists.newArrayList();
@@ -17,7 +19,6 @@ public class MockNodeStatus implements NodeStatus, Provider<NodeStatus>
     private String operationMode = "";
     private String gossipInfo = "";
     private List<String> operations = Lists.newArrayList();
-    private final CountDownLatch flushLatch = new CountDownLatch(1);
 
     public List<String> getOperations()
     {

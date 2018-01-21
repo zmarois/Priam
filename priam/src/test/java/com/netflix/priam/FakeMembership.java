@@ -1,9 +1,9 @@
 package com.netflix.priam;
 
+import com.netflix.priam.identity.IMembership;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.netflix.priam.identity.IMembership;
 
 public class FakeMembership implements IMembership
 {
@@ -14,8 +14,8 @@ public class FakeMembership implements IMembership
     {
         this.instances = priamInstances;
     }
-    
-    public void setInstances( List<String> priamInstances)
+
+    public void setInstances(List<String> priamInstances)
     {
         this.instances = priamInstances;
     }
@@ -42,14 +42,14 @@ public class FakeMembership implements IMembership
     public void addACL(Collection<String> listIPs, int from, int to)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void removeACL(Collection<String> listIPs, int from, int to)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -63,6 +63,6 @@ public class FakeMembership implements IMembership
     public void expandRacMembership(int count)
     {
         // TODO Auto-generated method stub
-        
+
     }
 }

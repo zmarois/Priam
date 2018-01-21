@@ -1,25 +1,21 @@
 package com.netflix.priam.defaultimpl;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.netflix.priam.IConfiguration;
+import com.netflix.priam.backup.Restore;
+import com.netflix.priam.utils.CassandraTuner;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.netflix.priam.IConfiguration;
-import com.netflix.priam.backup.Restore;
-import com.netflix.priam.utils.CassandraTuner;
-
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
 
 public class StandardTuner implements CassandraTuner
 {
@@ -50,16 +46,20 @@ public class StandardTuner implements CassandraTuner
         map.put("listen_address", hostname);
         map.put("rpc_address", hostname);
         //Dont bootstrap in restore mode
-        if (!Restore.isRestoreEnabled(config)) {
+        if (!Restore.isRestoreEnabled(config))
+        {
             map.put("auto_bootstrap", config.getAutoBoostrap());
-        } else {
+        }
+        else
+        {
             map.put("auto_bootstrap", false);
         }
-        
+
         map.put("saved_caches_directory", config.getCacheLocation());
         map.put("commitlog_directory", config.getCommitLogLocation());
         map.put("data_file_directories", Lists.newArrayList(config.getDataFileLocation()));
-        boolean enableIncremental = (config.getBackupHour() >= 0 && config.isIncrBackup()) && (CollectionUtils.isEmpty(config.getBackupRacs()) || config.getBackupRacs().contains(config.getRac()));
+        boolean enableIncremental = (config.getBackupHour() >= 0 && config.isIncrBackup()) && (
+                CollectionUtils.isEmpty(config.getBackupRacs()) || config.getBackupRacs().contains(config.getRac()));
         map.put("incremental_backups", enableIncremental);
         map.put("endpoint_snitch", getSnitch());
         map.put("in_memory_compaction_limit_in_mb", config.getInMemoryCompactionLimit());
@@ -80,10 +80,10 @@ public class StandardTuner implements CassandraTuner
         map.put("concurrent_reads", config.getConcurrentReadsCnt());
         map.put("concurrent_writes", config.getConcurrentWritesCnt());
         map.put("concurrent_compactors", config.getConcurrentCompactorsCnt());
-        
+
         map.put("rpc_server_type", config.getRpcServerType());
         map.put("index_interval", config.getIndexInterval());
-        
+
         List<?> seedp = (List) map.get("seed_provider");
         Map<String, String> m = (Map<String, String>) seedp.get(0);
         m.put("class_name", seedProvider);
@@ -91,10 +91,9 @@ public class StandardTuner implements CassandraTuner
         configfureSecurity(map);
         configureGlobalCaches(config, map);
         //force to 1 until vnodes are properly supported
-	    map.put("num_tokens", 1);
-	    
-	    
-	    addExtraCassParams(map);
+        map.put("num_tokens", 1);
+
+        addExtraCassParams(map);
 
         logger.info(yaml.dump(map));
         yaml.dump(map, new FileWriter(yamlFile));
@@ -118,35 +117,35 @@ public class StandardTuner implements CassandraTuner
     private void configureGlobalCaches(IConfiguration config, Map yaml)
     {
         final String keyCacheSize = config.getKeyCacheSizeInMB();
-        if(keyCacheSize != null)
+        if (keyCacheSize != null)
         {
             yaml.put("key_cache_size_in_mb", Integer.valueOf(keyCacheSize));
 
             final String keyCount = config.getKeyCacheKeysToSave();
-            if(keyCount != null)
+            if (keyCount != null)
                 yaml.put("key_cache_keys_to_save", Integer.valueOf(keyCount));
         }
 
         final String rowCacheSize = config.getRowCacheSizeInMB();
-        if(rowCacheSize != null)
+        if (rowCacheSize != null)
         {
             yaml.put("row_cache_size_in_mb", Integer.valueOf(rowCacheSize));
 
             final String rowCount = config.getRowCacheKeysToSave();
-            if(rowCount != null)
+            if (rowCount != null)
                 yaml.put("row_cache_keys_to_save", Integer.valueOf(rowCount));
         }
     }
 
     String derivePartitioner(String fromYaml, String fromConfig)
     {
-        if(fromYaml == null || fromYaml.isEmpty())
+        if (fromYaml == null || fromYaml.isEmpty())
             return fromConfig;
         //this check is to prevent against overwriting an existing yaml file that has
         // a partitioner not RandomPartitioner or (as of cass 1.2) Murmur3Partitioner.
         //basically we don't want to hose existing deployments by changing the partitioner unexpectedly on them
         final String lowerCase = fromYaml.toLowerCase();
-        if(lowerCase.contains("randomparti") || lowerCase.contains("murmur"))
+        if (lowerCase.contains("randomparti") || lowerCase.contains("murmur"))
             return fromConfig;
         return fromYaml;
     }
@@ -158,13 +157,13 @@ public class StandardTuner implements CassandraTuner
         clientEnc.put("enabled", config.isClientSslEnabled());
 
         //the server-side (internode) ssl settings
-        Map serverEnc = (Map)map.get("server_encryption_options");
+        Map serverEnc = (Map) map.get("server_encryption_options");
         serverEnc.put("internode_encryption", config.getInternodeEncryption());
     }
 
     protected void configureCommitLogBackups() throws IOException
     {
-        if(!config.isBackingUpCommitLogs())
+        if (!config.isBackingUpCommitLogs())
             return;
         Properties props = new Properties();
         props.put("archive_command", config.getCommitLogBackupArchiveCmd());
@@ -196,25 +195,26 @@ public class StandardTuner implements CassandraTuner
         logger.info("Updating yaml" + yaml.dump(map));
         yaml.dump(map, new FileWriter(yamlFile));
     }
-    
-    public void addExtraCassParams(Map map) 
+
+    public void addExtraCassParams(Map map)
     {
-    	String params = config.getExtraConfigParams();
-    	if (params == null) {
-    		logger.info("Updating yaml: no extra cass params");
-    		return;
-    	}
-    	
-    	String[] pairs = params.split(",");
-    	logger.info("Updating yaml: adding extra cass params");
-    	for(int i=0; i<pairs.length; i++) 
-    	{
-    		String[] pair = pairs[i].split("=");
-    		String priamKey = pair[0];
-    		String cassKey = pair[1];
-    		String cassVal = config.getCassYamlVal(priamKey);
-    		logger.info("Updating yaml: Priamkey[" + priamKey + "], CassKey[" + cassKey + "], Val[" + cassVal + "]");
-    		map.put(cassKey, cassVal);
-    	}
+        String params = config.getExtraConfigParams();
+        if (params == null)
+        {
+            logger.info("Updating yaml: no extra cass params");
+            return;
+        }
+
+        String[] pairs = params.split(",");
+        logger.info("Updating yaml: adding extra cass params");
+        for (int i = 0; i < pairs.length; i++)
+        {
+            String[] pair = pairs[i].split("=");
+            String priamKey = pair[0];
+            String cassKey = pair[1];
+            String cassVal = config.getCassYamlVal(priamKey);
+            logger.info("Updating yaml: Priamkey[" + priamKey + "], CassKey[" + cassKey + "], Val[" + cassVal + "]");
+            map.put(cassKey, cassVal);
+        }
     }
 }

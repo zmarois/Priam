@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,16 @@
  */
 package com.netflix.priam.aws;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.AmazonServiceException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.identity.IPriamInstanceFactory;
 import com.netflix.priam.identity.PriamInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * SimpleDB based instance factory. Requires 'InstanceIdentity' domain to be
@@ -66,11 +60,12 @@ public class SDBInstanceFactory implements IPriamInstanceFactory<PriamInstance>
     @Override
     public PriamInstance getInstance(String appName, String dc, int id)
     {
-      return dao.getInstance(appName, dc, id);
+        return dao.getInstance(appName, dc, id);
     }
 
     @Override
-    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac, Map<String, Object> volumes, String token)
+    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac,
+            Map<String, Object> volumes, String token)
     {
         try
         {
@@ -150,7 +145,8 @@ public class SDBInstanceFactory implements IPriamInstanceFactory<PriamInstance>
         // TODO Auto-generated method stub
     }
 
-    private PriamInstance makePriamInstance(String app, int id, String instanceID, String hostname, String ip, String rac, Map<String, Object> volumes, String token)
+    private PriamInstance makePriamInstance(String app, int id, String instanceID, String hostname, String ip,
+            String rac, Map<String, Object> volumes, String token)
     {
         Map<String, Object> v = (volumes == null) ? new HashMap<String, Object>() : volumes;
         PriamInstance ins = new PriamInstance();

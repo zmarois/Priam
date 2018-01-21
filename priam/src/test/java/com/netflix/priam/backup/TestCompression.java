@@ -31,8 +31,11 @@ public class TestCompression
         FileOutputStream stream = new FileOutputStream(f);
         for (int i = 0; i < 1 * 1000 * 1000; i++)
         {
-            stream.write("This is a test... Random things happen... and you are responsible for it...\n".getBytes("UTF-8"));
-            stream.write("The quick brown fox jumps over the lazy dog.The quick brown fox jumps over the lazy dog.The quick brown fox jumps over the lazy dog.\n".getBytes("UTF-8"));
+            stream.write(
+                    "This is a test... Random things happen... and you are responsible for it...\n".getBytes("UTF-8"));
+            stream.write(
+                    "The quick brown fox jumps over the lazy dog.The quick brown fox jumps over the lazy dog.The quick brown fox jumps over the lazy dog.\n"
+                            .getBytes("UTF-8"));
         }
         IOUtils.closeQuietly(stream);
     }
@@ -104,7 +107,8 @@ public class TestCompression
     public void snappyCompress() throws IOException
     {
         FileInputStream fi = new FileInputStream("/tmp/compress-test.txt");
-        SnappyOutputStream out = new SnappyOutputStream(new BufferedOutputStream(new FileOutputStream("/tmp/test0.snp")));
+        SnappyOutputStream out = new SnappyOutputStream(
+                new BufferedOutputStream(new FileOutputStream("/tmp/test0.snp")));
         BufferedInputStream origin = new BufferedInputStream(fi, 1024);
         byte data[] = new byte[1024];
         int count;
@@ -145,7 +149,7 @@ public class TestCompression
     {
         SnappyCompression compress = new SnappyCompression();
         RandomAccessFile file = new RandomAccessFile(new File("/tmp/compress-test.txt"), "r");
-        long chunkSize = 5L*1024*1024;
+        long chunkSize = 5L * 1024 * 1024;
         Iterator<byte[]> it = compress.compress(new AbstractBackupPath.RafInputStream(file), chunkSize);
         FileOutputStream ostream = new FileOutputStream("/tmp/test1.snp");
         while (it.hasNext())
@@ -161,7 +165,8 @@ public class TestCompression
     public void decompress() throws FileNotFoundException, IOException
     {
         SnappyCompression compress = new SnappyCompression();
-        compress.decompressAndClose(new FileInputStream("/tmp/test1.snp"), new FileOutputStream("/tmp/compress-test-out-2.txt"));
+        compress.decompressAndClose(new FileInputStream("/tmp/test1.snp"),
+                new FileOutputStream("/tmp/compress-test-out-2.txt"));
         String md1 = SystemUtils.md5(new File("/tmp/compress-test.txt"));
         String md2 = SystemUtils.md5(new File("/tmp/compress-test-out-2.txt"));
         assertEquals(md1, md2);

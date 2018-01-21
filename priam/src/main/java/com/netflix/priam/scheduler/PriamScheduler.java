@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,15 +15,14 @@
  */
 package com.netflix.priam.scheduler;
 
-import java.text.ParseException;
-
-import com.netflix.priam.utils.Sleeper;
-import org.quartz.*;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.netflix.priam.utils.Sleeper;
+import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.ParseException;
 
 /**
  * Scheduling class to schedule Priam tasks. Uses Quartz scheduler
@@ -55,7 +54,8 @@ public class PriamScheduler
     /**
      * Add a task to the scheduler
      */
-    public void addTask(String name, Class<? extends Task> taskclass, TaskTimer timer) throws SchedulerException, ParseException
+    public void addTask(String name, Class<? extends Task> taskclass, TaskTimer timer)
+            throws SchedulerException, ParseException
     {
         assert timer != null : "Cannot add scheduler task " + name + " as no timer is set";
         JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass).build();
@@ -65,19 +65,21 @@ public class PriamScheduler
     /**
      * Add a delayed task to the scheduler
      */
-    public void addTaskWithDelay(final String name, Class<? extends Task> taskclass, final TaskTimer timer, final int delayInSeconds) throws SchedulerException, ParseException
+    public void addTaskWithDelay(final String name, Class<? extends Task> taskclass, final TaskTimer timer,
+            final int delayInSeconds) throws SchedulerException, ParseException
     {
         assert timer != null : "Cannot add scheduler task " + name + " as no timer is set";
         final JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass).build();
-        
+
         //we know Priam doesn't do too many new tasks, so this is probably easy/safe/simple
-        new Thread(new Runnable(){
+        new Thread(new Runnable()
+        {
             public void run()
             {
                 try
                 {
-                        sleeper.sleepQuietly(delayInSeconds * 1000L);
-                        scheduler.scheduleJob(job, timer.getTrigger());
+                    sleeper.sleepQuietly(delayInSeconds * 1000L);
+                    scheduler.scheduleJob(job, timer.getTrigger());
                 }
                 catch (SchedulerException e)
                 {
@@ -90,7 +92,7 @@ public class PriamScheduler
             }
         }).start();
     }
-    
+
     public void runTaskNow(Class<? extends Task> taskclass) throws Exception
     {
         jobFactory.guice.getInstance(taskclass).execute(null);

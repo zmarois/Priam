@@ -1,9 +1,5 @@
 package com.netflix.priam;
 
-import org.junit.Ignore;
-import org.quartz.SchedulerFactory;
-import org.quartz.impl.StdSchedulerFactory;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -13,16 +9,14 @@ import com.netflix.priam.backup.FakeCredentials;
 import com.netflix.priam.backup.IBackupFileSystem;
 import com.netflix.priam.identity.IMembership;
 import com.netflix.priam.identity.IPriamInstanceFactory;
-import com.netflix.priam.identity.token.DeadTokenRetriever;
-import com.netflix.priam.identity.token.IDeadTokenRetriever;
-import com.netflix.priam.identity.token.INewTokenRetriever;
-import com.netflix.priam.identity.token.IPreGeneratedTokenRetriever;
-import com.netflix.priam.identity.token.NewTokenRetriever;
-import com.netflix.priam.identity.token.PreGeneratedTokenRetriever;
+import com.netflix.priam.identity.token.*;
 import com.netflix.priam.utils.FakeSleeper;
 import com.netflix.priam.utils.ITokenManager;
 import com.netflix.priam.utils.Sleeper;
 import com.netflix.priam.utils.TokenManager;
+import org.junit.Ignore;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 
 @Ignore
 public class TestModule extends AbstractModule
@@ -42,9 +36,10 @@ public class TestModule extends AbstractModule
         bind(AbstractBackupPath.class).to(S3BackupPath.class);
         bind(Sleeper.class).to(FakeSleeper.class);
         bind(ITokenManager.class).to(TokenManager.class);
-        
+
         bind(IDeadTokenRetriever.class).to(DeadTokenRetriever.class);
         bind(IPreGeneratedTokenRetriever.class).to(PreGeneratedTokenRetriever.class);
-        bind(INewTokenRetriever.class).to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens     
+        bind(INewTokenRetriever.class)
+                .to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens
     }
 }

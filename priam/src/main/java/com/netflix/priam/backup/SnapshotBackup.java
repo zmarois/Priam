@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.backup;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -38,6 +29,14 @@ import com.netflix.priam.utils.CassandraMonitor;
 import com.netflix.priam.utils.JMXNodeTool;
 import com.netflix.priam.utils.RetryableCallable;
 import com.netflix.priam.utils.ThreadSleeper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Task for running daily snapshots
@@ -45,36 +44,50 @@ import com.netflix.priam.utils.ThreadSleeper;
 @Singleton
 public class SnapshotBackup extends AbstractBackup
 {
-    public static String JOBNAME = "SnapshotBackup";
-    
     private static final Logger logger = LoggerFactory.getLogger(SnapshotBackup.class);
+    public static String JOBNAME = "SnapshotBackup";
+    static List<IMessageObserver> observers = new ArrayList<IMessageObserver>();
     private final MetaData metaData;
     private final List<String> snapshotRemotePaths = new ArrayList<String>();
-    static List<IMessageObserver> observers = new ArrayList<IMessageObserver>();
     private final ThreadSleeper sleeper = new ThreadSleeper();
     private final long WAIT_TIME_MS = 60 * 1000 * 10;
     private final CommitLogBackup clBackup;
-    
 
     @Inject
-    public SnapshotBackup(IConfiguration config, Provider<AbstractBackupPath> pathFactory, 
+    public SnapshotBackup(IConfiguration config, Provider<AbstractBackupPath> pathFactory,
             MetaData metaData, CommitLogBackup clBackup, @Named("backup") IFileSystemContext backupFileSystemCtx)
     {
-    	super(config, backupFileSystemCtx, pathFactory);
+        super(config, backupFileSystemCtx, pathFactory);
         this.metaData = metaData;
         this.clBackup = clBackup;
     }
 
-    
+    public static TaskTimer getTimer(IConfiguration config)
+    {
+        int hour = config.getBackupHour();
+        return new CronTimer(hour, 1, 0);
+    }
+
+    public static void addObserver(IMessageObserver observer)
+    {
+        observers.add(observer);
+    }
+
+    public static void removeObserver(IMessageObserver observer)
+    {
+        observers.remove(observer);
+    }
+
     @Override
     public void execute() throws Exception
     {
         //If Cassandra is started then only start Snapshot Backup
-    		while(!CassandraMonitor.isCassadraStarted())
-    		{
-        		logger.debug("Cassandra is not yet started, hence Snapshot Backup will start after ["+WAIT_TIME_MS/1000+"] secs ...");
-    			sleeper.sleep(WAIT_TIME_MS);
-    		}
+        while (!CassandraMonitor.isCassadraStarted())
+        {
+            logger.debug("Cassandra is not yet started, hence Snapshot Backup will start after [" + WAIT_TIME_MS / 1000
+                    + "] secs ...");
+            sleeper.sleep(WAIT_TIME_MS);
+        }
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         String snapshotName = pathFactory.get().formatDate(cal.getTime());
@@ -90,7 +103,7 @@ public class SnapshotBackup extends AbstractBackup
             for (File keyspaceDir : dataDir.listFiles())
             {
                 if (keyspaceDir.isFile())
-                		continue;
+                    continue;
                 logger.debug("Entering {} keyspace..", keyspaceDir.getName());
                 for (File columnFamilyDir : keyspaceDir.listFiles())
                 {
@@ -109,18 +122,18 @@ public class SnapshotBackup extends AbstractBackup
             // Upload meta file
             metaData.set(bps, snapshotName);
             logger.info("Snapshot upload complete for " + snapshotName);
-            
-            if(snapshotRemotePaths.size() > 0)
+
+            if (snapshotRemotePaths.size() > 0)
             {
-            	notifyObservers();
+                notifyObservers();
             }
-         
+
         }
         finally
         {
             try
             {
-                clearSnapshot(snapshotName);  
+                clearSnapshot(snapshotName);
             }
             catch (Exception e)
             {
@@ -169,40 +182,24 @@ public class SnapshotBackup extends AbstractBackup
         return JOBNAME;
     }
 
-    public static TaskTimer getTimer(IConfiguration config)
-    {
-        int hour = config.getBackupHour();
-        return new CronTimer(hour, 1, 0);
-    }
-
-   
-    public static void addObserver(IMessageObserver observer)
-    {
-    		observers.add(observer);
-    }
-    
-    public static void removeObserver(IMessageObserver observer)
-    {
-    		observers.remove(observer);
-    }
-    
     public void notifyObservers()
     {
-        for(IMessageObserver observer : observers)
+        for (IMessageObserver observer : observers)
         {
-        		if(observer != null)
-        		{
-        			logger.debug("Updating snapshot observers now ...");
-        			observer.update(BACKUP_MESSAGE_TYPE.SNAPSHOT,snapshotRemotePaths);
-        		}
-        		else
-        			logger.info("Observer is Null, hence can not notify ...");
+            if (observer != null)
+            {
+                logger.debug("Updating snapshot observers now ...");
+                observer.update(BACKUP_MESSAGE_TYPE.SNAPSHOT, snapshotRemotePaths);
+            }
+            else
+                logger.info("Observer is Null, hence can not notify ...");
         }
     }
 
-	@Override
-	protected void addToRemotePath(String remotePath) {		
-		snapshotRemotePaths.add(remotePath);		
-	}
+    @Override
+    protected void addToRemotePath(String remotePath)
+    {
+        snapshotRemotePaths.add(remotePath);
+    }
 
 }

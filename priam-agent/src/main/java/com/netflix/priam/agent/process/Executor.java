@@ -1,6 +1,7 @@
 package com.netflix.priam.agent.process;
 
 import com.netflix.priam.agent.NodeStatus;
+
 import java.util.concurrent.Callable;
 
 class Executor implements Callable<Void>
@@ -11,7 +12,8 @@ class Executor implements Callable<Void>
     private final NodeStatus nodeTool;
     private final String[] arguments;
 
-    Executor(AgentProcessManager processManager, String id, AgentProcess process, NodeStatus nodeTool, String[] arguments)
+    Executor(AgentProcessManager processManager, String id, AgentProcess process, NodeStatus nodeTool,
+            String[] arguments)
     {
         this.processManager = processManager;
         this.id = id;

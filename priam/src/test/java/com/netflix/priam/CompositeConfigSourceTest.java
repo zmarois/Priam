@@ -5,12 +5,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class CompositeConfigSourceTest 
+public final class CompositeConfigSourceTest
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(CompositeConfigSourceTest.class.getName());
 
     @Test
-    public void read() 
+    public void read()
     {
         MemoryConfigSource memoryConfigSource = new MemoryConfigSource();
         IConfigSource configSource = new CompositeConfigSource(memoryConfigSource);
@@ -27,7 +27,7 @@ public final class CompositeConfigSourceTest
     }
 
     @Test
-    public void readMultiple() 
+    public void readMultiple()
     {
         MemoryConfigSource m1 = new MemoryConfigSource();
         m1.set("foo", "foo");

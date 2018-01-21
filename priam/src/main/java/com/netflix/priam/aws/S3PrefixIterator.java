@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.aws;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -32,6 +23,14 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.AbstractBackupPath;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Class to iterate over prefixes (S3 Common prefixes) upto 
@@ -44,16 +43,16 @@ public class S3PrefixIterator implements Iterator<AbstractBackupPath>
     private final IConfiguration config;
     private final AmazonS3 s3Client;
     private final Provider<AbstractBackupPath> pathProvider;
+    Date date;
     private Iterator<AbstractBackupPath> iterator;
-    
     private String bucket = "";
     private String clusterPath = "";
     private SimpleDateFormat datefmt = new SimpleDateFormat("yyyyMMdd");
     private ObjectListing objectListing;
-    Date date;
 
     @Inject
-    public S3PrefixIterator(IConfiguration config, Provider<AbstractBackupPath> pathProvider, AmazonS3 s3Client, Date date)
+    public S3PrefixIterator(IConfiguration config, Provider<AbstractBackupPath> pathProvider, AmazonS3 s3Client,
+            Date date)
     {
         this.config = config;
         this.pathProvider = pathProvider;

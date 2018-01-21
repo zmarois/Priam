@@ -2,6 +2,7 @@ package com.netflix.priam.agent.tasks;
 
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.scheduler.Task;
+
 import javax.management.MBeanServer;
 
 public class ProcessTaskWrapper extends Task

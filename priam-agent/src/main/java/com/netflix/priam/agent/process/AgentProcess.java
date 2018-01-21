@@ -10,7 +10,7 @@ public interface AgentProcess
     /**
      * Perform the command and return when completed
      *
-     * @param nodeTool the node tool instance
+     * @param nodeTool  the node tool instance
      * @param arguments any arguments
      * @throws Exception errors
      */

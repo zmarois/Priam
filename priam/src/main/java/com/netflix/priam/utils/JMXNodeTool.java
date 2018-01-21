@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,25 +15,9 @@
  */
 package com.netflix.priam.utils;
 
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryUsage;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
-
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.priam.IConfiguration;
 import org.apache.cassandra.db.ColumnFamilyStoreMBean;
 import org.apache.cassandra.tools.NodeProbe;
 import org.codehaus.jettison.json.JSONArray;
@@ -42,9 +26,19 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.netflix.priam.IConfiguration;
+import javax.management.JMX;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
+import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Class to get data out of Cassandra JMX
@@ -59,9 +53,9 @@ public class JMXNodeTool extends NodeProbe
     /**
      * Hostname and Port to talk to will be same server for now optionally we
      * might want the ip to poll.
-     * 
+     *
      * NOTE: This class shouldn't be a singleton and this shouldn't be cached.
-     * 
+     *
      * This will work only if cassandra runs.
      */
     public JMXNodeTool(String host, int port) throws IOException, InterruptedException
@@ -77,7 +71,7 @@ public class JMXNodeTool extends NodeProbe
 
     /**
      * try to create if it is null.
-     * @throws IOException 
+     * @throws IOException
      */
     public static JMXNodeTool instance(IConfiguration config) throws JMXConnectionException
     {
@@ -91,9 +85,11 @@ public class JMXNodeTool extends NodeProbe
         try
         {
             if (mxbean)
-                return ManagementFactory.newPlatformMXBeanProxy(JMXNodeTool.instance(config).mbeanServerConn, mbeanName, clazz);
+                return ManagementFactory
+                        .newPlatformMXBeanProxy(JMXNodeTool.instance(config).mbeanServerConn, mbeanName, clazz);
             else
-                return JMX.newMBeanProxy(JMXNodeTool.instance(config).mbeanServerConn, new ObjectName(mbeanName), clazz);
+                return JMX
+                        .newMBeanProxy(JMXNodeTool.instance(config).mbeanServerConn, new ObjectName(mbeanName), clazz);
         }
         catch (Exception e)
         {
@@ -112,7 +108,7 @@ public class JMXNodeTool extends NodeProbe
         // connecting first time hence return false.
         if (tool == null)
             return false;
-        
+
         try
         {
             tool.isInitialized();
@@ -127,38 +123,42 @@ public class JMXNodeTool extends NodeProbe
 
     public static synchronized JMXNodeTool connect(final IConfiguration config) throws JMXConnectionException
     {
-    		JMXNodeTool jmxNodeTool = null;
-    		
-		// If Cassandra is started then only start the monitoring
-		if (!CassandraMonitor.isCassadraStarted()) {
-			String exceptionMsg = "Cassandra is not yet started, check back again later";
-			logger.debug(exceptionMsg);
-			throw new JMXConnectionException(exceptionMsg);
-		}        		
-    		
-    		try {
-    				jmxNodeTool = new BoundedExponentialRetryCallable<JMXNodeTool>()
-						{
-							@Override
-							public JMXNodeTool retriableCall() throws Exception
-							{
-								JMXNodeTool nodetool = new JMXNodeTool("localhost", config.getJmxPort());
-								Field fields[] = NodeProbe.class.getDeclaredFields();
-								for (int i = 0; i < fields.length; i++)
-								{
-									if (!fields[i].getName().equals("mbeanServerConn"))
-										continue;
-									fields[i].setAccessible(true);
-									nodetool.mbeanServerConn = (MBeanServerConnection) fields[i].get(nodetool);
-								}
-								return nodetool;
-							}
-						}.call();
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				throw new JMXConnectionException(e.getMessage());
-			}
-    		return jmxNodeTool;
+        JMXNodeTool jmxNodeTool = null;
+
+        // If Cassandra is started then only start the monitoring
+        if (!CassandraMonitor.isCassadraStarted())
+        {
+            String exceptionMsg = "Cassandra is not yet started, check back again later";
+            logger.debug(exceptionMsg);
+            throw new JMXConnectionException(exceptionMsg);
+        }
+
+        try
+        {
+            jmxNodeTool = new BoundedExponentialRetryCallable<JMXNodeTool>()
+            {
+                @Override
+                public JMXNodeTool retriableCall() throws Exception
+                {
+                    JMXNodeTool nodetool = new JMXNodeTool("localhost", config.getJmxPort());
+                    Field fields[] = NodeProbe.class.getDeclaredFields();
+                    for (int i = 0; i < fields.length; i++)
+                    {
+                        if (!fields[i].getName().equals("mbeanServerConn"))
+                            continue;
+                        fields[i].setAccessible(true);
+                        nodetool.mbeanServerConn = (MBeanServerConnection) fields[i].get(nodetool);
+                    }
+                    return nodetool;
+                }
+            }.call();
+        }
+        catch (Exception e)
+        {
+            logger.error(e.getMessage(), e);
+            throw new JMXConnectionException(e.getMessage());
+        }
+        return jmxNodeTool;
     }
 
     /**
@@ -248,10 +248,10 @@ public class JMXNodeTool extends NodeProbe
                 rack = "Unknown";
             }
             String status = liveNodes.contains(primaryEndpoint)
-                            ? "Up"
-                            : deadNodes.contains(primaryEndpoint)
-                              ? "Down"
-                              : "?";
+                    ? "Up"
+                    : deadNodes.contains(primaryEndpoint)
+                    ? "Down"
+                    : "?";
 
             String state = "Normal";
 
@@ -263,15 +263,17 @@ public class JMXNodeTool extends NodeProbe
                 state = "Moving";
 
             String load = loadMap.containsKey(primaryEndpoint)
-                          ? loadMap.get(primaryEndpoint)
-                          : "?";
-            String owns = new DecimalFormat("##0.00%").format(ownerships.get(token) == null ? 0.0F : ownerships.get(token));
+                    ? loadMap.get(primaryEndpoint)
+                    : "?";
+            String owns = new DecimalFormat("##0.00%")
+                    .format(ownerships.get(token) == null ? 0.0F : ownerships.get(token));
             ring.put(createJson(primaryEndpoint, dataCenter, rack, status, state, load, owns, token));
         }
         return ring;
     }
 
-    private JSONObject createJson(String primaryEndpoint, String dataCenter, String rack, String status, String state, String load, String owns, String token) throws JSONException
+    private JSONObject createJson(String primaryEndpoint, String dataCenter, String rack, String status, String state,
+            String load, String owns, String token) throws JSONException
     {
         JSONObject object = new JSONObject();
         object.put("endpoint", primaryEndpoint);
@@ -291,11 +293,14 @@ public class JMXNodeTool extends NodeProbe
             forceTableCompaction(keyspace, new String[0]);
     }
 
-    public void repair(boolean isSequential, boolean localDataCenterOnly) throws IOException, ExecutionException, InterruptedException
+    public void repair(boolean isSequential, boolean localDataCenterOnly)
+            throws IOException, ExecutionException, InterruptedException
     {
         repair(isSequential, localDataCenterOnly, false);
     }
-    public void repair(boolean isSequential, boolean localDataCenterOnly, boolean primaryRange) throws IOException, ExecutionException, InterruptedException
+
+    public void repair(boolean isSequential, boolean localDataCenterOnly, boolean primaryRange)
+            throws IOException, ExecutionException, InterruptedException
     {
         for (String keyspace : getKeyspaces())
             if (primaryRange)

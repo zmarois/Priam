@@ -23,6 +23,7 @@ import java.util.List;
 public abstract class InstanceTestUtils
 {
 
+    private static final ITokenManager tokenManager = new TokenManager();
     List<String> instances = new ArrayList<String>();
     IMembership membership;
     FakeConfiguration config;
@@ -31,8 +32,7 @@ public abstract class InstanceTestUtils
     Sleeper sleeper;
     DeadTokenRetriever deadTokenRetriever;
     PreGeneratedTokenRetriever preGeneratedTokenRetriever;
-	NewTokenRetriever newTokenRetriever;
-	private static final ITokenManager tokenManager = new TokenManager();
+    NewTokenRetriever newTokenRetriever;
 
     @Before
     public void setup()
@@ -70,15 +70,15 @@ public abstract class InstanceTestUtils
         createInstanceIdentity("az3", "fakeinstance8");
         createInstanceIdentity("az3", "fakeinstance9");
     }
-    
+
     protected InstanceIdentity createInstanceIdentity(String zone, String instanceId) throws Exception
     {
         config.zone = zone;
         config.instance_id = instanceId;
         return new InstanceIdentity(factory, membership, config, sleeper, new TokenManager()
-        , this.deadTokenRetriever
-        , this.preGeneratedTokenRetriever
-        , this.newTokenRetriever
+                , this.deadTokenRetriever
+                , this.preGeneratedTokenRetriever
+                , this.newTokenRetriever
         );
     }
 }

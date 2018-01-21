@@ -1,18 +1,16 @@
 package com.netflix.priam.dse;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Properties;
-
 import com.google.common.io.Files;
 import com.netflix.priam.FakeConfiguration;
 import com.netflix.priam.IConfiguration;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
 public class DseTunerTest
 {
@@ -29,7 +27,7 @@ public class DseTunerTest
         dseTuner = new DseTuner(config, dseConfig);
 
         File targetDir = new File(config.getCassHome() + "/conf");
-        if(!targetDir.exists())
+        if (!targetDir.exists())
             targetDir.mkdirs();
 
         targetFile = new File(config.getCassHome() + DseTuner.AUDIT_LOG_FILE);

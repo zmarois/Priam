@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.defaultimpl;
-
-import java.io.FileInputStream;
-import java.util.Properties;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -26,13 +23,16 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.util.Properties;
+
 /**
  * This is a basic implementation of ICredentials. User should prefer to
  * implement their own versions for more secured access. This class requires
  * clear AWS key and access.
- * 
+ *
  * Set the following properties in "conf/awscredntial.properties" 
- * 
+ *
  */
 public class ClearCredential implements ICredential
 {
@@ -50,7 +50,7 @@ public class ClearCredential implements ICredential
             final Properties props = new Properties();
             props.load(fis);
             AWS_ACCESS_ID = props.getProperty("AWSACCESSID") != null ? props.getProperty("AWSACCESSID").trim() : "";
-            AWS_KEY = props.getProperty("AWSKEY") != null ? props.getProperty("AWSKEY").trim() : "";            
+            AWS_KEY = props.getProperty("AWSKEY") != null ? props.getProperty("AWSKEY").trim() : "";
         }
         catch (Exception e)
         {
@@ -63,19 +63,19 @@ public class ClearCredential implements ICredential
         }
     }
 
-	public AWSCredentialsProvider getAwsCredentialProvider()
+    public AWSCredentialsProvider getAwsCredentialProvider()
     {
-		return new AWSCredentialsProvider()
+        return new AWSCredentialsProvider()
         {
-			public AWSCredentials getCredentials()
+            public AWSCredentials getCredentials()
             {
-				return new BasicAWSCredentials(AWS_ACCESS_ID, AWS_KEY);
-			}
+                return new BasicAWSCredentials(AWS_ACCESS_ID, AWS_KEY);
+            }
 
-			public void refresh()
+            public void refresh()
             {
-				// NOP				
-			}
-		};
-	}
+                // NOP
+            }
+        };
+    }
 }

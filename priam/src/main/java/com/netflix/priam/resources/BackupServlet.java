@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,40 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.resources;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -64,15 +30,26 @@ import com.netflix.priam.scheduler.PriamScheduler;
 import com.netflix.priam.utils.CassandraMonitor;
 import com.netflix.priam.utils.CassandraTuner;
 import com.netflix.priam.utils.ITokenManager;
-
+import com.netflix.priam.utils.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.netflix.priam.utils.SystemUtils;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.*;
 
 @Path("/v1/backup")
 @Produces(MediaType.APPLICATION_JSON)
@@ -88,13 +65,14 @@ public class BackupServlet
     private static final String REST_KEYSPACES = "keyspaces";
     private static final String REST_RESTORE_PREFIX = "restoreprefix";
     private static final String FMT = "yyyyMMddHHmm";
-	private static final String REST_LOCR_ROWKEY = "verifyrowkey";
-	private static final String REST_LOCR_KEYSPACE = "verifyks";
-	private static final String REST_LOCR_COLUMNFAMILY = "verifycf";
-	private static final String REST_LOCR_FILEEXTENSION = "verifyfileextension";
-	private static final String SSTABLE2JSON_DIR_LOCATION = "/tmp/priam_sstables";
-	private static final String SSTABLE2JSON_COMMAND_FROM_CASSHOME = "/bin/sstable2json";
-
+    private static final String REST_LOCR_ROWKEY = "verifyrowkey";
+    private static final String REST_LOCR_KEYSPACE = "verifyks";
+    private static final String REST_LOCR_COLUMNFAMILY = "verifycf";
+    private static final String REST_LOCR_FILEEXTENSION = "verifyfileextension";
+    private static final String SSTABLE2JSON_DIR_LOCATION = "/tmp/priam_sstables";
+    private static final String SSTABLE2JSON_COMMAND_FROM_CASSHOME = "/bin/sstable2json";
+    private final ITokenManager tokenManager;
+    private final ICassandraProcess cassProcess;
     private PriamServer priamServer;
     private IConfiguration config;
     private IBackupFileSystem backupFs;
@@ -104,8 +82,6 @@ public class BackupServlet
     private CassandraTuner tuner;
     private SnapshotBackup snapshotBackup;
     private IPriamInstanceFactory factory;
-    private final ITokenManager tokenManager;
-    private final ICassandraProcess cassProcess;
     @Inject
     private PriamScheduler scheduler;
     @Inject
@@ -113,8 +89,11 @@ public class BackupServlet
 
     @Inject
 
-    public BackupServlet(PriamServer priamServer, IConfiguration config, @Named("backup")IBackupFileSystem backupFs,@Named("backup_status")IBackupFileSystem bkpStatusFs, Restore restoreObj, Provider<AbstractBackupPath> pathProvider, CassandraTuner tuner,
-            SnapshotBackup snapshotBackup, IPriamInstanceFactory factory, ITokenManager tokenManager, ICassandraProcess cassProcess)
+    public BackupServlet(PriamServer priamServer, IConfiguration config, @Named("backup") IBackupFileSystem backupFs,
+            @Named("backup_status") IBackupFileSystem bkpStatusFs, Restore restoreObj,
+            Provider<AbstractBackupPath> pathProvider, CassandraTuner tuner,
+            SnapshotBackup snapshotBackup, IPriamInstanceFactory factory, ITokenManager tokenManager,
+            ICassandraProcess cassProcess)
 
     {
         this.priamServer = priamServer;
@@ -148,8 +127,10 @@ public class BackupServlet
 
     @GET
     @Path("/restore")
-    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_REGION) String region, @QueryParam(REST_HEADER_TOKEN) String token,
-            @QueryParam(REST_KEYSPACES) String keyspaces, @QueryParam(REST_RESTORE_PREFIX) String restorePrefix) throws Exception
+    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange,
+            @QueryParam(REST_HEADER_REGION) String region, @QueryParam(REST_HEADER_TOKEN) String token,
+            @QueryParam(REST_KEYSPACES) String keyspaces, @QueryParam(REST_RESTORE_PREFIX) String restorePrefix)
+            throws Exception
     {
         Date startTime;
         Date endTime;
@@ -166,26 +147,28 @@ public class BackupServlet
             startTime = path.parseDate(restore[0]);
             endTime = path.parseDate(restore[1]);
         }
-        
+
         String origRestorePrefix = config.getRestorePrefix();
         if (StringUtils.isNotBlank(restorePrefix))
         {
             config.setRestorePrefix(restorePrefix);
         }
-        
-        logger.info("Parameters: { token: [" + token + "], region: [" +  region + "], startTime: [" + startTime + "], endTime: [" + endTime + 
-                    "], keyspaces: [" + keyspaces + "], restorePrefix: [" + restorePrefix + "]}");
-        
+
+        logger.info("Parameters: { token: [" + token + "], region: [" + region + "], startTime: [" + startTime
+                + "], endTime: [" + endTime +
+                "], keyspaces: [" + keyspaces + "], restorePrefix: [" + restorePrefix + "]}");
+
         restore(token, region, startTime, endTime, keyspaces);
-        
+
         //Since this call is probably never called in parallel, config is multi-thread safe to be edited
         if (origRestorePrefix != null)
-                config.setRestorePrefix(origRestorePrefix);       
-        else    config.setRestorePrefix(""); 
+            config.setRestorePrefix(origRestorePrefix);
+        else
+            config.setRestorePrefix("");
 
         return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON).build();
     }
-    
+
     @GET
     @Path("/incremental_restore")
     public Response restoreIncrementals() throws Exception
@@ -194,10 +177,10 @@ public class BackupServlet
         return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON).build();
     }
 
-
     @GET
     @Path("/list")
-    public Response list(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_FILTER) @DefaultValue("") String filter) throws Exception
+    public Response list(@QueryParam(REST_HEADER_RANGE) String daterange,
+            @QueryParam(REST_HEADER_FILTER) @DefaultValue("") String filter) throws Exception
     {
         Date startTime;
         Date endTime;
@@ -214,12 +197,13 @@ public class BackupServlet
             startTime = path.parseDate(restore[0]);
             endTime = path.parseDate(restore[1]);
         }
-        
-        logger.info("Parameters: {backupPrefix: [" + config.getBackupPrefix() + "], daterange: [" + daterange + "], filter: [" + filter + "]}");
-        
+
+        logger.info("Parameters: {backupPrefix: [" + config.getBackupPrefix() + "], daterange: [" + daterange
+                + "], filter: [" + filter + "]}");
+
         Iterator<AbstractBackupPath> it = bkpStatusFs.list(config.getBackupPrefix(), startTime, endTime);
         JSONObject object = new JSONObject();
-        object = constructJsonResponse(object,it,filter);
+        object = constructJsonResponse(object, it, filter);
         return Response.ok(object.toString(2), MediaType.APPLICATION_JSON).build();
     }
 
@@ -244,7 +228,7 @@ public class BackupServlet
      * Life_Of_C*Row : With this REST call, mutations/existence of a rowkey can be found.
      * It uses SSTable2Json utility which will convert SSTables on disk to JSON format and 
      * Search for the desired rowkey.
-     * 
+     *
      * Steps include:
      * 1. Restoring data for given data range and other params
      * 2. Searching provided rowkey in SSTables and writing search result to JSON
@@ -252,9 +236,9 @@ public class BackupServlet
      *    Deletion is done for efficient space usage, so that same node can be reused for
      *    subsequent runs. 
      * <p>
-     * 
+     *
      * @param Similar to Restore call and few additional params.
-     *        
+     *
      *      daterange 		: Can not be Null or Default. Comma separated Start & End date eg. 201311250000,201311260000
      *      rowkey    		: rowkey to search (In Hex format)
      *      ks        		: keyspace of mentioned rowkey
@@ -262,80 +246,84 @@ public class BackupServlet
      *      fileExtension 	: Part of SSTable Data file names 
      *      					  eg. if file name = KS1-CF1-hf-100-Data.db
      *      						  then fileExtension = KS1-CF1-hf
-     * 
+     *
      * @return Creates JSON file based on the passed date at hardcoded dir location : /tmp/priam_sstables
      * 		   If rowkey is not found in the SSTable, JSON file will be empty.
      */
-	@GET
-	@Path("/life_of_crow")
-	public Response restore_verify_key(
-			@QueryParam(REST_HEADER_RANGE) String daterange,
-			@QueryParam(REST_HEADER_REGION) String region,
-			@QueryParam(REST_HEADER_TOKEN) String token,
-			@QueryParam(REST_KEYSPACES) String keyspaces,
-			@QueryParam(REST_RESTORE_PREFIX) String restorePrefix,
-			@QueryParam(REST_LOCR_ROWKEY) String rowkey,
-			@QueryParam(REST_LOCR_KEYSPACE) String ks,
-			@QueryParam(REST_LOCR_COLUMNFAMILY) String cf,
-			@QueryParam(REST_LOCR_FILEEXTENSION) String fileExtension) throws Exception {
+    @GET
+    @Path("/life_of_crow")
+    public Response restore_verify_key(
+            @QueryParam(REST_HEADER_RANGE) String daterange,
+            @QueryParam(REST_HEADER_REGION) String region,
+            @QueryParam(REST_HEADER_TOKEN) String token,
+            @QueryParam(REST_KEYSPACES) String keyspaces,
+            @QueryParam(REST_RESTORE_PREFIX) String restorePrefix,
+            @QueryParam(REST_LOCR_ROWKEY) String rowkey,
+            @QueryParam(REST_LOCR_KEYSPACE) String ks,
+            @QueryParam(REST_LOCR_COLUMNFAMILY) String cf,
+            @QueryParam(REST_LOCR_FILEEXTENSION) String fileExtension) throws Exception
+    {
 
-		Date startTime;
-		Date endTime;
-		//Creating Dir for Json storage
-		SystemUtils.createDirs(SSTABLE2JSON_DIR_LOCATION);
-		String JSON_FILE_PATH = "";
+        Date startTime;
+        Date endTime;
+        //Creating Dir for Json storage
+        SystemUtils.createDirs(SSTABLE2JSON_DIR_LOCATION);
+        String JSON_FILE_PATH = "";
 
-		try
-		{
-		
-		if (StringUtils.isBlank(daterange)
-				|| daterange.equalsIgnoreCase("default")) {
-			return Response.ok("\n[\"daterange can't be blank or default.eg.201311250000,201311260000\"]\n", MediaType.APPLICATION_JSON)
-					.build();
-		}
-		
-		String[] restore = daterange.split(",");
-		AbstractBackupPath path = pathProvider.get();
-		startTime = path.parseDate(restore[0]);
-		endTime = path.parseDate(restore[1]);		
+        try
+        {
 
-		String origRestorePrefix = config.getRestorePrefix();
-		if (StringUtils.isNotBlank(restorePrefix)) {
-			config.setRestorePrefix(restorePrefix);
-		}
+            if (StringUtils.isBlank(daterange)
+                    || daterange.equalsIgnoreCase("default"))
+            {
+                return Response.ok("\n[\"daterange can't be blank or default.eg.201311250000,201311260000\"]\n",
+                        MediaType.APPLICATION_JSON)
+                        .build();
+            }
 
-		
-		restore(token, region, startTime, endTime, keyspaces);
+            String[] restore = daterange.split(",");
+            AbstractBackupPath path = pathProvider.get();
+            startTime = path.parseDate(restore[0]);
+            endTime = path.parseDate(restore[1]);
 
-		// Since this call is probably never called in parallel, config is
-		// multi-thread safe to be edited
-		config.setRestorePrefix(origRestorePrefix);
+            String origRestorePrefix = config.getRestorePrefix();
+            if (StringUtils.isNotBlank(restorePrefix))
+            {
+                config.setRestorePrefix(restorePrefix);
+            }
 
-		while (!CassandraMonitor.isCassadraStarted())
-			Thread.sleep(1000l);
+            restore(token, region, startTime, endTime, keyspaces);
 
-		// initialize json file name
-		JSON_FILE_PATH = daterange.split(",")[0].substring(0, 8)+".json";
+            // Since this call is probably never called in parallel, config is
+            // multi-thread safe to be edited
+            config.setRestorePrefix(origRestorePrefix);
 
-		//Convert SSTable2Json and search for given rowkey
-		checkSSTablesForKey(rowkey,ks,cf,fileExtension,JSON_FILE_PATH);
+            while (!CassandraMonitor.isCassadraStarted())
+                Thread.sleep(1000l);
 
-		}
-		catch(Exception e)
-		{
-			logger.info(ExceptionUtils.getStackTrace(e));
-		}
-		finally{
-			removeAllDataFiles(ks);
-		}
-		
-		return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON)
-				.build();
-	}
+            // initialize json file name
+            JSON_FILE_PATH = daterange.split(",")[0].substring(0, 8) + ".json";
+
+            //Convert SSTable2Json and search for given rowkey
+            checkSSTablesForKey(rowkey, ks, cf, fileExtension, JSON_FILE_PATH);
+
+        }
+        catch (Exception e)
+        {
+            logger.info(ExceptionUtils.getStackTrace(e));
+        }
+        finally
+        {
+            removeAllDataFiles(ks);
+        }
+
+        return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON)
+                .build();
+    }
 
     /**
      * Restore with the specified start and end time.
-     * 
+     *
      * @param token
      *            Overrides the current token with this one, if specified
      * @param region
@@ -355,14 +343,16 @@ public class BackupServlet
         if (StringUtils.isNotBlank(token))
             priamServer.getId().getInstance().setToken(token);
 
-        if( config.isRestoreClosestToken())
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
-        
+        if (config.isRestoreClosestToken())
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
+
         if (StringUtils.isNotBlank(region))
         {
             config.setDC(region);
             logger.info("Restoring from region " + region);
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
             logger.info("Restore will use token " + priamServer.getId().getInstance().getToken());
         }
 
@@ -404,122 +394,141 @@ public class BackupServlet
     {
         if (StringUtils.isNotBlank(keyspaces))
         {
-                 List<String> newKeyspaces = Lists.newArrayList(keyspaces.split(","));
-                 config.setRestoreKeySpaces(newKeyspaces);
+            List<String> newKeyspaces = Lists.newArrayList(keyspaces.split(","));
+            config.setRestoreKeySpaces(newKeyspaces);
         }
     }
-    
-    private JSONObject constructJsonResponse(JSONObject object, Iterator<AbstractBackupPath> it,String filter) throws Exception
-    {
-		int fileCnt = 0;
-		filter = filter.contains("?") ? filter.substring(0, filter.indexOf("?")) : filter;
 
-		try {
-			JSONArray jArray = new JSONArray();
-			while (it.hasNext()) {
-				AbstractBackupPath p = it.next();
-				if (!filter.isEmpty() && BackupFileType.valueOf(filter) != p.getType())
-					continue;
-                                JSONObject backupJSON = new JSONObject();
-				backupJSON.put("bucket", config.getBackupPrefix());
-				backupJSON.put("filename", p.getRemotePath());
-				backupJSON.put("app", p.getClusterName());
-				backupJSON.put("region", p.getRegion());
-				backupJSON.put("token", p.getToken());
-				backupJSON.put("ts", new DateTime(p.getTime()).toString(FMT));
-				backupJSON.put("instance_id", p.getInstanceIdentity()
-						.getInstance().getInstanceId());
-				backupJSON.put("uploaded_ts",
-						new DateTime(p.getUploadedTs()).toString(FMT));
-				if ("meta".equalsIgnoreCase(filter)) {
-					List<AbstractBackupPath> allFiles = metaData.get(p);
-					long totalSize = 0;
-					for (AbstractBackupPath abp : allFiles)
-						totalSize = totalSize + abp.getSize();
-					backupJSON.put("num_files", Long.toString(allFiles.size()));
-					// keyValues.put("TOTAL-SIZE", Long.toString(totalSize)); //
-					// Add Later
-				}
-				fileCnt++;
-				jArray.put(backupJSON);
-			}
-			object.put("files", jArray);
-			object.put("num_files", fileCnt);
-		} catch (JSONException jse) {
-			logger.info("Caught JSON Exception --> "+jse.getMessage());
-		}
-		return object;
-	}
+    private JSONObject constructJsonResponse(JSONObject object, Iterator<AbstractBackupPath> it, String filter)
+            throws Exception
+    {
+        int fileCnt = 0;
+        filter = filter.contains("?") ? filter.substring(0, filter.indexOf("?")) : filter;
+
+        try
+        {
+            JSONArray jArray = new JSONArray();
+            while (it.hasNext())
+            {
+                AbstractBackupPath p = it.next();
+                if (!filter.isEmpty() && BackupFileType.valueOf(filter) != p.getType())
+                    continue;
+                JSONObject backupJSON = new JSONObject();
+                backupJSON.put("bucket", config.getBackupPrefix());
+                backupJSON.put("filename", p.getRemotePath());
+                backupJSON.put("app", p.getClusterName());
+                backupJSON.put("region", p.getRegion());
+                backupJSON.put("token", p.getToken());
+                backupJSON.put("ts", new DateTime(p.getTime()).toString(FMT));
+                backupJSON.put("instance_id", p.getInstanceIdentity()
+                        .getInstance().getInstanceId());
+                backupJSON.put("uploaded_ts",
+                        new DateTime(p.getUploadedTs()).toString(FMT));
+                if ("meta".equalsIgnoreCase(filter))
+                {
+                    List<AbstractBackupPath> allFiles = metaData.get(p);
+                    long totalSize = 0;
+                    for (AbstractBackupPath abp : allFiles)
+                        totalSize = totalSize + abp.getSize();
+                    backupJSON.put("num_files", Long.toString(allFiles.size()));
+                    // keyValues.put("TOTAL-SIZE", Long.toString(totalSize)); //
+                    // Add Later
+                }
+                fileCnt++;
+                jArray.put(backupJSON);
+            }
+            object.put("files", jArray);
+            object.put("num_files", fileCnt);
+        }
+        catch (JSONException jse)
+        {
+            logger.info("Caught JSON Exception --> " + jse.getMessage());
+        }
+        return object;
+    }
 
     /**
      * Convert SSTable2Json and search for given key
      */
-    public void checkSSTablesForKey(String rowkey,String keyspace, String cf, String fileExtension, String jsonFilePath) throws Exception {
-		try {
-			logger.info("Starting SSTable2Json conversion ...");
-			//Setting timeout to 10 Mins
-			long TIMEOUT_PERIOD = 10l;
-			String unixCmd = formulateCommandToRun( rowkey, keyspace,  cf,  fileExtension, jsonFilePath);
-			
-			String[] cmd = {"/bin/sh", "-c", unixCmd.toString()};
-			final Process p = Runtime
-					.getRuntime()
-					.exec(cmd);
-			
-			Callable<Integer> callable = new Callable<Integer>()
-			{
-				@Override
-				public Integer call() throws Exception {
-					int returnCode = p.waitFor();
-					return returnCode;
-				}				
-			};
-			
-			ExecutorService exeService = Executors.newSingleThreadExecutor();
-			try{
-				Future<Integer> future = exeService.submit(callable);
-				int returnVal = future.get(TIMEOUT_PERIOD, TimeUnit.MINUTES);
-				if (returnVal == 0)
-					logger.info("Finished SSTable2Json conversion and search.");
-				else
-					logger.error("Error occurred during SSTable2Json conversion and search.");
-			}catch(TimeoutException e){
-				logger.error(ExceptionUtils.getStackTrace(e));
-				throw e;
-			}
-			finally{
-				p.destroy();
-				exeService.shutdown();
-			}
-			
-		} catch (IOException e) {
-			logger.error(ExceptionUtils.getStackTrace(e));
-		}		
-	}
-	
-	public String formulateCommandToRun(String rowkey,String keyspace, String cf, String fileExtension, String jsonFilePath)
-	{
-		StringBuffer sbuff = new StringBuffer();
+    public void checkSSTablesForKey(String rowkey, String keyspace, String cf, String fileExtension,
+            String jsonFilePath) throws Exception
+    {
+        try
+        {
+            logger.info("Starting SSTable2Json conversion ...");
+            //Setting timeout to 10 Mins
+            long TIMEOUT_PERIOD = 10l;
+            String unixCmd = formulateCommandToRun(rowkey, keyspace, cf, fileExtension, jsonFilePath);
 
-		sbuff.append("for i in $(ls "+config.getDataFileLocation()+File.separator+keyspace+File.separator+cf+File.separator+fileExtension+"-*-Data.db); do "+config.getCassHome()+SSTABLE2JSON_COMMAND_FROM_CASSHOME+" $i -k ");
-		sbuff.append(rowkey);
-		sbuff.append("  | grep ");
-		sbuff.append(rowkey);
-		sbuff.append(" >> ");
-		sbuff.append(SSTABLE2JSON_DIR_LOCATION+File.separator+jsonFilePath);
-		sbuff.append(" ; done");
-		
-		logger.info("SSTable2JSON location <"+SSTABLE2JSON_DIR_LOCATION+File.separator+jsonFilePath+">");
-		logger.info("Running Command = "+sbuff.toString());
-		return sbuff.toString();
-	}
-	
-	public void removeAllDataFiles(String ks) throws Exception
-	{		
-		String cleanupDirPath = config.getDataFileLocation()+File.separator+ks;
-		logger.info("Starting to clean all the files inside <"+cleanupDirPath+">");
-		SystemUtils.cleanupDir(cleanupDirPath, null);
-		logger.info("*** Done cleaning all the files inside <"+cleanupDirPath+">");
-	}
+            String[] cmd = { "/bin/sh", "-c", unixCmd.toString() };
+            final Process p = Runtime
+                    .getRuntime()
+                    .exec(cmd);
+
+            Callable<Integer> callable = new Callable<Integer>()
+            {
+                @Override
+                public Integer call() throws Exception
+                {
+                    int returnCode = p.waitFor();
+                    return returnCode;
+                }
+            };
+
+            ExecutorService exeService = Executors.newSingleThreadExecutor();
+            try
+            {
+                Future<Integer> future = exeService.submit(callable);
+                int returnVal = future.get(TIMEOUT_PERIOD, TimeUnit.MINUTES);
+                if (returnVal == 0)
+                    logger.info("Finished SSTable2Json conversion and search.");
+                else
+                    logger.error("Error occurred during SSTable2Json conversion and search.");
+            }
+            catch (TimeoutException e)
+            {
+                logger.error(ExceptionUtils.getStackTrace(e));
+                throw e;
+            }
+            finally
+            {
+                p.destroy();
+                exeService.shutdown();
+            }
+
+        }
+        catch (IOException e)
+        {
+            logger.error(ExceptionUtils.getStackTrace(e));
+        }
+    }
+
+    public String formulateCommandToRun(String rowkey, String keyspace, String cf, String fileExtension,
+            String jsonFilePath)
+    {
+        StringBuffer sbuff = new StringBuffer();
+
+        sbuff.append("for i in $(ls " + config.getDataFileLocation() + File.separator + keyspace + File.separator + cf
+                + File.separator + fileExtension + "-*-Data.db); do " + config.getCassHome()
+                + SSTABLE2JSON_COMMAND_FROM_CASSHOME + " $i -k ");
+        sbuff.append(rowkey);
+        sbuff.append("  | grep ");
+        sbuff.append(rowkey);
+        sbuff.append(" >> ");
+        sbuff.append(SSTABLE2JSON_DIR_LOCATION + File.separator + jsonFilePath);
+        sbuff.append(" ; done");
+
+        logger.info("SSTable2JSON location <" + SSTABLE2JSON_DIR_LOCATION + File.separator + jsonFilePath + ">");
+        logger.info("Running Command = " + sbuff.toString());
+        return sbuff.toString();
+    }
+
+    public void removeAllDataFiles(String ks) throws Exception
+    {
+        String cleanupDirPath = config.getDataFileLocation() + File.separator + ks;
+        logger.info("Starting to clean all the files inside <" + cleanupDirPath + ">");
+        SystemUtils.cleanupDir(cleanupDirPath, null);
+        logger.info("*** Done cleaning all the files inside <" + cleanupDirPath + ">");
+    }
 
 }

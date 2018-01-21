@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.aws;
-
-import java.util.List;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -30,27 +27,29 @@ import com.netflix.priam.scheduler.SimpleTimer;
 import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.scheduler.TaskTimer;
 
+import java.util.List;
+import java.util.Random;
+
 /**
  * this class will associate an Public IP's with a new instance so they can talk
  * across the regions.
- * 
+ *
  * Requirement: 1) Nodes in the same region needs to be able to talk to each
  * other. 2) Nodes in other regions needs to be able to talk to the others in
  * the other region.
- * 
+ *
  * Assumption: 1) IPriamInstanceFactory will provide the membership... and will
  * be visible across the regions 2) IMembership amazon or any other
  * implementation which can tell if the instance is part of the group (ASG in
  * amazons case).
- * 
+ *
  */
 @Singleton
 public class UpdateSecuritySettings extends Task
 {
     public static final String JOBNAME = "Update_SG";
-    public static boolean firstTimeUpdated = false;
-
     private static final Random ran = new Random();
+    public static boolean firstTimeUpdated = false;
     private final IMembership membership;
     private final IPriamInstanceFactory<PriamInstance> factory;
 
@@ -61,6 +60,16 @@ public class UpdateSecuritySettings extends Task
         super(config);
         this.membership = membership;
         this.factory = factory;
+    }
+
+    public static TaskTimer getTimer(InstanceIdentity id)
+    {
+        SimpleTimer return_;
+        if (id.isSeed())
+            return_ = new SimpleTimer(JOBNAME, 120 * 1000 + ran.nextInt(120 * 1000));
+        else
+            return_ = new SimpleTimer(JOBNAME);
+        return return_;
     }
 
     /**
@@ -109,16 +118,6 @@ public class UpdateSecuritySettings extends Task
             membership.removeACL(remove, port, port);
             firstTimeUpdated = true;
         }
-    }
-
-    public static TaskTimer getTimer(InstanceIdentity id)
-    {
-        SimpleTimer return_;
-        if (id.isSeed())
-            return_ = new SimpleTimer(JOBNAME, 120 * 1000 + ran.nextInt(120 * 1000));
-        else
-            return_ = new SimpleTimer(JOBNAME);
-        return return_;
     }
 
     @Override

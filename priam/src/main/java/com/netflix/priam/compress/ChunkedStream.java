@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,18 +22,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+
 /**
  * Byte iterator representing compressed data.
  * Uses snappy compression
  */
 public class ChunkedStream implements Iterator<byte[]>
 {
+    private static int BYTES_TO_READ = 2048;
     private boolean hasnext = true;
     private ByteArrayOutputStream bos;
     private SnappyOutputStream compress;
     private InputStream origin;
     private long chunkSize;
-    private static int BYTES_TO_READ = 2048;
 
     public ChunkedStream(InputStream is, long chunkSize) throws IOException
     {

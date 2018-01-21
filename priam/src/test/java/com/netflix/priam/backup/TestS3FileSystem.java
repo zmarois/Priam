@@ -1,22 +1,5 @@
 package com.netflix.priam.backup;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
-
-import junit.framework.Assert;
-import mockit.Mock;
-import mockit.MockUp;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
@@ -35,11 +18,26 @@ import com.netflix.priam.aws.S3FileSystem;
 import com.netflix.priam.aws.S3PartUploader;
 import com.netflix.priam.backup.AbstractBackupPath.BackupFileType;
 import com.netflix.priam.utils.RetryableCallable;
+import junit.framework.Assert;
+import mockit.Mock;
+import mockit.MockUp;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
 
 public class TestS3FileSystem
 {
-    private static Injector injector;
     private static final Logger logger = LoggerFactory.getLogger(TestS3FileSystem.class);
+    private static Injector injector;
     private static String FILE_PATH = "target/data/Keyspace1/Standard1/backups/201108082320/Keyspace1-Standard1-ia-1-Data.db";
 
     @BeforeClass
@@ -135,7 +133,7 @@ public class TestS3FileSystem
         Assert.assertEquals(1, MockAmazonS3Client.bconf.getRules().size());
         BucketLifecycleConfiguration.Rule rule = MockAmazonS3Client.bconf.getRules().get(0);
         logger.info(rule.getPrefix());
-        Assert.assertEquals("casstestbackup/"+FakeConfiguration.FAKE_REGION+"/fake-app/", rule.getPrefix());
+        Assert.assertEquals("casstestbackup/" + FakeConfiguration.FAKE_REGION + "/fake-app/", rule.getPrefix());
         Assert.assertEquals(5, rule.getExpirationInDays());
     }
 
@@ -148,11 +146,10 @@ public class TestS3FileSystem
         Assert.assertEquals(1, MockAmazonS3Client.bconf.getRules().size());
         BucketLifecycleConfiguration.Rule rule = MockAmazonS3Client.bconf.getRules().get(0);
         logger.info(rule.getPrefix());
-        Assert.assertEquals("casstestbackup/"+FakeConfiguration.FAKE_REGION+"/fake-app/", rule.getPrefix());
+        Assert.assertEquals("casstestbackup/" + FakeConfiguration.FAKE_REGION + "/fake-app/", rule.getPrefix());
         Assert.assertEquals(5, rule.getExpirationInDays());
     }
 
-    
     // Mock Nodeprobe class
     @Ignore
     public static class MockS3PartUploader extends MockUp<S3PartUploader>
@@ -162,6 +159,14 @@ public class TestS3FileSystem
         public static boolean partFailure = false;
         public static boolean completionFailure = false;
         private static List<PartETag> partETags;
+
+        public static void setup()
+        {
+            compattempts = 0;
+            partAttempts = 0;
+            partFailure = false;
+            completionFailure = false;
+        }
 
         @Mock
         public void $init(AmazonS3 client, DataPart dp, List<PartETag> partETags)
@@ -198,14 +203,6 @@ public class TestS3FileSystem
             logger.info("MOCK UPLOADING...");
             return uploadPart();
         }
-
-        public static void setup()
-        {
-            compattempts = 0;
-            partAttempts = 0;
-            partFailure = false;
-            completionFailure = false;
-        }
     }
 
     @Ignore
@@ -213,36 +210,41 @@ public class TestS3FileSystem
     {
         public static boolean ruleAvailable = false;
         public static BucketLifecycleConfiguration bconf = new BucketLifecycleConfiguration();
+
         @Mock
         public void $init()
         {
         }
 
         @Mock
-        public InitiateMultipartUploadResult initiateMultipartUpload(InitiateMultipartUploadRequest initiateMultipartUploadRequest) throws AmazonClientException, AmazonServiceException
+        public InitiateMultipartUploadResult initiateMultipartUpload(
+                InitiateMultipartUploadRequest initiateMultipartUploadRequest)
+                throws AmazonClientException, AmazonServiceException
         {
             return new InitiateMultipartUploadResult();
         }
-        
+
         @Mock
         public BucketLifecycleConfiguration getBucketLifecycleConfiguration(String bucketName)
         {
             List<BucketLifecycleConfiguration.Rule> rules = Lists.newArrayList();
-            if( ruleAvailable )
+            if (ruleAvailable)
             {
-                String clusterPath = "casstestbackup/"+FakeConfiguration.FAKE_REGION+"/fake-app/";                
-                BucketLifecycleConfiguration.Rule rule = new BucketLifecycleConfiguration.Rule().withExpirationInDays(5).withPrefix(clusterPath);
+                String clusterPath = "casstestbackup/" + FakeConfiguration.FAKE_REGION + "/fake-app/";
+                BucketLifecycleConfiguration.Rule rule = new BucketLifecycleConfiguration.Rule().withExpirationInDays(5)
+                        .withPrefix(clusterPath);
                 rule.setStatus(BucketLifecycleConfiguration.ENABLED);
                 rule.setId(clusterPath);
                 rules.add(rule);
-                
+
             }
             bconf.setRules(rules);
             return bconf;
         }
-        
+
         @Mock
-        public void setBucketLifecycleConfiguration(String bucketName,  BucketLifecycleConfiguration bucketLifecycleConfiguration)
+        public void setBucketLifecycleConfiguration(String bucketName,
+                BucketLifecycleConfiguration bucketLifecycleConfiguration)
         {
             bconf = bucketLifecycleConfiguration;
         }

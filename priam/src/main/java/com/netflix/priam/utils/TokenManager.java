@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,15 +15,15 @@
  */
 package com.netflix.priam.utils;
 
-import java.math.BigInteger;
-import java.util.List;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 
+import java.math.BigInteger;
+import java.util.List;
+
 public class TokenManager implements ITokenManager
-{    
+{
     public static final BigInteger MINIMUM_TOKEN = BigInteger.ZERO;
     public static final BigInteger MAXIMUM_TOKEN = new BigInteger("2").pow(127);
 
@@ -52,7 +52,7 @@ public class TokenManager implements ITokenManager
 
     /**
      * Creates a token given the following parameter
-     * 
+     *
      * @param my_slot
      *            -- Slot where this instance has to be.
      * @param rac_count
@@ -68,13 +68,13 @@ public class TokenManager implements ITokenManager
         int regionCount = rac_count * rac_size;
         return initialToken(regionCount, my_slot, regionOffset(region)).toString();
     }
-    
+
     @Override
     public String createToken(int my_slot, int totalCount, String region)
     {
         return initialToken(totalCount, my_slot, regionOffset(region)).toString();
     }
-    
+
     @Override
     public BigInteger findClosestToken(BigInteger tokenToSearch, List<BigInteger> tokenList)
     {

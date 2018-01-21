@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,9 @@ import java.util.concurrent.CancellationException;
 
 public abstract class RetryableCallable<T> implements Callable<T>
 {
-    private static final Logger logger = LoggerFactory.getLogger(RetryableCallable.class);
     public static final int DEFAULT_NUMBER_OF_RETRIES = 15;
     public static final long DEFAULT_WAIT_TIME = 100;
+    private static final Logger logger = LoggerFactory.getLogger(RetryableCallable.class);
     private int retrys;
     private long waitTime;
 
@@ -69,10 +69,10 @@ public abstract class RetryableCallable<T> implements Callable<T>
                 {
                     throw e;
                 }
-                logger.error(String.format("Retry #%d for: %s",retry, e.getMessage()));
+                logger.error(String.format("Retry #%d for: %s", retry, e.getMessage()));
 
-                if(++logCounter == 1)
-                		logger.error("Exception --> "+ ExceptionUtils.getStackTrace(e));
+                if (++logCounter == 1)
+                    logger.error("Exception --> " + ExceptionUtils.getStackTrace(e));
                 Thread.sleep(waitTime);
             }
             finally

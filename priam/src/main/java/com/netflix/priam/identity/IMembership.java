@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ public interface IMembership
 {
     /**
      * Get a list of Instances in the current RAC
-     * 
+     *
      * @return
      */
     public List<String> getRacMembership();
@@ -42,14 +42,14 @@ public interface IMembership
 
     /**
      * Number of RACs
-     * 
+     *
      * @return
      */
     public int getRacCount();
 
     /**
      * Add security group ACLs
-     * 
+     *
      * @param listIPs
      * @param from
      * @param to
@@ -58,7 +58,7 @@ public interface IMembership
 
     /**
      * Remove security group ACLs
-     * 
+     *
      * @param listIPs
      * @param from
      * @param to
@@ -67,14 +67,14 @@ public interface IMembership
 
     /**
      * List all ACLs
-     * 
+     *
      * @return
      */
     public List<String> listACL(int from, int to);
 
     /**
      * Expand the membership size by 1.
-     * 
+     *
      * @param count
      */
     public void expandRacMembership(int count);

@@ -1,16 +1,13 @@
 package com.netflix.priam.backup;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+import com.netflix.priam.utils.CassandraMonitor;
 import junit.framework.Assert;
 import mockit.Mock;
 import mockit.MockUp;
-
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -20,23 +17,23 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.netflix.priam.utils.CassandraMonitor;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Unit test case to test a snapshot backup and incremental backup
- * 
+ *
  * @author Praveen Sadhu
- * 
  */
 public class TestBackup
 {
+    private static final Logger logger = LoggerFactory.getLogger(TestBackup.class);
     private static Injector injector;
     private static FakeBackupFileSystem filesystem;
-    private static final Logger logger = LoggerFactory.getLogger(TestBackup.class);
     private static Set<String> expectedFiles = new HashSet<String>();
 
     @BeforeClass
@@ -44,49 +41,15 @@ public class TestBackup
     {
         new MockNodeProbe();
         injector = Guice.createInjector(new BRTestModule());
-        filesystem = (FakeBackupFileSystem) injector.getInstance(Key.get(IBackupFileSystem.class,Names.named("backup")));
+        filesystem = (FakeBackupFileSystem) injector
+                .getInstance(Key.get(IBackupFileSystem.class, Names.named("backup")));
     }
-    
+
     @AfterClass
     public static void cleanup() throws IOException
     {
         File file = new File("target/data");
         FileUtils.deleteQuietly(file);
-    }
-
-    @Test
-    public void testSnapshotBackup() throws Exception
-    {
-    		filesystem.setupTest();
-        SnapshotBackup backup = injector.getInstance(SnapshotBackup.class);
-        CassandraMonitor cassMon = injector.getInstance(CassandraMonitor.class);
-        cassMon.setIsCassadraStarted();
-        backup.execute();
-        Assert.assertEquals(3, filesystem.uploadedFiles.size());
-        System.out.println("***** "+filesystem.uploadedFiles.size());
-        boolean metafile = false;
-        for (String filePath : expectedFiles)
-            Assert.assertTrue(filesystem.uploadedFiles.contains(filePath));
-            
-        for(String filepath : filesystem.uploadedFiles){
-            if( filepath.endsWith("meta.json")){             
-                metafile = true;
-                break;
-            }
-        }        
-        Assert.assertTrue(metafile);
-    }
-
-    @Test
-    public void testIncrementalBackup() throws Exception
-    {
-    		filesystem.setupTest();
-        generateIncrementalFiles();
-        IncrementalBackup backup = injector.getInstance(IncrementalBackup.class);
-        backup.execute();
-        Assert.assertEquals(5, filesystem.uploadedFiles.size()); //uploaded files will now include the incremental audit log
-        for (String filePath : expectedFiles)
-            Assert.assertTrue(filesystem.uploadedFiles.contains(filePath));
     }
 
     public static void generateIncrementalFiles()
@@ -134,6 +97,44 @@ public class TestBackup
         FileUtils.deleteQuietly(dir);
     }
 
+    @Test
+    public void testSnapshotBackup() throws Exception
+    {
+        filesystem.setupTest();
+        SnapshotBackup backup = injector.getInstance(SnapshotBackup.class);
+        CassandraMonitor cassMon = injector.getInstance(CassandraMonitor.class);
+        cassMon.setIsCassadraStarted();
+        backup.execute();
+        Assert.assertEquals(3, filesystem.uploadedFiles.size());
+        System.out.println("***** " + filesystem.uploadedFiles.size());
+        boolean metafile = false;
+        for (String filePath : expectedFiles)
+            Assert.assertTrue(filesystem.uploadedFiles.contains(filePath));
+
+        for (String filepath : filesystem.uploadedFiles)
+        {
+            if (filepath.endsWith("meta.json"))
+            {
+                metafile = true;
+                break;
+            }
+        }
+        Assert.assertTrue(metafile);
+    }
+
+    @Test
+    public void testIncrementalBackup() throws Exception
+    {
+        filesystem.setupTest();
+        generateIncrementalFiles();
+        IncrementalBackup backup = injector.getInstance(IncrementalBackup.class);
+        backup.execute();
+        Assert.assertEquals(5,
+                filesystem.uploadedFiles.size()); //uploaded files will now include the incremental audit log
+        for (String filePath : expectedFiles)
+            Assert.assertTrue(filesystem.uploadedFiles.contains(filePath));
+    }
+
     // Mock Nodeprobe class
     @Ignore
     public static class MockNodeProbe extends MockUp<NodeProbe>
@@ -151,9 +152,11 @@ public class TestBackup
                 cleanup(tmp);
             // Setup
             Set<String> files = new HashSet<String>();
-            files.add("target/data/Keyspace1/Standard1/snapshots/" + snapshotName + "/Keyspace1-Standard1-ia-5-Data.db");
+            files.add(
+                    "target/data/Keyspace1/Standard1/snapshots/" + snapshotName + "/Keyspace1-Standard1-ia-5-Data.db");
             files.add("target/data/Keyspace1/Standard1/snapshots/201101081230/Keyspace1-Standard1-ia-6-Data.db");
-            files.add("target/data/Keyspace1/Standard1/snapshots/" + snapshotName + "/Keyspace1-Standard1-ia-7-Data.db");
+            files.add(
+                    "target/data/Keyspace1/Standard1/snapshots/" + snapshotName + "/Keyspace1-Standard1-ia-7-Data.db");
 
             expectedFiles.clear();
             for (String filePath : files)

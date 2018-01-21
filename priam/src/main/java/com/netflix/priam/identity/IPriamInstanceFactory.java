@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ public interface IPriamInstanceFactory<T>
      * @param appName the cluster name
      * @return a list of all nodes in {@code appName}
      */
-	public List<T> getAllIds(String appName);
+    public List<T> getAllIds(String appName);
 
     /**
      * Return the Cassandra server node with the given {@code id}.
@@ -55,7 +55,8 @@ public interface IPriamInstanceFactory<T>
      * @param token
      * @return the new node
      */
-    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac, Map<String, Object> volumes, String token);
+    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac,
+            Map<String, Object> volumes, String token);
 
     /**
      * Delete the server node from the registry

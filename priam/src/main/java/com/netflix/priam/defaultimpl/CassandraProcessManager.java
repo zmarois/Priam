@@ -1,5 +1,14 @@
 package com.netflix.priam.defaultimpl;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.netflix.priam.ICassandraProcess;
+import com.netflix.priam.IConfiguration;
+import com.netflix.priam.utils.Sleeper;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -7,18 +16,6 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Lists;
-
-import com.netflix.priam.utils.Sleeper;
-import org.apache.commons.lang3.StringUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.netflix.priam.ICassandraProcess;
-import com.netflix.priam.IConfiguration;
 
 public class CassandraProcessManager implements ICassandraProcess
 {
@@ -63,28 +60,31 @@ public class CassandraProcessManager implements ICassandraProcess
         startCass.redirectErrorStream(true);
         Process starter = startCass.start();
         logger.info("Starting cassandra server ....");
-		try {
-			sleeper.sleepQuietly(SCRIPT_EXECUTE_WAIT_TIME_MS);
-			int code = starter.exitValue();
-			if (code == 0)
-				logger.info("Cassandra server has been started");
-			else
-				logger.error(
-						"Unable to start cassandra server. Error code: {}",
-						code);
+        try
+        {
+            sleeper.sleepQuietly(SCRIPT_EXECUTE_WAIT_TIME_MS);
+            int code = starter.exitValue();
+            if (code == 0)
+                logger.info("Cassandra server has been started");
+            else
+                logger.error(
+                        "Unable to start cassandra server. Error code: {}",
+                        code);
 
-			logProcessOutput(starter);
-		} catch (Exception e) 
-                {
-                     logger.warn("Starting Cassandra has an error", e);
-		}
+            logProcessOutput(starter);
+        }
+        catch (Exception e)
+        {
+            logger.warn("Starting Cassandra has an error", e);
+        }
     }
 
     protected List<String> getStartCommand()
     {
         List<String> startCmd = new LinkedList<String>();
-        for(String param : config.getCassStartupScript().split(" ")){
-            if( StringUtils.isNotBlank(param))
+        for (String param : config.getCassStartupScript().split(" "))
+        {
+            if (StringUtils.isNotBlank(param))
                 startCmd.add(param);
         }
         return startCmd;
@@ -99,7 +99,7 @@ public class CassandraProcessManager implements ICassandraProcess
             logger.info("std_out: {}", stdOut);
             logger.info("std_err: {}", stdErr);
         }
-        catch(IOException ioe)
+        catch (IOException ioe)
         {
             logger.warn("Failed to read the std out/err streams", ioe);
         }
@@ -115,7 +115,6 @@ public class CassandraProcessManager implements ICassandraProcess
         return baos.toString();
     }
 
-
     public void stop() throws IOException
     {
         logger.info("Stopping cassandra server ....");
@@ -126,8 +125,9 @@ public class CassandraProcessManager implements ICassandraProcess
             command.add("-n");
             command.add("-E");
         }
-        for(String param : config.getCassStopScript().split(" ")){
-            if( StringUtils.isNotBlank(param))
+        for (String param : config.getCassStopScript().split(" "))
+        {
+            if (StringUtils.isNotBlank(param))
                 command.add(param);
         }
         ProcessBuilder stopCass = new ProcessBuilder(command);
@@ -147,7 +147,7 @@ public class CassandraProcessManager implements ICassandraProcess
                 logProcessOutput(stopper);
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             logger.warn("couldn't shut down cassandra correctly", e);
         }

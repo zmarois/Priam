@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.backup;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -38,6 +23,16 @@ import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.AbstractBackupPath.BackupFileType;
 import com.netflix.priam.backup.IMessageObserver.BACKUP_MESSAGE_TYPE;
 import com.netflix.priam.utils.RetryableCallable;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class to create a meta data file with a list of snapshot files. Also list the
@@ -46,17 +41,28 @@ import com.netflix.priam.utils.RetryableCallable;
 public class MetaData
 {
     private static final Logger logger = LoggerFactory.getLogger(MetaData.class);
-    private final Provider<AbstractBackupPath> pathFactory;
     static List<IMessageObserver> observers = new ArrayList<IMessageObserver>();
+    private final Provider<AbstractBackupPath> pathFactory;
     private final List<String> metaRemotePaths = new ArrayList<String>();
     private final IBackupFileSystem fs;
 
     @Inject
-    public MetaData(Provider<AbstractBackupPath> pathFactory, @Named("backup") IFileSystemContext backupFileSystemCtx, IConfiguration config)
+    public MetaData(Provider<AbstractBackupPath> pathFactory, @Named("backup") IFileSystemContext backupFileSystemCtx,
+            IConfiguration config)
 
     {
         this.pathFactory = pathFactory;
         this.fs = backupFileSystemCtx.getFileStrategy(config);
+    }
+
+    public static void addObserver(IMessageObserver observer)
+    {
+        observers.add(observer);
+    }
+
+    public static void removeObserver(IMessageObserver observer)
+    {
+        observers.remove(observer);
     }
 
     @SuppressWarnings("unchecked")
@@ -80,12 +86,13 @@ public class MetaData
         backupfile.time = backupfile.parseDate(snapshotName);
         try
         {
-			upload(backupfile);
+            upload(backupfile);
 
-			addToRemotePath(backupfile.getRemotePath());
-			if (metaRemotePaths.size() > 0) {
-				notifyObservers();
-			}          
+            addToRemotePath(backupfile.getRemotePath());
+            if (metaRemotePaths.size() > 0)
+            {
+                notifyObservers();
+            }
         }
         finally
         {
@@ -136,42 +143,42 @@ public class MetaData
             }
         }.call();
     }
-    
-    public File createTmpMetaFile() throws IOException{
+
+    public File createTmpMetaFile() throws IOException
+    {
         File metafile = File.createTempFile("meta", ".json");
         File destFile = new File(metafile.getParent(), "meta.json");
-        if(destFile.exists())
+        if (destFile.exists())
             destFile.delete();
         FileUtils.moveFile(metafile, destFile);
         return destFile;
     }
 
-	public static void addObserver(IMessageObserver observer) {
-		observers.add(observer);
-	}
+    public void notifyObservers()
+    {
+        for (IMessageObserver observer : observers)
+        {
+            if (observer != null)
+            {
+                logger.debug("Updating snapshot observers now ...");
+                observer.update(BACKUP_MESSAGE_TYPE.META, metaRemotePaths);
+            }
+            else
+                logger.info("Observer is Null, hence can not notify ...");
+        }
+    }
 
-	public static void removeObserver(IMessageObserver observer) {
-		observers.remove(observer);
-	}
+    protected void addToRemotePath(String remotePath)
+    {
+        metaRemotePaths.add(remotePath);
+    }
 
-	public void notifyObservers() {
-		for (IMessageObserver observer : observers) {
-			if (observer != null) {
-				logger.debug("Updating snapshot observers now ...");
-				observer.update(BACKUP_MESSAGE_TYPE.META, metaRemotePaths);
-			} else
-				logger.info("Observer is Null, hence can not notify ...");
-		}
-	}
+    public List<AbstractBackupPath> toJson(File input)
+    {
+        List<AbstractBackupPath> files = Lists.newArrayList();
+        try
+        {
 
-	protected void addToRemotePath(String remotePath) {
-		metaRemotePaths.add(remotePath);
-	}
-	
-    public List<AbstractBackupPath> toJson(File input) {
-    	List<AbstractBackupPath> files = Lists.newArrayList();
-    	try{
-    		
             JSONArray jsonObj = (JSONArray) new JSONParser().parse(new FileReader(input));
             for (int i = 0; i < jsonObj.size(); i++)
             {
@@ -179,13 +186,18 @@ public class MetaData
                 p.parseRemote((String) jsonObj.get(i));
                 files.add(p);
             }
-            
-    	} catch (Exception ex) {
-    		throw new RuntimeException("Error transforming file " + input.getAbsolutePath() + " to JSON format.  Msg:" + ex.getLocalizedMessage(), ex);
-    	}
 
-        logger.debug("Transformed file " + input.getAbsolutePath() + " to JSON.  Number of JSON elements: " + files.size());
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(
+                    "Error transforming file " + input.getAbsolutePath() + " to JSON format.  Msg:" + ex
+                            .getLocalizedMessage(), ex);
+        }
+
+        logger.debug(
+                "Transformed file " + input.getAbsolutePath() + " to JSON.  Number of JSON elements: " + files.size());
         return files;
-    }	
+    }
 
 }

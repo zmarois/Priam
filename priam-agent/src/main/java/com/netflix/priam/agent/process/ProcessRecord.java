@@ -1,6 +1,7 @@
 package com.netflix.priam.agent.process;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -10,14 +11,14 @@ import java.util.concurrent.Future;
  */
 public class ProcessRecord
 {
-    private final String            name;
-    private final String            id;
-    private final List<String>      arguments;
-    private final long              startTimeMs = System.currentTimeMillis();
+    private final String name;
+    private final String id;
+    private final List<String> arguments;
+    private final long startTimeMs = System.currentTimeMillis();
 
-    private volatile long           endTimeMs = 0;
-    private volatile long           stopAttemptMs = 0;
-    private volatile Future<Void>   executor;
+    private volatile long endTimeMs = 0;
+    private volatile long stopAttemptMs = 0;
+    private volatile Future<Void> executor;
 
     ProcessRecord(String name, String id, String[] arguments)
     {
@@ -26,14 +27,14 @@ public class ProcessRecord
         this.name = name;
     }
 
-    void setExecutor(Future<Void> executor)
-    {
-        this.executor = executor;
-    }
-
     Future<Void> getExecutor()
     {
         return executor;
+    }
+
+    void setExecutor(Future<Void> executor)
+    {
+        this.executor = executor;
     }
 
     void setEnd()

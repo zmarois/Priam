@@ -1,37 +1,28 @@
 package com.netflix.priam.backup;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.io.IOUtils;
-import org.json.simple.JSONArray;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.netflix.priam.aws.S3BackupPath;
-import com.netflix.priam.backup.AbstractBackupPath;
-import com.netflix.priam.backup.BackupRestoreException;
-import com.netflix.priam.backup.IBackupFileSystem;
 import com.netflix.priam.backup.AbstractBackupPath.BackupFileType;
+import org.apache.commons.io.IOUtils;
+import org.json.simple.JSONArray;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.*;
 
 @Singleton
 public class FakeBackupFileSystem implements IBackupFileSystem
 {
-    private List<AbstractBackupPath> flist;
     public Set<String> downloadedFiles;
     public Set<String> uploadedFiles;
     public String baseDir, region, clusterName;
-
     @Inject
     Provider<S3BackupPath> pathProvider;
+    private List<AbstractBackupPath> flist;
 
     public void setupTest(List<String> files)
     {
@@ -114,21 +105,23 @@ public class FakeBackupFileSystem implements IBackupFileSystem
     public Iterator<AbstractBackupPath> list(String bucket, Date start, Date till)
     {
         String[] paths = bucket.split(String.valueOf(S3BackupPath.PATH_SEP));
-        
-        if( paths.length > 1){
+
+        if (paths.length > 1)
+        {
             baseDir = paths[1];
             region = paths[2];
             clusterName = paths[3];
         }
-        
+
         List<AbstractBackupPath> tmpList = new ArrayList<AbstractBackupPath>();
         for (AbstractBackupPath path : flist)
         {
 
             if ((path.time.after(start) && path.time.before(till)) || path.time.equals(start)
-                && path.baseDir.equals(baseDir) && path.clusterName.equals(clusterName) && path.region.equals(region))
+                    && path.baseDir.equals(baseDir) && path.clusterName.equals(clusterName) && path.region
+                    .equals(region))
             {
-                 tmpList.add(path);
+                tmpList.add(path);
             }
         }
         return tmpList.iterator();
@@ -157,12 +150,13 @@ public class FakeBackupFileSystem implements IBackupFileSystem
     public void cleanup()
     {
         // TODO Auto-generated method stub
-        
+
     }
 
-	@Override
-	public void download(AbstractBackupPath path, OutputStream os,
-			String diskPath) throws BackupRestoreException {
+    @Override
+    public void download(AbstractBackupPath path, OutputStream os,
+            String diskPath) throws BackupRestoreException
+    {
 
         try
         {
@@ -192,7 +186,7 @@ public class FakeBackupFileSystem implements IBackupFileSystem
         {
             throw new BackupRestoreException(io.getMessage(), io);
         }
-		
-	}
+
+    }
 
 }

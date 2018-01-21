@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,9 @@
  */
 package com.netflix.priam.aws;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.IBackupFileSystem;
 import com.netflix.priam.scheduler.SimpleTimer;
@@ -22,13 +25,9 @@ import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.scheduler.TaskTimer;
 import com.netflix.priam.utils.RetryableCallable;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 /**
  * Updates the cleanup policy for the bucket
- * 
+ *
  */
 @Singleton
 public class UpdateCleanupPolicy extends Task
@@ -37,10 +36,15 @@ public class UpdateCleanupPolicy extends Task
     private IBackupFileSystem fs;
 
     @Inject
-    public UpdateCleanupPolicy(IConfiguration config,@Named("backup")IBackupFileSystem fs)
+    public UpdateCleanupPolicy(IConfiguration config, @Named("backup") IBackupFileSystem fs)
     {
         super(config);
-		this.fs = fs;
+        this.fs = fs;
+    }
+
+    public static TaskTimer getTimer()
+    {
+        return new SimpleTimer(JOBNAME);
     }
 
     @Override
@@ -62,11 +66,6 @@ public class UpdateCleanupPolicy extends Task
     public String getName()
     {
         return JOBNAME;
-    }
-
-    public static TaskTimer getTimer()
-    {
-        return new SimpleTimer(JOBNAME);
     }
 
 }

@@ -9,16 +9,41 @@ import java.util.Set;
  */
 public interface IDseConfiguration
 {
+    String getDseYamlLocation();
+
+    ;
+
+    String getDseDelegatingSnitch();
+
+    NodeType getNodeType();
+
+    boolean isAuditLogEnabled();
+
+    /* audit log configuration */
+
+    /**
+     * @return comma-delimited list of keyspace names
+     */
+    String getAuditLogExemptKeyspaces();
+
+    Set<AuditLogCategory> getAuditLogCategories();
+
     /**
      * Using Datastax's terms here for the different types of nodes.
      */
     public enum NodeType
     {
-        /** vanilla Cassandra node */
+        /**
+         * vanilla Cassandra node
+         */
         REAL_TIME_QUERY("cassandra"),
-        /** Hadoop node */
+        /**
+         * Hadoop node
+         */
         ANALYTIC("hadoop"),
-        /** Solr node */
+        /**
+         * Solr node
+         */
         SEARCH("solr");
 
         private final String altName;
@@ -30,33 +55,23 @@ public interface IDseConfiguration
 
         public static NodeType getByAltName(String altName)
         {
-            for(NodeType nt : NodeType.values())
+            for (NodeType nt : NodeType.values())
             {
-                if(nt.altName.toLowerCase().equals(altName))
+                if (nt.altName.toLowerCase().equals(altName))
                     return nt;
             }
             throw new IllegalArgumentException("Unknown node type: " + altName);
         }
-    };
+    }
 
-    String getDseYamlLocation();
-
-    String getDseDelegatingSnitch();
-
-    NodeType getNodeType();
-
-    /* audit log configuration */
-
-    boolean isAuditLogEnabled();
-
-    /** @return comma-delimited list of keyspace names  */
-    String getAuditLogExemptKeyspaces();
+    ;
 
     /**
      * DSE-defined audit logging categories
      * http://www.datastax.com/docs/datastax_enterprise3.1/security/data_auditing#data-auditing
      */
-    public enum AuditLogCategory { ADMIN, ALL, AUTH, DML, DDL, DCL, QUERY };
-
-    Set<AuditLogCategory> getAuditLogCategories();
+    public enum AuditLogCategory
+    {
+        ADMIN, ALL, AUTH, DML, DDL, DCL, QUERY
+    }
 }

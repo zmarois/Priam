@@ -1,13 +1,14 @@
 package com.netflix.priam.defaultimpl;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.google.common.io.Files;
 import com.netflix.priam.FakeConfiguration;
 import com.netflix.priam.IConfiguration;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+
 import static org.junit.Assert.assertEquals;
 
 public class StandardTunerTest

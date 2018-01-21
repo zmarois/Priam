@@ -25,7 +25,7 @@ public class TestTasks
         commandObject.put(FIELD_NAME, "flush");
         commandObject.put(FIELD_ARGUMENTS, new JSONArray());
 
-        JSONArray   commandTab = new JSONArray();
+        JSONArray commandTab = new JSONArray();
         commandTab.put(commandObject);
 
         MockAgentConfiguration configuration = new MockAgentConfiguration("localhost");
@@ -34,13 +34,14 @@ public class TestTasks
         storage.setValue(configuration, ProcessTask.ROW_KEY, "localhost", commandTab.toString());
 
         MockNodeStatus nodeStatus = new MockNodeStatus();
-        AgentProcessManager processManager = new AgentProcessManager(new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
+        AgentProcessManager processManager = new AgentProcessManager(
+                new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
         ProcessTask processTask = new ProcessTask(configuration, processManager, storage);
         processTask.execute();
 
         Assert.assertTrue(nodeStatus.getFlushLatch().await(5, TimeUnit.SECONDS));
 
-        for ( int i = 0; i < 5; ++i )
+        for (int i = 0; i < 5; ++i)
         {
             Assert.assertEquals(nodeStatus.getOperations().size(), 1);
             Assert.assertEquals(nodeStatus.getOperations().get(0), "flush");
@@ -64,13 +65,14 @@ public class TestTasks
     {
         MockAgentConfiguration configuration = new MockAgentConfiguration("localhost");
         MockNodeStatus nodeStatus = new MockNodeStatus();
-        AgentProcessManager processManager = new AgentProcessManager(new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
+        AgentProcessManager processManager = new AgentProcessManager(
+                new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
         try
         {
             processManager.startProcess("remove-node", "x", new String[0]);
             Assert.fail();
         }
-        catch ( IncorrectArgumentsException e )
+        catch (IncorrectArgumentsException e)
         {
             // correct
         }
@@ -89,7 +91,8 @@ public class TestTasks
         MockStorage storage = new MockStorage();
 
         MockAgentConfiguration configuration = new MockAgentConfiguration("localhost");
-        AgentProcessManager processManager = new AgentProcessManager(new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
+        AgentProcessManager processManager = new AgentProcessManager(
+                new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
         try
         {
             AgentTask agentTask = new AgentTask(configuration, processManager, nodeStatus, storage);
@@ -118,7 +121,7 @@ public class TestTasks
         commandObject.put(FIELD_NAME, "compact");
         commandObject.put(FIELD_ARGUMENTS, new JSONArray());
 
-        JSONArray   commandTab = new JSONArray();
+        JSONArray commandTab = new JSONArray();
         commandTab.put(commandObject);
 
         MockAgentConfiguration configuration = new MockAgentConfiguration("localhost");
@@ -127,7 +130,8 @@ public class TestTasks
         storage.setValue(configuration, ProcessTask.ROW_KEY, "localhost", commandTab.toString());
 
         MockNodeStatus nodeStatus = new MockNodeStatus();
-        AgentProcessManager processManager = new AgentProcessManager(new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
+        AgentProcessManager processManager = new AgentProcessManager(
+                new AgentProcessMap(AgentProcessMap.buildDefaultMap()), configuration, nodeStatus);
         ProcessTask processTask = new ProcessTask(configuration, processManager, storage);
         processTask.execute();
         Assert.assertTrue(processManager.closeAndWaitForCompletion(5, TimeUnit.SECONDS));

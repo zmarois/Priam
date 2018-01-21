@@ -14,12 +14,11 @@ import static com.netflix.priam.agent.tasks.ProcessTaskConstants.*;
  */
 public class ProcessTask
 {
+    @VisibleForTesting
+    public static final String ROW_KEY = "priam_agent_commands";
     private final AgentConfiguration configuration;
     private final AgentProcessManager processManager;
     private final Storage storage;
-
-    @VisibleForTesting
-    public static final String ROW_KEY = "priam_agent_commands";
 
     public ProcessTask(AgentConfiguration configuration, AgentProcessManager processManager, Storage storage)
     {
@@ -31,31 +30,31 @@ public class ProcessTask
     public void execute() throws Exception
     {
         String ourValue = storage.getValue(configuration, ROW_KEY, configuration.getThisHostName());
-        if ( ourValue == null )
+        if (ourValue == null)
         {
             return;
         }
 
         JSONArray tab = new JSONArray(ourValue);
-        for ( int i = 0; i < tab.length(); ++i )
+        for (int i = 0; i < tab.length(); ++i)
         {
             JSONObject commandObject = tab.getJSONObject(i);
 
             String command = commandObject.getString(FIELD_COMMAND);
             String id = commandObject.getString(FIELD_ID);
 
-            if ( command.equals(COMMAND_START) )
+            if (command.equals(COMMAND_START))
             {
                 String name = commandObject.getString(FIELD_NAME);
                 JSONArray argumentsTab = commandObject.getJSONArray(FIELD_ARGUMENTS);
                 String[] arguments = new String[argumentsTab.length()];
-                for ( int j = 0; j < argumentsTab.length(); ++j )
+                for (int j = 0; j < argumentsTab.length(); ++j)
                 {
                     arguments[j] = argumentsTab.getString(j);
                 }
                 processManager.startProcess(name, id, arguments);
             }
-            else if ( command.equals(COMMAND_STOP) )
+            else if (command.equals(COMMAND_STOP))
             {
                 processManager.stopProcess(id);
             }

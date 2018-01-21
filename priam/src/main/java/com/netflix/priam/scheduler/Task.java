@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,29 +31,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Task class that should be implemented by all cron tasks. Jobconf will contain
  * any instance specific data
- * 
+ *
  * NOTE: Constructor must not throw any exception. This will cause Quartz to set the job to failure
  */
 public abstract class Task implements Job, TaskMBean
 {
-    public STATE status = STATE.DONE;
-
-    public static enum STATE
-    {
-        ERROR, RUNNING, DONE
-    }
-    protected final IConfiguration config;
-    
     private static final Logger logger = LoggerFactory.getLogger(Task.class);
+    protected final IConfiguration config;
     private final AtomicInteger errors = new AtomicInteger();
     private final AtomicInteger executions = new AtomicInteger();
-
+    public STATE status = STATE.DONE;
     protected Task(IConfiguration config)
     {
         this(config, ManagementFactory.getPlatformMBeanServer());
     }
 
-    protected Task(IConfiguration config, MBeanServer mBeanServer) {
+    protected Task(IConfiguration config, MBeanServer mBeanServer)
+    {
         this.config = config;
         // TODO: don't do mbean registration here
         String mbeanName = "com.priam.scheduler:type=" + this.getClass().getName();
@@ -68,7 +62,6 @@ public abstract class Task implements Job, TaskMBean
         }
     }
 
-    
     /**
      * This method has to be implemented and cannot thow any exception.
      */
@@ -76,7 +69,7 @@ public abstract class Task implements Job, TaskMBean
     {
         // nothing to intialize
     }
-        
+
     public abstract void execute() throws Exception;
 
     /**
@@ -113,17 +106,22 @@ public abstract class Task implements Job, TaskMBean
     {
         return status;
     }
-    
+
     public int getErrorCount()
     {
         return errors.get();
     }
-    
+
     public int getExecutionCount()
     {
         return executions.get();
     }
 
     public abstract String getName();
+
+    public static enum STATE
+    {
+        ERROR, RUNNING, DONE
+    }
 
 }

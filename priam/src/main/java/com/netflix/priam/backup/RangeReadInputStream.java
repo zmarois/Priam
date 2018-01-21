@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,16 @@
  */
 package com.netflix.priam.backup;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.netflix.priam.utils.RetryableCallable;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * An implementation of InputStream that will request explicit byte ranges of the target file.
@@ -50,10 +49,10 @@ public class RangeReadInputStream extends InputStream
 
     public int read(final byte b[], final int off, final int len) throws IOException
     {
-//        logger.info(String.format("incoming buf req's size = %d, off = %d, len to read = %d, on file size %d, cur offset = %d path = %s",
-//                b.length, off, len, path.getSize(), offset, path.getRemotePath()));
+        //        logger.info(String.format("incoming buf req's size = %d, off = %d, len to read = %d, on file size %d, cur offset = %d path = %s",
+        //                b.length, off, len, path.getSize(), offset, path.getRemotePath()));
         final long fileSize = path.getSize();
-        if(fileSize > 0 && offset >= fileSize)
+        if (fileSize > 0 && offset >= fileSize)
             return -1;
         final long firstByte = offset;
         long curEndByte = firstByte + len;
@@ -62,7 +61,7 @@ public class RangeReadInputStream extends InputStream
         //need to subtract one as the call to getRange is inclusive
         //meaning if you want to download the first 10 bytes of a file, request bytes 0..9
         final long endByte = curEndByte - 1;
-//        logger.info(String.format("start byte = %d, end byte = %d", firstByte, endByte));
+        //        logger.info(String.format("start byte = %d, end byte = %d", firstByte, endByte));
         try
         {
             Integer cnt = new RetryableCallable<Integer>()
@@ -85,10 +84,10 @@ public class RangeReadInputStream extends InputStream
                             System.arraycopy(readBuf, 0, b, incomingOffet, rCnt);
                             readTotal += rCnt;
                             incomingOffet += rCnt;
-//                            logger.info("    local read cnt = " + rCnt + "Current Thread Name = "+Thread.currentThread().getName());
+                            //                            logger.info("    local read cnt = " + rCnt + "Current Thread Name = "+Thread.currentThread().getName());
                         }
-                        if(readTotal == 0 && rCnt == -1)
-                        		return -1;
+                        if (readTotal == 0 && rCnt == -1)
+                            return -1;
                         offset += readTotal;
                         return Integer.valueOf(readTotal);
                     }
@@ -98,10 +97,10 @@ public class RangeReadInputStream extends InputStream
                     }
                 }
             }.call();
-//            logger.info("read cnt = " + cnt);
+            //            logger.info("read cnt = " + cnt);
             return cnt.intValue();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             String msg = String.format("failed to read offset range %d-%d of file %s whose size is %d",
                     firstByte, endByte, path.getRemotePath(), path.getSize());

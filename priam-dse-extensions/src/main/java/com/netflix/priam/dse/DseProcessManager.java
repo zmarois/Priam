@@ -1,11 +1,11 @@
 package com.netflix.priam.dse;
 
-import java.util.List;
-
 import com.google.inject.Inject;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.defaultimpl.CassandraProcessManager;
 import com.netflix.priam.utils.Sleeper;
+
+import java.util.List;
 
 import static com.netflix.priam.dse.IDseConfiguration.NodeType;
 
@@ -27,9 +27,9 @@ public class DseProcessManager extends CassandraProcessManager
         cmd.add("cassandra");
 
         NodeType nodeType = dseConfig.getNodeType();
-        if(nodeType == NodeType.ANALYTIC)
+        if (nodeType == NodeType.ANALYTIC)
             cmd.add("-t");
-        else if(nodeType == NodeType.SEARCH)
+        else if (nodeType == NodeType.SEARCH)
             cmd.add("-s");
 
         return cmd;

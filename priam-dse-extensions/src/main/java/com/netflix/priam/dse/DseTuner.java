@@ -1,20 +1,22 @@
 package com.netflix.priam.dse;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.*;
-
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.defaultimpl.StandardTuner;
 import org.apache.cassandra.io.util.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import static com.netflix.priam.dse.IDseConfiguration.NodeType;
 import static org.apache.cassandra.locator.SnitchProperties.RACKDC_PROPERTY_FILENAME;
 
@@ -25,12 +27,10 @@ import static org.apache.cassandra.locator.SnitchProperties.RACKDC_PROPERTY_FILE
  */
 public class DseTuner extends StandardTuner
 {
-    private static final Logger logger = LoggerFactory.getLogger(DseTuner.class);
     protected static final String AUDIT_LOG_FILE = "/conf/log4j-server.properties";
-
     protected static final String PRIMARY_AUDIT_LOG_ENTRY = "log4j.logger.DataAudit";
     protected static final String AUDIT_LOG_ADDITIVE_ENTRY = "log4j.additivity.DataAudit";
-
+    private static final Logger logger = LoggerFactory.getLogger(DseTuner.class);
     private final IDseConfiguration dseConfig;
 
     @Inject
@@ -64,7 +64,7 @@ public class DseTuner extends StandardTuner
     private void writeCassandraSnitchProperties()
     {
         final NodeType nodeType = dseConfig.getNodeType();
-        if(nodeType == NodeType.REAL_TIME_QUERY)
+        if (nodeType == NodeType.REAL_TIME_QUERY)
             return;
 
         Reader reader = null;
@@ -75,9 +75,9 @@ public class DseTuner extends StandardTuner
             Properties properties = new Properties();
             properties.load(reader);
             String suffix = "";
-            if(nodeType == NodeType.SEARCH)
+            if (nodeType == NodeType.SEARCH)
                 suffix = "_solr";
-            if(nodeType == NodeType.ANALYTIC)
+            if (nodeType == NodeType.ANALYTIC)
                 suffix = "_hadoop";
             properties.put("dc_suffix", suffix);
             properties.store(new FileWriter(filePath), "");
@@ -117,39 +117,42 @@ public class DseTuner extends StandardTuner
             }
             catch (IllegalStateException ise)
             {
-                logger.warn(String.format("cannot locate %s property, will ignore any audit log updating", PRIMARY_AUDIT_LOG_ENTRY));
+                logger.warn(String.format("cannot locate %s property, will ignore any audit log updating",
+                        PRIMARY_AUDIT_LOG_ENTRY));
                 return;
             }
 
-            for(String line : lines)
+            for (String line : lines)
             {
-                if(line.contains(loggerPrefix) || line.contains(PRIMARY_AUDIT_LOG_ENTRY) || line.contains(AUDIT_LOG_ADDITIVE_ENTRY))
+                if (line.contains(loggerPrefix) || line.contains(PRIMARY_AUDIT_LOG_ENTRY) || line
+                        .contains(AUDIT_LOG_ADDITIVE_ENTRY))
                 {
-                    if(dseConfig.isAuditLogEnabled())
+                    if (dseConfig.isAuditLogEnabled())
                     {
                         //first, check to see if we need to uncomment the line
-                        while(line.startsWith("#"))
+                        while (line.startsWith("#"))
                         {
                             line = line.substring(1);
                         }
 
                         //next, check if we need to change the prop's value
-                        if(line.contains("ActiveCategories"))
+                        if (line.contains("ActiveCategories"))
                         {
                             final String cats = Joiner.on(",").join(dseConfig.getAuditLogCategories());
                             line = line.substring(0, line.indexOf("=") + 1).concat(cats);
                         }
-                        else if(line.contains("ExemptKeyspaces"))
+                        else if (line.contains("ExemptKeyspaces"))
                         {
-                            line = line.substring(0, line.indexOf("=") + 1).concat(dseConfig.getAuditLogExemptKeyspaces());
+                            line = line.substring(0, line.indexOf("=") + 1)
+                                    .concat(dseConfig.getAuditLogExemptKeyspaces());
                         }
                     }
                     else
                     {
-                        if(line.startsWith("#"))
+                        if (line.startsWith("#"))
                         {
                             //make sure there's only one # at the beginning of the line
-                            while(line.charAt(1) == '#')
+                            while (line.charAt(1) == '#')
                                 line = line.substring(1);
                         }
                         else
@@ -174,12 +177,12 @@ public class DseTuner extends StandardTuner
 
     private final String findAuditLoggerName(List<String> lines) throws IllegalStateException
     {
-        for(final String l : lines)
+        for (final String l : lines)
         {
-            if(l.contains(PRIMARY_AUDIT_LOG_ENTRY))
+            if (l.contains(PRIMARY_AUDIT_LOG_ENTRY))
             {
                 final String[] valTokens = l.split(",");
-                return valTokens[valTokens.length -1].trim();
+                return valTokens[valTokens.length - 1].trim();
             }
         }
         throw new IllegalStateException();

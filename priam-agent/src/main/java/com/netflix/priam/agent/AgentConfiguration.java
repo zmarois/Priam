@@ -15,7 +15,7 @@ public interface AgentConfiguration
      *
      * @return keyspace
      */
-    public Keyspace                     getKeyspace();
+    public Keyspace getKeyspace();
 
     /**
      * Column family to use for storing/reading agent JSON data
@@ -30,7 +30,7 @@ public interface AgentConfiguration
      *
      * @return ttl
      */
-    public int                          getCassandraTtl();
+    public int getCassandraTtl();
 
     /**
      * Max number of threads to allow for processes. i.e. the maximum number of concurrent
@@ -38,19 +38,19 @@ public interface AgentConfiguration
      *
      * @return max
      */
-    public int                          getMaxProcessThreads();
+    public int getMaxProcessThreads();
 
     /**
      * The max number of completed processes to keep track of
      *
      * @return max
      */
-    public int                          getMaxCompletedProcesses();
+    public int getMaxCompletedProcesses();
 
     /**
      * This VM's hostname. This is used as the column name when storing agent data
      *
      * @return hostname
      */
-    public String                       getThisHostName();
+    public String getThisHostName();
 }

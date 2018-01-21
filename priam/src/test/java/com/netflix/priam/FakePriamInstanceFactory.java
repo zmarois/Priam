@@ -1,20 +1,15 @@
 package com.netflix.priam;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.netflix.priam.IConfiguration;
 import com.netflix.priam.identity.IPriamInstanceFactory;
 import com.netflix.priam.identity.PriamInstance;
 
+import java.util.*;
+
 public class FakePriamInstanceFactory implements IPriamInstanceFactory<PriamInstance>
 {
-    private final Map<Integer,PriamInstance> instances = Maps.newHashMap();
+    private final Map<Integer, PriamInstance> instances = Maps.newHashMap();
     private final IConfiguration config;
 
     @Inject
@@ -28,14 +23,16 @@ public class FakePriamInstanceFactory implements IPriamInstanceFactory<PriamInst
     {
         return new ArrayList<PriamInstance>(instances.values());
     }
-    
+
     @Override
-    public PriamInstance getInstance(String appName, String dc, int id) {
-      return instances.get(id);
+    public PriamInstance getInstance(String appName, String dc, int id)
+    {
+        return instances.get(id);
     }
 
     @Override
-    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac, Map<String, Object> volumes, String payload)
+    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac,
+            Map<String, Object> volumes, String payload)
     {
         PriamInstance ins = new PriamInstance();
         ins.setApp(app);

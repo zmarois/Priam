@@ -1,12 +1,12 @@
 package com.netflix.priam.utils;
 
+import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
 import static com.netflix.priam.utils.TokenManager.MAXIMUM_TOKEN;
 import static com.netflix.priam.utils.TokenManager.MINIMUM_TOKEN;
 import static org.junit.Assert.assertEquals;
@@ -15,7 +15,7 @@ import static org.junit.Assert.assertFalse;
 public class TokenManagerTest
 {
     private static final TokenManager tokenManager = new TokenManager();
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void initialToken_zeroSize()
     {
@@ -50,9 +50,10 @@ public class TokenManagerTest
         assertEquals(MINIMUM_TOKEN.add(BigInteger.valueOf(Integer.MAX_VALUE)),
                 tokenManager.initialToken(256, 0, Integer.MAX_VALUE));
     }
-    
+
     @Test
-    public void initialToken_cannotExceedMaximumToken() {
+    public void initialToken_cannotExceedMaximumToken()
+    {
         final int maxRingSize = Integer.MAX_VALUE;
         final int maxPosition = maxRingSize - 1;
         final int maxOffset = Integer.MAX_VALUE;
@@ -63,9 +64,9 @@ public class TokenManagerTest
     public void createToken()
     {
         assertEquals(MAXIMUM_TOKEN.divide(BigInteger.valueOf(8 * 32))
-                .multiply(BigInteger.TEN)
-                .add(BigInteger.valueOf(tokenManager.regionOffset("region")))
-                .toString(),
+                        .multiply(BigInteger.TEN)
+                        .add(BigInteger.valueOf(tokenManager.regionOffset("region")))
+                        .toString(),
                 tokenManager.createToken(10, 8, 32, "region"));
     }
 

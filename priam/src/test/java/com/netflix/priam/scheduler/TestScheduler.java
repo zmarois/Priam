@@ -75,13 +75,19 @@ public class TestScheduler
     @Singleton
     public static class SingleTestTask extends Task
     {
+        public static int count = 0;
+
         @Inject
         public SingleTestTask(IConfiguration config)
         {
             super(config, MBeanServerFactory.newMBeanServer());
         }
 
-        public static int count =0;
+        public static TaskTimer getTimer()
+        {
+            return new SimpleTimer("test2", 11L);
+        }
+
         @Override
         public void execute()
         {
@@ -103,11 +109,6 @@ public class TestScheduler
         public String getName()
         {
             return "test2";
-        }
-
-        public static TaskTimer getTimer()
-        {
-            return new SimpleTimer("test2", 11L);
         }
     }
 }

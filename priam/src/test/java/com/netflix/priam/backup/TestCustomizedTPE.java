@@ -1,16 +1,16 @@
 package com.netflix.priam.backup;
 
-import static junit.framework.Assert.*;
+import com.netflix.priam.scheduler.BlockingSubmitThreadPoolExecutor;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.netflix.priam.scheduler.BlockingSubmitThreadPoolExecutor;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 public class TestCustomizedTPE
 {
@@ -18,7 +18,8 @@ public class TestCustomizedTPE
     private static final int MAX_THREADS = 10;
     // timeout 1 sec
     private static final int TIME_OUT = 10 * 1000;
-    private BlockingSubmitThreadPoolExecutor startTest = new BlockingSubmitThreadPoolExecutor(MAX_THREADS, new LinkedBlockingDeque<Runnable>(MAX_THREADS), TIME_OUT);
+    private BlockingSubmitThreadPoolExecutor startTest = new BlockingSubmitThreadPoolExecutor(MAX_THREADS,
+            new LinkedBlockingDeque<Runnable>(MAX_THREADS), TIME_OUT);
 
     @Test
     public void testExecutor() throws InterruptedException
@@ -55,7 +56,7 @@ public class TestCustomizedTPE
                     public Void call() throws Exception
                     {
                         logger.info("Sleeping for 2 * timeout.");
-                        Thread.sleep(TIME_OUT * 2);                        
+                        Thread.sleep(TIME_OUT * 2);
                         return null;
                     }
                 });

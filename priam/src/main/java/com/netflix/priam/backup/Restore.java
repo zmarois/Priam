@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.backup;
-
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -41,7 +30,16 @@ import com.netflix.priam.scheduler.TaskTimer;
 import com.netflix.priam.utils.RetryableCallable;
 import com.netflix.priam.utils.Sleeper;
 import com.netflix.priam.utils.SystemUtils;
-import com.netflix.priam.utils.ThreadSleeper;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Main class for restoring data from backup
@@ -62,10 +60,24 @@ public class Restore extends AbstractRestore
     private InstanceIdentity id;
 
     @Inject
-    public Restore(IConfiguration config, @Named("backup")IBackupFileSystem fs,Sleeper sleeper, ICassandraProcess cassProcess)
+    public Restore(IConfiguration config, @Named("backup") IBackupFileSystem fs, Sleeper sleeper,
+            ICassandraProcess cassProcess)
     {
         super(config, fs, JOBNAME, sleeper);
         this.cassProcess = cassProcess;
+    }
+
+    public static TaskTimer getTimer()
+    {
+        return new SimpleTimer(JOBNAME);
+    }
+
+    public static boolean isRestoreEnabled(IConfiguration conf)
+    {
+        boolean isRestoreMode = StringUtils.isNotBlank(conf.getRestoreSnapshot());
+        boolean isBackedupRac = (CollectionUtils.isEmpty(conf.getBackupRacs()) || conf.getBackupRacs()
+                .contains(conf.getRac()));
+        return (isRestoreMode && isBackedupRac);
     }
 
     @Override
@@ -131,22 +143,23 @@ public class Restore extends AbstractRestore
         while (backupfiles.hasNext())
         {
             AbstractBackupPath path = backupfiles.next();
-            if (path.type == BackupFileType.META) {
-            	//Since there are now meta file for incrementals as well as snapshot, we need to find the correct one (i.e. the snapshot meta file (meta.json))
-            	if (path.getFileName().equalsIgnoreCase("meta.json")) {
-                    metas.add(path);            		
-            	}
-            	
+            if (path.type == BackupFileType.META)
+            {
+                //Since there are now meta file for incrementals as well as snapshot, we need to find the correct one (i.e. the snapshot meta file (meta.json))
+                if (path.getFileName().equalsIgnoreCase("meta.json"))
+                {
+                    metas.add(path);
+                }
+
             }
         }
-        
+
         if (metas.size() == 0)
         {
-        	logger.info("[cass_backup] No snapshot meta file found, Restore Failed.");
-        	assert false : "[cass_backup] No snapshots found, Restore Failed.";
-        	return;
+            logger.info("[cass_backup] No snapshot meta file found, Restore Failed.");
+            assert false : "[cass_backup] No snapshots found, Restore Failed.";
+            return;
         }
-        
 
         Collections.sort(metas);
         AbstractBackupPath meta = Iterators.getLast(metas.iterator());
@@ -160,24 +173,19 @@ public class Restore extends AbstractRestore
         // Download incrementals (SST).
         Iterator<AbstractBackupPath> incrementals = fs.list(prefix, meta.time, endTime);
         download(incrementals, BackupFileType.SST);
-        
+
         //Downloading CommitLogs
         if (config.isBackingUpCommitLogs())  //TODO: will change to isRestoringCommitLogs()
-        {	
-        	logger.info("Delete all backuped commitlog files in " + config.getBackupCommitLogLocation());
-        	SystemUtils.cleanupDir(config.getBackupCommitLogLocation(), null);
-        	     
-        	logger.info("Delete all commitlog files in " + config.getCommitLogLocation());
-        	SystemUtils.cleanupDir(config.getCommitLogLocation(), null);
-        	
-        	Iterator<AbstractBackupPath> commitLogPathIterator = fs.list(prefix, meta.time, endTime); 
-        	download(commitLogPathIterator, BackupFileType.CL, config.maxCommitLogsRestore());       	
-        }
-    }
+        {
+            logger.info("Delete all backuped commitlog files in " + config.getBackupCommitLogLocation());
+            SystemUtils.cleanupDir(config.getBackupCommitLogLocation(), null);
 
-    public static TaskTimer getTimer()
-    {
-        return new SimpleTimer(JOBNAME);
+            logger.info("Delete all commitlog files in " + config.getCommitLogLocation());
+            SystemUtils.cleanupDir(config.getCommitLogLocation(), null);
+
+            Iterator<AbstractBackupPath> commitLogPathIterator = fs.list(prefix, meta.time, endTime);
+            download(commitLogPathIterator, BackupFileType.CL, config.maxCommitLogsRestore());
+        }
     }
 
     @Override
@@ -189,13 +197,6 @@ public class Restore extends AbstractRestore
     public int getActiveCount()
     {
         return (executor == null) ? 0 : executor.getActiveCount();
-    }
-
-    public static boolean isRestoreEnabled(IConfiguration conf)
-    {
-        boolean isRestoreMode = StringUtils.isNotBlank(conf.getRestoreSnapshot());
-        boolean isBackedupRac = (CollectionUtils.isEmpty(conf.getBackupRacs()) || conf.getBackupRacs().contains(conf.getRac()));
-        return (isRestoreMode && isBackedupRac);
     }
 
 }

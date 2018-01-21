@@ -14,12 +14,7 @@ import java.io.Closeable;
 import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
 
 /**
  * Manages running processes in the agent
@@ -38,16 +33,18 @@ public class AgentProcessManager implements Closeable
     private final Deque<ProcessRecord> completedProcesses = new LinkedBlockingDeque<ProcessRecord>();
 
     /**
-     * @param processMap map from process name to process provider
-     * @param configuration config
+     * @param processMap       map from process name to process provider
+     * @param configuration    config
      * @param nodeToolProvider provider for the Node Tool operations
      */
-    public AgentProcessManager(AgentProcessMap processMap, AgentConfiguration configuration, Provider<NodeStatus> nodeToolProvider)
+    public AgentProcessManager(AgentProcessMap processMap, AgentConfiguration configuration,
+            Provider<NodeStatus> nodeToolProvider)
     {
         this.processMap = processMap;
         this.configuration = configuration;
         this.nodeToolProvider = nodeToolProvider;
-        executorService = Executors.newFixedThreadPool(configuration.getMaxProcessThreads(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("AgentProcessManager-%d").build());
+        executorService = Executors.newFixedThreadPool(configuration.getMaxProcessThreads(),
+                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("AgentProcessManager-%d").build());
     }
 
     /**
@@ -67,7 +64,7 @@ public class AgentProcessManager implements Closeable
      */
     public List<ProcessRecord> getCompletedProcesses()
     {
-        synchronized(completedProcesses)
+        synchronized (completedProcesses)
         {
             return ImmutableList.copyOf(completedProcesses);
         }
@@ -76,8 +73,8 @@ public class AgentProcessManager implements Closeable
     /**
      * Start a process
      *
-     * @param name name of the process to start (must exist in the process map)
-     * @param id ID of the process. IDs must be unique. If there is already a process running with this ID this method will not start a new process.
+     * @param name      name of the process to start (must exist in the process map)
+     * @param id        ID of the process. IDs must be unique. If there is already a process running with this ID this method will not start a new process.
      * @param arguments arguments for the processes
      * @return true if a new process was started
      * @throws Exception errors
@@ -87,14 +84,15 @@ public class AgentProcessManager implements Closeable
         ProcessRecord newProcessRecord = new ProcessRecord(name, id, arguments);
         ProcessRecord oldProcessRecord = activeProcesses.putIfAbsent(id, newProcessRecord);
         final ProcessRecord useProcessRecord = (oldProcessRecord != null) ? oldProcessRecord : newProcessRecord;
-        synchronized(useProcessRecord)
+        synchronized (useProcessRecord)
         {
-            if ( useProcessRecord.getExecutor() == null )
+            if (useProcessRecord.getExecutor() == null)
             {
-                AgentProcess    process = processMap.newProcess(name);
+                AgentProcess process = processMap.newProcess(name);
                 validateArguments(process, arguments);
 
-                Future<Void>    future = executorService.submit(new Executor(this, id, process, nodeToolProvider.get(), arguments));
+                Future<Void> future = executorService
+                        .submit(new Executor(this, id, process, nodeToolProvider.get(), arguments));
                 useProcessRecord.setExecutor(future);
                 return true;
             }
@@ -111,16 +109,16 @@ public class AgentProcessManager implements Closeable
     public boolean stopProcess(String id)
     {
         final ProcessRecord processRecord = activeProcesses.get(id);
-        if ( processRecord == null )
+        if (processRecord == null)
         {
             return false;
         }
 
-        synchronized(processRecord)
+        synchronized (processRecord)
         {
             processRecord.noteStopAttempt();
             Future<Void> executor = processRecord.getExecutor();
-            if ( executor != null )
+            if (executor != null)
             {
                 executor.cancel(true);
             }
@@ -132,7 +130,7 @@ public class AgentProcessManager implements Closeable
      * Stop all process and block until they complete or until time runs out
      *
      * @param timeout max time to wait for process completion
-     * @param unit time unit
+     * @param unit    time unit
      * @return true if all processes terminated
      * @throws InterruptedException if interrupted
      */
@@ -151,27 +149,27 @@ public class AgentProcessManager implements Closeable
     void removeProcess(String id)
     {
         final ProcessRecord processRecord = activeProcesses.remove(id);
-        if ( processRecord == null )
+        if (processRecord == null)
         {
             return;
         }
-        synchronized(processRecord)
+        synchronized (processRecord)
         {
             processRecord.setEnd();
         }
 
-        synchronized(completedProcesses)
+        synchronized (completedProcesses)
         {
             try
             {
-                while ( completedProcesses.size() >= configuration.getMaxCompletedProcesses() )
+                while (completedProcesses.size() >= configuration.getMaxCompletedProcesses())
                 {
                     completedProcesses.removeLast();
                 }
             }
-            catch ( NoSuchElementException ignore )
+            catch (NoSuchElementException ignore)
             {
-                if(logger.isTraceEnabled())
+                if (logger.isTraceEnabled())
                     logger.trace("nothing left in list");
             }
             completedProcesses.addFirst(processRecord);
@@ -181,9 +179,11 @@ public class AgentProcessManager implements Closeable
     private void validateArguments(AgentProcess process, String[] arguments) throws IncorrectArgumentsException
     {
         ProcessMetaData metaData = process.getMetaData();
-        if ( arguments.length < metaData.getMinArguments() )
+        if (arguments.length < metaData.getMinArguments())
         {
-            throw new IncorrectArgumentsException("Expected at least " + metaData.getMinArguments() + " arguments but was only provided " + arguments.length);
+            throw new IncorrectArgumentsException(
+                    "Expected at least " + metaData.getMinArguments() + " arguments but was only provided "
+                            + arguments.length);
         }
     }
 }

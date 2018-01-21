@@ -9,6 +9,7 @@ import com.netflix.priam.agent.storage.Storage;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.json.simple.JSONArray;
+
 import javax.inject.Provider;
 
 /**
@@ -16,15 +17,15 @@ import javax.inject.Provider;
  */
 public class AgentTask
 {
+    private static final String ROW_KEY = "priam_agent_instances";
+    private static final int VERSION = 0x00010001;
     private final AgentConfiguration configuration;
     private final AgentProcessManager processManager;
     private final Provider<NodeStatus> nodeToolProvider;
     private final Storage storage;
 
-    private static final String ROW_KEY = "priam_agent_instances";
-    private static final int VERSION = 0x00010001;
-
-    public AgentTask(AgentConfiguration configuration, AgentProcessManager processManager, Provider<NodeStatus> nodeToolProvider, Storage storage)
+    public AgentTask(AgentConfiguration configuration, AgentProcessManager processManager,
+            Provider<NodeStatus> nodeToolProvider, Storage storage)
     {
         this.configuration = configuration;
         this.processManager = processManager;
@@ -59,7 +60,7 @@ public class AgentTask
     private JSONArray getCompletedProcesses() throws JSONException
     {
         JSONArray tab = new JSONArray();
-        for ( ProcessRecord processRecord : processManager.getCompletedProcesses() )
+        for (ProcessRecord processRecord : processManager.getCompletedProcesses())
         {
             JSONObject json = new JSONObject();
             addProcessCommon(processRecord, json);
@@ -72,7 +73,7 @@ public class AgentTask
     private JSONArray getActiveProcesses() throws JSONException
     {
         JSONArray tab = new JSONArray();
-        for ( ProcessRecord processRecord : processManager.getActiveProcesses() )
+        for (ProcessRecord processRecord : processManager.getActiveProcesses())
         {
             JSONObject json = new JSONObject();
             addProcessCommon(processRecord, json);

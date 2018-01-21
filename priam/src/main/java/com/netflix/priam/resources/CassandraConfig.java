@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,20 @@
  */
 package com.netflix.priam.resources;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.inject.Inject;
+import com.netflix.priam.PriamServer;
+import com.netflix.priam.identity.DoubleRing;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.netflix.priam.PriamServer;
-import com.netflix.priam.identity.DoubleRing;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * This servlet will provide the configuration API service as and when Cassandra
@@ -105,7 +103,6 @@ public class CassandraConfig
         }
     }
 
-    
     @GET
     @Path("/get_replaced_ip")
     public Response getReplacedIp()
@@ -120,8 +117,7 @@ public class CassandraConfig
             return Response.serverError().build();
         }
     }
-    
-    
+
     @GET
     @Path("/double_ring")
     public Response doubleRing() throws IOException, ClassNotFoundException

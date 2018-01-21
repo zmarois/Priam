@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.priam.backup;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.io.IOUtils;
-import org.bouncycastle.util.io.Streams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.AbstractBackupPath.BackupFileType;
@@ -42,6 +24,17 @@ import com.netflix.priam.scheduler.Task;
 import com.netflix.priam.utils.FifoQueue;
 import com.netflix.priam.utils.RetryableCallable;
 import com.netflix.priam.utils.Sleeper;
+import org.apache.commons.io.IOUtils;
+import org.bouncycastle.util.io.Streams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.math.BigInteger;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
  * A means to perform a restore.  This class contains the following characteristics:
@@ -51,21 +44,19 @@ import com.netflix.priam.utils.Sleeper;
  */
 public abstract class AbstractRestore extends Task
 {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractRestore.class);
-    private static final String SYSTEM_KEYSPACE = "system";
     // keeps track of the last few download which was executed.
     // TODO fix the magic number of 1000 => the idea of 80% of 1000 files limit per s3 query
     protected static final FifoQueue<AbstractBackupPath> tracker = new FifoQueue<AbstractBackupPath>(800);
-    private AtomicInteger count = new AtomicInteger();
+    private static final Logger logger = LoggerFactory.getLogger(AbstractRestore.class);
+    private static final String SYSTEM_KEYSPACE = "system";
+    public static BigInteger restoreToken;
     protected final IBackupFileSystem fs;
-    
+
     protected final IConfiguration config;
     protected final ThreadPoolExecutor executor;
-
-    public static BigInteger restoreToken;
-    
     protected final Sleeper sleeper;
-    
+    private AtomicInteger count = new AtomicInteger();
+
     public AbstractRestore(IConfiguration config, IBackupFileSystem fs, String name, Sleeper sleeper)
     {
         super(config);
@@ -83,55 +74,37 @@ public abstract class AbstractRestore extends Task
             AbstractBackupPath temp = fsIterator.next();
             if (temp.type == BackupFileType.SST && tracker.contains(temp))
                 continue;
-            
+
             if (temp.getType() == filter)
-            {   
-            	File localFileHandler = temp.newRestoreFile();
-            	logger.debug("Created local file name: " + localFileHandler.getAbsolutePath() + File.pathSeparator + localFileHandler.getName());
+            {
+                File localFileHandler = temp.newRestoreFile();
+                logger.debug("Created local file name: " + localFileHandler.getAbsolutePath() + File.pathSeparator
+                        + localFileHandler.getName());
                 download(temp, localFileHandler);
-            }   
+            }
         }
         waitToComplete();
     }
-    
-    public class BoundedList<E> extends LinkedList<E> {
 
-        private final int limit;
-
-        public BoundedList(int limit) {
-            this.limit = limit;
-        }
-
-        @Override
-        public boolean add(E o) {
-            super.add(o);
-            while (size() > limit) 
-            { 
-            	super.remove(); 
-            }
-            return true;
-        }
-    }
-    
     protected void download(Iterator<AbstractBackupPath> fsIterator, BackupFileType filter, int lastN) throws Exception
     {
-    	if (fsIterator == null)
-    		return;
-    	
-    	BoundedList bl = new BoundedList(lastN);
-    	while (fsIterator.hasNext())
-    	{
-    		AbstractBackupPath temp = fsIterator.next();
+        if (fsIterator == null)
+            return;
+
+        BoundedList bl = new BoundedList(lastN);
+        while (fsIterator.hasNext())
+        {
+            AbstractBackupPath temp = fsIterator.next();
             if (temp.type == BackupFileType.SST && tracker.contains(temp))
                 continue;
-            
+
             if (temp.getType() == filter)
-            {   
-            	bl.add(temp);
-            }  
-    	}
-    	
-    	download(bl.iterator(), filter);
+            {
+                bl.add(temp);
+            }
+        }
+
+        download(bl.iterator(), filter);
     }
 
     /**
@@ -139,7 +112,8 @@ public abstract class AbstractRestore extends Task
      */
     public void download(final AbstractBackupPath path, final File restoreLocation) throws Exception
     {
-        if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(path.keyspace) || path.keyspace.equals(SYSTEM_KEYSPACE)))
+        if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(path.keyspace)
+                || path.keyspace.equals(SYSTEM_KEYSPACE)))
             return;
         count.incrementAndGet();
         executor.submit(new RetryableCallable<Integer>()
@@ -148,136 +122,160 @@ public abstract class AbstractRestore extends Task
             public Integer retriableCall() throws Exception
             {
                 logger.info("Downloading file: " + path.getRemotePath() + " to: " + restoreLocation.getAbsolutePath());
-                fs.download(path, new FileOutputStream(restoreLocation),restoreLocation.getAbsolutePath());
+                fs.download(path, new FileOutputStream(restoreLocation), restoreLocation.getAbsolutePath());
                 tracker.adjustAndAdd(path);
                 // TODO: fix me -> if there is exception the why hang?
-                
-                
-                logger.info("Completed download of file: " + path.getRemotePath() + " to: " + restoreLocation.getAbsolutePath());
+
+                logger.info("Completed download of file: " + path.getRemotePath() + " to: " + restoreLocation
+                        .getAbsolutePath());
                 return count.decrementAndGet();
             }
         });
     }
-    
-    
+
     /*
      * An overloaded download where it will not only download the object but decrypt and uncompress the
-     * 
+     *
      *  @param path - path of object to download from source.
      *  @param out - handle to the FINAL destination stream.
      *  Note: if this behavior is successfull, it will close the output stream.
-     *  
+     *
      *  @param temp - file handlle to the downloaded file (i.e. file not decrypted yet).  To ensure widest compatability with various encryption/decryption
-     *  
+     *
      *  Note: the temp file will be removed on successful processing.
-     *  
+     *
      *  algorithm, we download the file completely to disk and then decrypt.  This is a temporary file and will be deleted once this behavior completes.
      *  @param fileCrypotography - the implemented cryptography algorithm use to decrypt.
      *  @param passPhrase - if necessary, the pass phrase use by the cryptography algorithm to decrypt.
      */
-    public void download(final AbstractBackupPath path, final OutputStream finalDestination,  final File tempFile
-		, final IFileCryptography fileCryptography
-		, final char[] passPhrase
-		, final ICompression compress) {
-    	
-        if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(path.keyspace) || path.keyspace.equals(SYSTEM_KEYSPACE)))
+    public void download(final AbstractBackupPath path, final OutputStream finalDestination, final File tempFile
+            , final IFileCryptography fileCryptography
+            , final char[] passPhrase
+            , final ICompression compress)
+    {
+
+        if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(path.keyspace)
+                || path.keyspace.equals(SYSTEM_KEYSPACE)))
             return;
-        
+
         count.incrementAndGet();
-        executor.submit(new RetryableCallable<Integer>() {
-        	
-        	@Override
-        	public Integer retriableCall() throws Exception {
-        	
-            	//== download object from source bucket
-                try {
-                	
-                    logger.info("Downloading file from: " + path.getRemotePath() + " to: " + tempFile.getAbsolutePath());
-                    fs.download(path, new FileOutputStream(tempFile),tempFile.getAbsolutePath());                    
+        executor.submit(new RetryableCallable<Integer>()
+        {
+
+            @Override
+            public Integer retriableCall() throws Exception
+            {
+
+                //== download object from source bucket
+                try
+                {
+
+                    logger.info(
+                            "Downloading file from: " + path.getRemotePath() + " to: " + tempFile.getAbsolutePath());
+                    fs.download(path, new FileOutputStream(tempFile), tempFile.getAbsolutePath());
                     tracker.adjustAndAdd(path);
-                    logger.info("Completed downloading file from: " + path.getRemotePath() + " to: " + tempFile.getAbsolutePath());
-                    
-                	
-                } catch (Exception ex) {
-                	//This behavior is retryable; therefore, lets get to a clean state before each retry.
-                	if (tempFile.exists()) {
-                		tempFile.createNewFile();
-                	}                	
-                	
-                	throw new Exception("Exception downloading file from: " + path.getRemotePath() + " to: " + tempFile.getAbsolutePath(), ex);
-                } 
-                
+                    logger.info("Completed downloading file from: " + path.getRemotePath() + " to: " + tempFile
+                            .getAbsolutePath());
+
+                }
+                catch (Exception ex)
+                {
+                    //This behavior is retryable; therefore, lets get to a clean state before each retry.
+                    if (tempFile.exists())
+                    {
+                        tempFile.createNewFile();
+                    }
+
+                    throw new Exception("Exception downloading file from: " + path.getRemotePath() + " to: " + tempFile
+                            .getAbsolutePath(), ex);
+                }
+
                 //== object downloaded successfully from source, decrypt it.
                 OutputStream fOut = null;  //destination file after decryption
                 File decryptedFile = new File(tempFile.getAbsolutePath() + ".decrypted");
-                try {
+                try
+                {
 
-                	InputStream in = new BufferedInputStream(new FileInputStream(tempFile.getAbsolutePath()));
-                    InputStream encryptedDataInputStream = fileCryptography.decryptStream(in, passPhrase, tempFile.getAbsolutePath());
+                    InputStream in = new BufferedInputStream(new FileInputStream(tempFile.getAbsolutePath()));
+                    InputStream encryptedDataInputStream = fileCryptography
+                            .decryptStream(in, passPhrase, tempFile.getAbsolutePath());
                     fOut = new BufferedOutputStream(new FileOutputStream(decryptedFile));
                     Streams.pipeAll(encryptedDataInputStream, fOut);
-                    logger.info("completed decrypting file: " + tempFile.getAbsolutePath() + "to final file dest: " + decryptedFile.getAbsolutePath());                	
-                	
-                } catch (Exception ex) {
-                	//This behavior is retryable; therefore, lets get to a clean state before each retry.
-                	if (tempFile.exists()) {
-                		tempFile.createNewFile();
-                	}
-                	
-                	if (decryptedFile.exists()) {
-                		decryptedFile.createNewFile();
-                	}
-                	                	
-                	throw new Exception("Exception during decryption file:  " + decryptedFile.getAbsolutePath(), ex);
+                    logger.info("completed decrypting file: " + tempFile.getAbsolutePath() + "to final file dest: "
+                            + decryptedFile.getAbsolutePath());
 
-                } finally {
-                	if (fOut != null ) {
-                		fOut.close();
-                	}
                 }
-                                
-                //== object downloaded and decrypted successfully, now uncompress it
-                logger.info("Start uncompressing file: " + decryptedFile.getAbsolutePath() + " to the FINAL destination stream");
-            	FileInputStream fileIs = null;
-            	InputStream is = null;
-            	
-            	try {
+                catch (Exception ex)
+                {
+                    //This behavior is retryable; therefore, lets get to a clean state before each retry.
+                    if (tempFile.exists())
+                    {
+                        tempFile.createNewFile();
+                    }
 
-            		fileIs = new FileInputStream(decryptedFile);
-	            	is = new BufferedInputStream(fileIs);
-	            
-	            	compress.decompressAndClose(is, finalDestination);	            		
-            		
-            	} catch (Exception ex) {
-            		IOUtils.closeQuietly(is);                	
-            		throw new Exception("Exception uncompressing file: " + decryptedFile.getAbsolutePath() + " to the FINAL destination stream");
-            	}
-            	
-            	logger.info("Completed uncompressing file: " + decryptedFile.getAbsolutePath() + " to the FINAL destination stream " 
-            			+ " current worker: " + Thread.currentThread().getName());                
-            	//if here, everything was successful for this object, lets remove unneeded file(s)
-            	if (tempFile.exists())
-            		tempFile.delete();
-            	
-            	if (decryptedFile.exists()) {
-            		decryptedFile.delete();  
-            	}
-            	
-            	//Note: removal of the tempFile is responsbility of the caller as this behavior did not create it.
-                
-                return count.decrementAndGet();                
-        		
-        	}
-        	
+                    if (decryptedFile.exists())
+                    {
+                        decryptedFile.createNewFile();
+                    }
+
+                    throw new Exception("Exception during decryption file:  " + decryptedFile.getAbsolutePath(), ex);
+
+                }
+                finally
+                {
+                    if (fOut != null)
+                    {
+                        fOut.close();
+                    }
+                }
+
+                //== object downloaded and decrypted successfully, now uncompress it
+                logger.info("Start uncompressing file: " + decryptedFile.getAbsolutePath()
+                        + " to the FINAL destination stream");
+                FileInputStream fileIs = null;
+                InputStream is = null;
+
+                try
+                {
+
+                    fileIs = new FileInputStream(decryptedFile);
+                    is = new BufferedInputStream(fileIs);
+
+                    compress.decompressAndClose(is, finalDestination);
+
+                }
+                catch (Exception ex)
+                {
+                    IOUtils.closeQuietly(is);
+                    throw new Exception("Exception uncompressing file: " + decryptedFile.getAbsolutePath()
+                            + " to the FINAL destination stream");
+                }
+
+                logger.info("Completed uncompressing file: " + decryptedFile.getAbsolutePath()
+                        + " to the FINAL destination stream "
+                        + " current worker: " + Thread.currentThread().getName());
+                //if here, everything was successful for this object, lets remove unneeded file(s)
+                if (tempFile.exists())
+                    tempFile.delete();
+
+                if (decryptedFile.exists())
+                {
+                    decryptedFile.delete();
+                }
+
+                //Note: removal of the tempFile is responsbility of the caller as this behavior did not create it.
+
+                return count.decrementAndGet();
+
+            }
+
         });
-    	
+
     }
-    
-    
-    
+
     /*
      * An overloaded download where it will not only download the object but also decrypt and uncompress.
-     * 
+     *
      *  @param path - path of object to download from source.
      *  @param restoreLocation - file handle to the FINAL file on disk
      *  @param temp - file handlle to the downloaded file (i.e. file not decrypted yet).  To ensure widest compatability with various encryption/decryption
@@ -286,29 +284,35 @@ public abstract class AbstractRestore extends Task
      *  @param passPhrase - if necessary, the pass phrase use by the cryptography algorithm to decrypt.
      */
     public void download(final AbstractBackupPath path, final File restoreLocation, final File tempFile
-    		, final IFileCryptography fileCryptography
-    		, final char[] passPhrase
-    		, final ICompression compress
-    		) throws Exception
+            , final IFileCryptography fileCryptography
+            , final char[] passPhrase
+            , final ICompression compress
+    ) throws Exception
     {
-    	
-    	FileOutputStream fileOs = null;
-    	BufferedOutputStream os = null;
-    	try {
-        	fileOs = new FileOutputStream(restoreLocation);
-        	os = new BufferedOutputStream(fileOs);
-        	download(path, os, tempFile, fileCryptography, passPhrase, compress);
-    	} catch (Exception e) {
-    		fileOs.close();
-    		throw new Exception("Exception in download of:  " + path.getFileName() + ", msg: " + e.getLocalizedMessage(), e );
-    		
-    	} finally {
-    	
-    		//Note: no need to close buffered outpust stream as it is done within the called download() behavior
-    	}
-		
-    } 
-    
+
+        FileOutputStream fileOs = null;
+        BufferedOutputStream os = null;
+        try
+        {
+            fileOs = new FileOutputStream(restoreLocation);
+            os = new BufferedOutputStream(fileOs);
+            download(path, os, tempFile, fileCryptography, passPhrase, compress);
+        }
+        catch (Exception e)
+        {
+            fileOs.close();
+            throw new Exception(
+                    "Exception in download of:  " + path.getFileName() + ", msg: " + e.getLocalizedMessage(), e);
+
+        }
+        finally
+        {
+
+            //Note: no need to close buffered outpust stream as it is done within the called download() behavior
+        }
+
+    }
+
     /*
      * A means to wait until until all threads have completed.  It blocks calling thread
      * until all tasks (ala counter "count" is 0) are completed.
@@ -328,14 +332,36 @@ public abstract class AbstractRestore extends Task
             }
         }
     }
-    
+
     protected AtomicInteger getFileCount()
     {
-    		return count;
+        return count;
     }
-    
+
     protected void setFileCount(int cnt)
     {
-    		count.set(cnt);
+        count.set(cnt);
+    }
+
+    public class BoundedList<E> extends LinkedList<E>
+    {
+
+        private final int limit;
+
+        public BoundedList(int limit)
+        {
+            this.limit = limit;
+        }
+
+        @Override
+        public boolean add(E o)
+        {
+            super.add(o);
+            while (size() > limit)
+            {
+                super.remove();
+            }
+            return true;
+        }
     }
 }
