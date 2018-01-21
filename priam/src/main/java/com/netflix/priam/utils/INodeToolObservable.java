@@ -15,7 +15,8 @@
  */
 package com.netflix.priam.utils;
 
-public interface INodeToolObservable {
+public interface INodeToolObservable
+{
     /*
      * @param observer to add to list of internal observers.
      */

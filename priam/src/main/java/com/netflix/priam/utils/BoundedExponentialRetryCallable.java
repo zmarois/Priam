@@ -22,56 +22,74 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CancellationException;
 
-public abstract class BoundedExponentialRetryCallable<T> extends RetryableCallable<T> {
+public abstract class BoundedExponentialRetryCallable<T> extends RetryableCallable<T>
+{
     public final static long MAX_SLEEP = 10000;
     public final static long MIN_SLEEP = 1000;
     public final static int MAX_RETRIES = 10;
 
     private static final Logger logger = LoggerFactory.getLogger(BoundedExponentialRetryCallable.class);
+    private final ThreadSleeper sleeper = new ThreadSleeper();
     private long max;
     private long min;
     private int maxRetries;
-    private final ThreadSleeper sleeper = new ThreadSleeper();
 
-    public BoundedExponentialRetryCallable() {
+    public BoundedExponentialRetryCallable()
+    {
         this.max = MAX_SLEEP;
         this.min = MIN_SLEEP;
         this.maxRetries = MAX_RETRIES;
     }
 
-    public BoundedExponentialRetryCallable(long minSleep, long maxSleep, int maxNumRetries) {
+    public BoundedExponentialRetryCallable(long minSleep, long maxSleep, int maxNumRetries)
+    {
         this.max = maxSleep;
         this.min = minSleep;
         this.maxRetries = maxNumRetries;
     }
 
-    public T call() throws Exception {
+    public T call() throws Exception
+    {
         long delay = min;// ms
         int retry = 0;
         int logCounter = 0;
-        while (true) {
-            try {
+        while (true)
+        {
+            try
+            {
                 return retriableCall();
-            } catch (CancellationException e) {
+            }
+            catch (CancellationException e)
+            {
                 throw e;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 retry++;
 
-                if (delay < max && retry <= maxRetries) {
+                if (delay < max && retry <= maxRetries)
+                {
                     delay *= 2;
                     logger.error("Retry #{} for: {}", retry, e.getMessage());
                     if (++logCounter == 1 && logger.isInfoEnabled())
                         logger.info("Exception --> " + ExceptionUtils.getStackTrace(e));
                     sleeper.sleep(delay);
-                } else if (delay >= max && retry <= maxRetries) {
-                    if (logger.isErrorEnabled()) {
+                }
+                else if (delay >= max && retry <= maxRetries)
+                {
+                    if (logger.isErrorEnabled())
+                    {
                         logger.error(String.format("Retry #%d for: %s", retry, ExceptionUtils.getStackTrace(e)));
                     }
                     sleeper.sleep(max);
-                } else {
+                }
+                else
+                {
                     throw e;
                 }
-            } finally {
+            }
+            finally
+            {
                 forEachExecution();
             }
         }

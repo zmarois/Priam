@@ -19,54 +19,69 @@ import com.netflix.priam.utils.SystemUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-public abstract class InstanceDataRetrieverBase implements InstanceDataRetriever{
+public abstract class InstanceDataRetrieverBase implements InstanceDataRetriever
+{
     protected JSONObject identityDocument = null;
 
-    public String getPrivateIP(){
+    public String getPrivateIP()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/local-ipv4");
     }
 
-    public String getRac() {
+    public String getRac()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/placement/availability-zone");
     }
 
-    public String getPublicHostname() {
+    public String getPublicHostname()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/public-hostname");
     }
 
-    public String getPublicIP() {
+    public String getPublicIP()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/public-ipv4");
     }
 
-    public String getInstanceId() {
+    public String getInstanceId()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/instance-id");
     }
 
-    public String getInstanceType() {
+    public String getInstanceType()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/instance-type");
     }
 
-    public String getMac() {
+    public String getMac()
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/network/interfaces/macs/").trim();
     }
 
-    public String getAWSAccountId() throws JSONException {
-        if (this.identityDocument == null) {
-            String jsonStr = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/dynamic/instance-identity/document");
+    public String getAWSAccountId() throws JSONException
+    {
+        if (this.identityDocument == null)
+        {
+            String jsonStr = SystemUtils
+                    .getDataFromUrl("http://169.254.169.254/latest/dynamic/instance-identity/document");
             this.identityDocument = new JSONObject(jsonStr);
         }
         return this.identityDocument.getString("accountId");
     }
 
-    public String getRegion() throws JSONException {
-        if (this.identityDocument == null) {
-            String jsonStr = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/dynamic/instance-identity/document");
+    public String getRegion() throws JSONException
+    {
+        if (this.identityDocument == null)
+        {
+            String jsonStr = SystemUtils
+                    .getDataFromUrl("http://169.254.169.254/latest/dynamic/instance-identity/document");
             this.identityDocument = new JSONObject(jsonStr);
         }
         return this.identityDocument.getString("region");
     }
 
-    public String getAvailabilityZone() throws JSONException {
+    public String getAvailabilityZone() throws JSONException
+    {
         return SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/placement/availability-zone");
     }
 }

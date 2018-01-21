@@ -34,35 +34,46 @@ import java.util.Properties;
  * <p>
  * Set the following properties in "conf/awscredntial.properties"
  */
-public class ClearCredential implements ICredential {
+public class ClearCredential implements ICredential
+{
     private static final Logger logger = LoggerFactory.getLogger(ClearCredential.class);
     private static final String CRED_FILE = "/etc/awscredential.properties";
     private final String AWS_ACCESS_ID;
     private final String AWS_KEY;
 
-    public ClearCredential() {
+    public ClearCredential()
+    {
         FileInputStream fis = null;
-        try {
+        try
+        {
             fis = new FileInputStream(CRED_FILE);
             final Properties props = new Properties();
             props.load(fis);
             AWS_ACCESS_ID = props.getProperty("AWSACCESSID") != null ? props.getProperty("AWSACCESSID").trim() : "";
             AWS_KEY = props.getProperty("AWSKEY") != null ? props.getProperty("AWSKEY").trim() : "";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error("Exception with credential file ", e);
             throw new RuntimeException("Problem reading credential file. Cannot start.", e);
-        } finally {
+        }
+        finally
+        {
             FileUtils.closeQuietly(fis);
         }
     }
 
-    public AWSCredentialsProvider getAwsCredentialProvider() {
-        return new AWSCredentialsProvider() {
-            public AWSCredentials getCredentials() {
+    public AWSCredentialsProvider getAwsCredentialProvider()
+    {
+        return new AWSCredentialsProvider()
+        {
+            public AWSCredentials getCredentials()
+            {
                 return new BasicAWSCredentials(AWS_ACCESS_ID, AWS_KEY);
             }
 
-            public void refresh() {
+            public void refresh()
+            {
                 // NOP
             }
         };

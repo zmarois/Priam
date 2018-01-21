@@ -22,7 +22,8 @@ import com.google.inject.ImplementedBy;
  * Created by vinhn on 11/3/16.
  */
 @ImplementedBy(AWSSnsNotificationService.class)
-public interface INotificationService {
+public interface INotificationService
+{
     /**
      * Notify the message.
      *

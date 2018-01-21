@@ -32,16 +32,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class StandardTuner implements ICassandraTuner {
+public class StandardTuner implements ICassandraTuner
+{
     private static final Logger logger = LoggerFactory.getLogger(StandardTuner.class);
     protected final IConfiguration config;
 
     @Inject
-    public StandardTuner(IConfiguration config) {
+    public StandardTuner(IConfiguration config)
+    {
         this.config = config;
     }
 
-    public void writeAllProperties(String yamlLocation, String hostname, String seedProvider) throws Exception {
+    public void writeAllProperties(String yamlLocation, String hostname, String seedProvider) throws Exception
+    {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml yaml = new Yaml(options);
@@ -57,9 +60,12 @@ public class StandardTuner implements ICassandraTuner {
         map.put("listen_address", hostname);
         map.put("rpc_address", hostname);
         //Dont bootstrap in restore mode
-        if (!Restore.isRestoreEnabled(config)) {
+        if (!Restore.isRestoreEnabled(config))
+        {
             map.put("auto_bootstrap", config.getAutoBoostrap());
-        } else {
+        }
+        else
+        {
             map.put("auto_bootstrap", false);
         }
 
@@ -67,22 +73,26 @@ public class StandardTuner implements ICassandraTuner {
         map.put("commitlog_directory", config.getCommitLogLocation());
         map.put("data_file_directories", Lists.newArrayList(config.getDataFileLocation()));
 
-        boolean enableIncremental = (SnapshotBackup.isBackupEnabled(config) && config.isIncrBackup()) && (CollectionUtils.isEmpty(config.getBackupRacs()) || config.getBackupRacs().contains(config.getRac()));
+        boolean enableIncremental = (SnapshotBackup.isBackupEnabled(config) && config.isIncrBackup()) && (
+                CollectionUtils.isEmpty(config.getBackupRacs()) || config.getBackupRacs().contains(config.getRac()));
         map.put("incremental_backups", enableIncremental);
 
         map.put("endpoint_snitch", config.getSnitch());
-        if (map.containsKey("in_memory_compaction_limit_in_mb")) {
+        if (map.containsKey("in_memory_compaction_limit_in_mb"))
+        {
             map.remove("in_memory_compaction_limit_in_mb");
         }
         map.put("compaction_throughput_mb_per_sec", config.getCompactionThroughput());
         map.put("partitioner", derivePartitioner(map.get("partitioner").toString(), config.getPartitioner()));
 
-        if (map.containsKey("memtable_total_space_in_mb")) {
+        if (map.containsKey("memtable_total_space_in_mb"))
+        {
             map.remove("memtable_total_space_in_mb");
         }
 
         map.put("stream_throughput_outbound_megabits_per_sec", config.getStreamingThroughputMB());
-        if (map.containsKey("multithreaded_compaction")) {
+        if (map.containsKey("multithreaded_compaction"))
+        {
             map.remove("multithreaded_compaction");
         }
 
@@ -104,13 +114,13 @@ public class StandardTuner implements ICassandraTuner {
         map.put("broadcast_rpc_address", config.getInstanceDataRetriever().getPrivateIP());
         //map.put("index_interval", config.getIndexInterval());
 
-
         map.put("tombstone_warn_threshold", config.getTombstoneWarnThreshold());
         map.put("tombstone_failure_threshold", config.getTombstoneFailureThreshold());
         map.put("streaming_socket_timeout_in_ms", config.getStreamingSocketTimeoutInMS());
 
         map.put("memtable_cleanup_threshold", config.getMemtableCleanupThreshold());
-        map.put("compaction_large_partition_warning_threshold_mb", config.getCompactionLargePartitionWarnThresholdInMB());
+        map.put("compaction_large_partition_warning_threshold_mb",
+                config.getCompactionLargePartitionWarnThresholdInMB());
 
         List<?> seedp = (List) map.get("seed_provider");
         Map<String, String> m = (Map<String, String>) seedp.get(0);
@@ -120,7 +130,6 @@ public class StandardTuner implements ICassandraTuner {
         configureGlobalCaches(config, map);
         //force to 1 until vnodes are properly supported
         map.put("num_tokens", 1);
-
 
         addExtraCassParams(map);
 
@@ -139,16 +148,19 @@ public class StandardTuner implements ICassandraTuner {
      *
      * @return Sntich to be used by this cluster
      */
-    protected String getSnitch() {
+    protected String getSnitch()
+    {
         return config.getSnitch();
     }
 
     /**
      * Setup the cassandra 1.1 global cache values
      */
-    private void configureGlobalCaches(IConfiguration config, Map yaml) {
+    private void configureGlobalCaches(IConfiguration config, Map yaml)
+    {
         final String keyCacheSize = config.getKeyCacheSizeInMB();
-        if (keyCacheSize != null) {
+        if (keyCacheSize != null)
+        {
             yaml.put("key_cache_size_in_mb", Integer.valueOf(keyCacheSize));
 
             final String keyCount = config.getKeyCacheKeysToSave();
@@ -157,7 +169,8 @@ public class StandardTuner implements ICassandraTuner {
         }
 
         final String rowCacheSize = config.getRowCacheSizeInMB();
-        if (rowCacheSize != null) {
+        if (rowCacheSize != null)
+        {
             yaml.put("row_cache_size_in_mb", Integer.valueOf(rowCacheSize));
 
             final String rowCount = config.getRowCacheKeysToSave();
@@ -166,7 +179,8 @@ public class StandardTuner implements ICassandraTuner {
         }
     }
 
-    String derivePartitioner(String fromYaml, String fromConfig) {
+    String derivePartitioner(String fromYaml, String fromConfig)
+    {
         if (fromYaml == null || fromYaml.isEmpty())
             return fromConfig;
         //this check is to prevent against overwriting an existing yaml file that has
@@ -178,7 +192,8 @@ public class StandardTuner implements ICassandraTuner {
         return fromYaml;
     }
 
-    protected void configfureSecurity(Map map) {
+    protected void configfureSecurity(Map map)
+    {
         //the client-side ssl settings
         Map clientEnc = (Map) map.get("client_encryption_options");
         clientEnc.put("enabled", config.isClientSslEnabled());
@@ -188,7 +203,8 @@ public class StandardTuner implements ICassandraTuner {
         serverEnc.put("internode_encryption", config.getInternodeEncryption());
     }
 
-    protected void configureCommitLogBackups() throws IOException {
+    protected void configureCommitLogBackups() throws IOException
+    {
         if (!config.isBackingUpCommitLogs())
             return;
         Properties props = new Properties();
@@ -198,15 +214,19 @@ public class StandardTuner implements ICassandraTuner {
         props.put("restore_point_in_time", config.getCommitLogBackupRestorePointInTime());
 
         FileOutputStream fos = null;
-        try {
+        try
+        {
             fos = new FileOutputStream(new File(config.getCommitLogBackupPropsFile()));
             props.store(fos, "cassandra commit log archive props, as written by priam");
-        } finally {
+        }
+        finally
+        {
             IOUtils.closeQuietly(fos);
         }
     }
 
-    public void updateAutoBootstrap(String yamlFile, boolean autobootstrap) throws IOException {
+    public void updateAutoBootstrap(String yamlFile, boolean autobootstrap) throws IOException
+    {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml yaml = new Yaml(options);
@@ -214,22 +234,26 @@ public class StandardTuner implements ICassandraTuner {
         Map map = (Map) yaml.load(new FileInputStream(yamlFile));
         //Dont bootstrap in restore mode
         map.put("auto_bootstrap", autobootstrap);
-        if (logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled())
+        {
             logger.info("Updating yaml: " + yaml.dump(map));
         }
         yaml.dump(map, new FileWriter(yamlFile));
     }
 
-    public void addExtraCassParams(Map map) {
+    public void addExtraCassParams(Map map)
+    {
         String params = config.getExtraConfigParams();
-        if (params == null) {
+        if (params == null)
+        {
             logger.info("Updating yaml: no extra cass params");
             return;
         }
 
         String[] pairs = params.split(",");
         logger.info("Updating yaml: adding extra cass params");
-        for (int i = 0; i < pairs.length; i++) {
+        for (int i = 0; i < pairs.length; i++)
+        {
             String[] pair = pairs[i].split("=");
             String priamKey = pair[0];
             String cassKey = pair[1];

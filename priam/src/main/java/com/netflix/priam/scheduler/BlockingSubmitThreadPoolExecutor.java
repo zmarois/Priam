@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * {@link ThreadPoolExecutor} that will block in the {@code submit()} method
  * until the task can be successfully added to the queue.
  */
-public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor {
+public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor
+{
     private static final long DEFAULT_SLEEP = 100;
     private static final long DEFAULT_KEEP_ALIVE = 100;
     private static final Logger logger = LoggerFactory.getLogger(BlockingSubmitThreadPoolExecutor.class);
@@ -34,7 +35,8 @@ public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor {
     private long giveupTime;
     private AtomicInteger active;
 
-    public BlockingSubmitThreadPoolExecutor(int maximumPoolSize, BlockingQueue<Runnable> workQueue, long timeoutAdding) {
+    public BlockingSubmitThreadPoolExecutor(int maximumPoolSize, BlockingQueue<Runnable> workQueue, long timeoutAdding)
+    {
         super(maximumPoolSize, maximumPoolSize, DEFAULT_KEEP_ALIVE, TimeUnit.SECONDS, workQueue);
         this.queue = workQueue;
         this.giveupTime = timeoutAdding;
@@ -47,19 +49,28 @@ public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor {
      * there is a free thread.
      */
     @Override
-    public <T> Future<T> submit(Callable<T> task) {
-        synchronized (this) {
+    public <T> Future<T> submit(Callable<T> task)
+    {
+        synchronized (this)
+        {
             active.incrementAndGet();
             long timeout = 0;
-            while (queue.remainingCapacity() == 0) {
-                try {
-                    if (timeout <= giveupTime) {
+            while (queue.remainingCapacity() == 0)
+            {
+                try
+                {
+                    if (timeout <= giveupTime)
+                    {
                         Thread.sleep(DEFAULT_SLEEP);
                         timeout += DEFAULT_SLEEP;
-                    } else {
+                    }
+                    else
+                    {
                         throw new RuntimeException("Timed out because TPE is too busy...");
                     }
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e)
+                {
                     throw new RuntimeException(e);
                 }
             }
@@ -68,7 +79,8 @@ public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor {
     }
 
     @Override
-    protected void afterExecute(Runnable r, Throwable t) {
+    protected void afterExecute(Runnable r, Throwable t)
+    {
         super.afterExecute(r, t);
         active.decrementAndGet();
     }
@@ -76,19 +88,27 @@ public class BlockingSubmitThreadPoolExecutor extends ThreadPoolExecutor {
     /**
      * blocking call to test if the threads are done or not.
      */
-    public void sleepTillEmpty() {
+    public void sleepTillEmpty()
+    {
         long timeout = 0;
 
-        while (!queue.isEmpty() || (active.get() > 0)) {
-            try {
-                if (timeout <= giveupTime) {
+        while (!queue.isEmpty() || (active.get() > 0))
+        {
+            try
+            {
+                if (timeout <= giveupTime)
+                {
                     Thread.sleep(DEFAULT_SLEEP);
                     timeout += DEFAULT_SLEEP;
                     logger.debug("After Sleeping for empty: {}, Count: {}", +queue.size(), active.get());
-                } else {
+                }
+                else
+                {
                     throw new RuntimeException("Timed out because TPE is too busy...");
                 }
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 throw new RuntimeException(e);
             }
         }

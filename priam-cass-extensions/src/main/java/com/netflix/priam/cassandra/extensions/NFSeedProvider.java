@@ -16,14 +16,14 @@
  */
 package com.netflix.priam.cassandra.extensions;
 
+import org.apache.cassandra.locator.SeedProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.cassandra.locator.SeedProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Retrieves the list of seeds from Priam.
@@ -33,7 +33,8 @@ public class NFSeedProvider implements SeedProvider
     private static final Logger logger = LoggerFactory.getLogger(NFSeedProvider.class);
 
     public NFSeedProvider(Map<String, String> args)
-    {    }
+    {
+    }
 
     @Override
     public List<InetAddress> getSeeds()

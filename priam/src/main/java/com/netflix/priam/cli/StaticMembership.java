@@ -28,7 +28,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-public class StaticMembership implements IMembership {
+public class StaticMembership implements IMembership
+{
     private static final String MEMBERSHIP_PRE = "membership.";
     private static final String INSTANCES_PRE = MEMBERSHIP_PRE + "instances.";
     private static final String RAC_NAME = MEMBERSHIP_PRE + "racname";
@@ -41,22 +42,30 @@ public class StaticMembership implements IMembership {
     private List<String> racMembership;
     private int racCount;
 
-    public StaticMembership() throws IOException {
+    public StaticMembership() throws IOException
+    {
         Properties config = new Properties();
         FileInputStream fis = null;
-        try {
+        try
+        {
             fis = new FileInputStream(DEFAULT_PROP_PATH);
             config.load(fis);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error("Exception with static membership file ", e);
             throw new RuntimeException("Problem reading static membership file. Cannot start.", e);
-        } finally {
+        }
+        finally
+        {
             FileUtils.closeQuietly(fis);
         }
         racName = config.getProperty(RAC_NAME);
         racCount = 0;
-        for (String name : config.stringPropertyNames()) {
-            if (name.startsWith(INSTANCES_PRE)) {
+        for (String name : config.stringPropertyNames())
+        {
+            if (name.startsWith(INSTANCES_PRE))
+            {
                 racCount += 1;
                 if (name == INSTANCES_PRE + racName)
                     racMembership = Arrays.asList(config.getProperty(name).split(","));
@@ -65,41 +74,49 @@ public class StaticMembership implements IMembership {
     }
 
     @Override
-    public List<String> getRacMembership() {
+    public List<String> getRacMembership()
+    {
         return racMembership;
     }
 
     @Override
-    public List<String> getCrossAccountRacMembership() {
+    public List<String> getCrossAccountRacMembership()
+    {
         return null;
     }
 
     @Override
-    public int getRacMembershipSize() {
+    public int getRacMembershipSize()
+    {
         if (racMembership == null)
             return 0;
         return racMembership.size();
     }
 
     @Override
-    public int getRacCount() {
+    public int getRacCount()
+    {
         return racCount;
     }
 
     @Override
-    public void addACL(Collection<String> listIPs, int from, int to) {
+    public void addACL(Collection<String> listIPs, int from, int to)
+    {
     }
 
     @Override
-    public void removeACL(Collection<String> listIPs, int from, int to) {
+    public void removeACL(Collection<String> listIPs, int from, int to)
+    {
     }
 
     @Override
-    public List<String> listACL(int from, int to) {
+    public List<String> listACL(int from, int to)
+    {
         return null;
     }
 
     @Override
-    public void expandRacMembership(int count) {
+    public void expandRacMembership(int count)
+    {
     }
 }

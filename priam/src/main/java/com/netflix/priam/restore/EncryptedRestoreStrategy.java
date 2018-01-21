@@ -39,26 +39,30 @@ import org.slf4j.LoggerFactory;
  * A strategy to restore encrypted data from a primary AWS account
  */
 @Singleton
-public class EncryptedRestoreStrategy extends EncryptedRestoreBase {
-    private static final Logger logger = LoggerFactory.getLogger(EncryptedRestoreStrategy.class);
+public class EncryptedRestoreStrategy extends EncryptedRestoreBase
+{
     public static final String JOBNAME = "CRYPTOGRAPHY_RESTORE_JOB";
+    private static final Logger logger = LoggerFactory.getLogger(EncryptedRestoreStrategy.class);
 
     @Inject
     public EncryptedRestoreStrategy(final IConfiguration config, ICassandraProcess cassProcess,
-                                    @Named("encryptedbackup") IBackupFileSystem fs, Sleeper sleeper
+            @Named("encryptedbackup") IBackupFileSystem fs, Sleeper sleeper
             , @Named("filecryptoalgorithm") IFileCryptography fileCryptography
             , @Named("pgpcredential") ICredentialGeneric credential
             , ICompression compress, Provider<AbstractBackupPath> pathProvider,
-                                    InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState
-    ) {
+            InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState
+    )
+    {
 
-        super(config, fs, JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector, credential, fileCryptography, compress, metaData, instanceState);
+        super(config, fs, JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector, credential, fileCryptography,
+                compress, metaData, instanceState);
     }
 
     /*
      * @return a timer used by the scheduler to determine when "this" should be run.
      */
-    public static TaskTimer getTimer() {
+    public static TaskTimer getTimer()
+    {
         return new SimpleTimer(JOBNAME);
     }
 

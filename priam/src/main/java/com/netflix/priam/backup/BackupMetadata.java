@@ -15,13 +15,9 @@
  */
 package com.netflix.priam.backup;
 
-
-import com.netflix.priam.health.InstanceState;
 import com.netflix.priam.utils.DateUtil;
 import com.netflix.priam.utils.GsonJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +29,8 @@ import java.util.Date;
  * Created by aagrawal on 1/31/17.
  */
 
-final public class BackupMetadata implements Serializable {
+final public class BackupMetadata implements Serializable
+{
     private static final Logger logger = LoggerFactory.getLogger(BackupMetadata.class);
 
     private String snapshotDate;
@@ -42,9 +39,11 @@ final public class BackupMetadata implements Serializable {
     private Status status;
     private String snapshotLocation;
 
-    public BackupMetadata(String token, Date start) throws Exception {
+    public BackupMetadata(String token, Date start) throws Exception
+    {
         if (start == null || token == null || StringUtils.isEmpty(token))
-            throw new Exception(String.format("Invalid Input: Token: {} or start date:{} is null or empty.", token, start));
+            throw new Exception(
+                    String.format("Invalid Input: Token: {} or start date:{} is null or empty.", token, start));
 
         this.snapshotDate = DateUtil.formatyyyyMMdd(start);
         this.token = token;
@@ -53,19 +52,25 @@ final public class BackupMetadata implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || this.getClass() != o.getClass()) return false;
+    public boolean equals(Object o)
+    {
+        if (this == o)
+            return true;
+        if (o == null || this.getClass() != o.getClass())
+            return false;
 
         BackupMetadata that = (BackupMetadata) o;
 
-        if (!this.snapshotDate.equals(that.snapshotDate)) return false;
-        if (!this.token.equals(that.token)) return false;
+        if (!this.snapshotDate.equals(that.snapshotDate))
+            return false;
+        if (!this.token.equals(that.token))
+            return false;
         return this.start.equals(that.start);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         int result = this.snapshotDate.hashCode();
         result = 31 * result + this.token.hashCode();
         result = 31 * result + this.start.hashCode();
@@ -77,7 +82,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @return snapshot date formatted in yyyyMMdd.
      */
-    public String getSnapshotDate() {
+    public String getSnapshotDate()
+    {
         return this.snapshotDate;
     }
 
@@ -86,7 +92,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @return snapshot token.
      */
-    public String getToken() {
+    public String getToken()
+    {
         return this.token;
     }
 
@@ -95,7 +102,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @return start date of snapshot.
      */
-    public Date getStart() {
+    public Date getStart()
+    {
         return this.start;
     }
 
@@ -105,17 +113,9 @@ final public class BackupMetadata implements Serializable {
      * @return completion date of snapshot.
      */
 
-    public Date getCompleted() {
+    public Date getCompleted()
+    {
         return this.completed;
-    }
-
-    /**
-     * Get the status of the snapshot.
-     *
-     * @return snapshot status
-     */
-    public Status getStatus() {
-        return this.status;
     }
 
     /**
@@ -123,8 +123,19 @@ final public class BackupMetadata implements Serializable {
      *
      * @param completed date of completion for a snapshot.
      */
-    public void setCompleted(Date completed) {
+    public void setCompleted(Date completed)
+    {
         this.completed = completed;
+    }
+
+    /**
+     * Get the status of the snapshot.
+     *
+     * @return snapshot status
+     */
+    public Status getStatus()
+    {
+        return this.status;
     }
 
     /**
@@ -132,7 +143,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @param status of the snapshot.
      */
-    public void setStatus(Status status) {
+    public void setStatus(Status status)
+    {
         this.status = status;
     }
 
@@ -141,7 +153,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @return snapshot upload location for the meta file.
      */
-    public String getSnapshotLocation() {
+    public String getSnapshotLocation()
+    {
         return this.snapshotLocation;
     }
 
@@ -150,7 +163,8 @@ final public class BackupMetadata implements Serializable {
      *
      * @param snapshotLocation where snapshot meta file is uploaded.
      */
-    public void setSnapshotLocation(String snapshotLocation) {
+    public void setSnapshotLocation(String snapshotLocation)
+    {
         this.snapshotLocation = snapshotLocation;
     }
 

@@ -29,23 +29,25 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class S3PartUploader extends RetryableCallable<Void> {
+public class S3PartUploader extends RetryableCallable<Void>
+{
+    private static final Logger logger = LoggerFactory.getLogger(S3PartUploader.class);
+    private static final int MAX_RETRIES = 5;
     private final AmazonS3 client;
     private DataPart dataPart;
     private List<PartETag> partETags;
     private AtomicInteger partsUploaded = null; //num of data parts successfully uploaded
 
-    private static final Logger logger = LoggerFactory.getLogger(S3PartUploader.class);
-    private static final int MAX_RETRIES = 5;
-
-    public S3PartUploader(AmazonS3 client, DataPart dp, List<PartETag> partETags) {
+    public S3PartUploader(AmazonS3 client, DataPart dp, List<PartETag> partETags)
+    {
         super(MAX_RETRIES, RetryableCallable.DEFAULT_WAIT_TIME);
         this.client = client;
         this.dataPart = dp;
         this.partETags = partETags;
     }
 
-    public S3PartUploader(AmazonS3 client, DataPart dp, List<PartETag> partETags, AtomicInteger partsUploaded) {
+    public S3PartUploader(AmazonS3 client, DataPart dp, List<PartETag> partETags, AtomicInteger partsUploaded)
+    {
         super(MAX_RETRIES, RetryableCallable.DEFAULT_WAIT_TIME);
         this.client = client;
         this.dataPart = dp;
@@ -53,8 +55,8 @@ public class S3PartUploader extends RetryableCallable<Void> {
         this.partsUploaded = partsUploaded;
     }
 
-
-    private Void uploadPart() throws AmazonS3Exception, AmazonClientException, BackupRestoreException {
+    private Void uploadPart() throws AmazonS3Exception, AmazonClientException, BackupRestoreException
+    {
         UploadPartRequest req = new UploadPartRequest();
         req.setBucketName(dataPart.getBucketName());
         req.setKey(dataPart.getS3key());
@@ -73,19 +75,24 @@ public class S3PartUploader extends RetryableCallable<Void> {
         return null;
     }
 
-    public CompleteMultipartUploadResult completeUpload() throws BackupRestoreException {
-        CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(dataPart.getBucketName(), dataPart.getS3key(), dataPart.getUploadID(), partETags);
+    public CompleteMultipartUploadResult completeUpload() throws BackupRestoreException
+    {
+        CompleteMultipartUploadRequest compRequest = new CompleteMultipartUploadRequest(dataPart.getBucketName(),
+                dataPart.getS3key(), dataPart.getUploadID(), partETags);
         return client.completeMultipartUpload(compRequest);
     }
 
     // Abort
-    public void abortUpload() {
-        AbortMultipartUploadRequest abortRequest = new AbortMultipartUploadRequest(dataPart.getBucketName(), dataPart.getS3key(), dataPart.getUploadID());
+    public void abortUpload()
+    {
+        AbortMultipartUploadRequest abortRequest = new AbortMultipartUploadRequest(dataPart.getBucketName(),
+                dataPart.getS3key(), dataPart.getUploadID());
         client.abortMultipartUpload(abortRequest);
     }
 
     @Override
-    public Void retriableCall() throws AmazonS3Exception, AmazonClientException, BackupRestoreException {
+    public Void retriableCall() throws AmazonS3Exception, AmazonClientException, BackupRestoreException
+    {
         logger.debug("Picked up part {} size {}", dataPart.getPartNo(), dataPart.getPartData().length);
         return uploadPart();
     }

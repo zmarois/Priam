@@ -28,14 +28,16 @@ import java.io.IOException;
  * <p>
  * Created by vinhn on 10/11/16.
  */
-public class JMXConnectorMgr extends NodeProbe {
+public class JMXConnectorMgr extends NodeProbe
+{
     private static final Logger logger = LoggerFactory.getLogger(JMXConnectorMgr.class);
 
     /*
      * create a connection to remote mbean server and get proxy to various mbeans
      * @throws exception if unable to create the connection, e.g. Cassandra process not running.
      */
-    public JMXConnectorMgr(IConfiguration config) throws IOException, InterruptedException {
+    public JMXConnectorMgr(IConfiguration config) throws IOException, InterruptedException
+    {
         super("localhost", config.getJmxPort());
     }
 
@@ -43,7 +45,8 @@ public class JMXConnectorMgr extends NodeProbe {
     /*
     close the connection to remote mbean server
      */
-    public void close() throws IOException {
+    public void close() throws IOException
+    {
         super.close(); //close the connection to remote mbean server
     }
 

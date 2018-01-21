@@ -33,7 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class CassandraProcessManager implements ICassandraProcess {
+public class CassandraProcessManager implements ICassandraProcess
+{
     private static final Logger logger = LoggerFactory.getLogger(CassandraProcessManager.class);
     private static final String SUDO_STRING = "/usr/bin/sudo";
     private static final int SCRIPT_EXECUTE_WAIT_TIME_MS = 5000;
@@ -42,13 +43,16 @@ public class CassandraProcessManager implements ICassandraProcess {
     private ICassMonitorMetrics iCassMonitorMetrics;
 
     @Inject
-    public CassandraProcessManager(IConfiguration config, InstanceState instanceState, ICassMonitorMetrics cassMonitorMetrics) {
+    public CassandraProcessManager(IConfiguration config, InstanceState instanceState,
+            ICassMonitorMetrics cassMonitorMetrics)
+    {
         this.config = config;
         this.instanceState = instanceState;
         this.iCassMonitorMetrics = cassMonitorMetrics;
     }
 
-    protected void setEnv(Map<String, String> env) {
+    protected void setEnv(Map<String, String> env)
+    {
         env.put("HEAP_NEWSIZE", config.getHeapNewSize());
         env.put("MAX_HEAP_SIZE", config.getHeapSize());
         env.put("DATA_DIR", config.getDataFileLocation());
@@ -67,9 +71,11 @@ public class CassandraProcessManager implements ICassandraProcess {
 
         List<String> command = Lists.newArrayList();
 
-        if(config.useSudo()) {
+        if (config.useSudo())
+        {
             logger.info("Configured to use sudo to start C*");
-            if (!"root".equals(System.getProperty("user.name"))) {
+            if (!"root".equals(System.getProperty("user.name")))
+            {
                 command.add(SUDO_STRING);
                 command.add("-n");
                 command.add("-E");
@@ -92,9 +98,11 @@ public class CassandraProcessManager implements ICassandraProcess {
         Process starter = startCass.start();
 
         logger.info("Starting cassandra server ....");
-        try {
-            int code =  starter.waitFor();
-            if (code == 0) {
+        try
+        {
+            int code = starter.waitFor();
+            if (code == 0)
+            {
                 logger.info("Cassandra server has been started");
                 instanceState.setCassandraProcessAlive(true);
                 this.iCassMonitorMetrics.incCassStart();
@@ -103,32 +111,41 @@ public class CassandraProcessManager implements ICassandraProcess {
                 logger.error("Unable to start cassandra server. Error code: {}", code);
 
             logProcessOutput(starter);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.warn("Starting Cassandra has an error", e);
         }
     }
 
-    protected List<String> getStartCommand() {
+    protected List<String> getStartCommand()
+    {
         List<String> startCmd = new LinkedList<String>();
-        for (String param : config.getCassStartupScript().split(" ")) {
+        for (String param : config.getCassStartupScript().split(" "))
+        {
             if (StringUtils.isNotBlank(param))
                 startCmd.add(param);
         }
         return startCmd;
     }
 
-    void logProcessOutput(Process p) {
-        try {
+    void logProcessOutput(Process p)
+    {
+        try
+        {
             final String stdOut = readProcessStream(p.getInputStream());
             final String stdErr = readProcessStream(p.getErrorStream());
             logger.info("std_out: {}", stdOut);
             logger.info("std_err: {}", stdErr);
-        } catch (IOException ioe) {
+        }
+        catch (IOException ioe)
+        {
             logger.warn("Failed to read the std out/err streams", ioe);
         }
     }
 
-    String readProcessStream(InputStream inputStream) throws IOException {
+    String readProcessStream(InputStream inputStream) throws IOException
+    {
         final byte[] buffer = new byte[512];
         final ByteArrayOutputStream baos = new ByteArrayOutputStream(buffer.length);
         int cnt;
@@ -137,20 +154,23 @@ public class CassandraProcessManager implements ICassandraProcess {
         return baos.toString();
     }
 
-
-    public void stop() throws IOException {
+    public void stop() throws IOException
+    {
         logger.info("Stopping cassandra server ....");
         List<String> command = Lists.newArrayList();
-        if(config.useSudo()) {
+        if (config.useSudo())
+        {
             logger.info("Configured to use sudo to stop C*");
 
-            if (!"root".equals(System.getProperty("user.name"))) {
+            if (!"root".equals(System.getProperty("user.name")))
+            {
                 command.add(SUDO_STRING);
                 command.add("-n");
                 command.add("-E");
             }
         }
-        for (String param : config.getCassStopScript().split(" ")) {
+        for (String param : config.getCassStopScript().split(" "))
+        {
             if (StringUtils.isNotBlank(param))
                 command.add(param);
         }
@@ -160,18 +180,23 @@ public class CassandraProcessManager implements ICassandraProcess {
 
         instanceState.setShouldCassandraBeAlive(false);
         Process stopper = stopCass.start();
-        try {
+        try
+        {
             int code = stopper.waitFor();
-            if (code == 0) {
+            if (code == 0)
+            {
                 logger.info("Cassandra server has been stopped");
                 this.iCassMonitorMetrics.incCassStop();
                 instanceState.setCassandraProcessAlive(false);
             }
-            else {
+            else
+            {
                 logger.error("Unable to stop cassandra server. Error code: {}", code);
                 logProcessOutput(stopper);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.warn("couldn't shut down cassandra correctly", e);
         }
     }

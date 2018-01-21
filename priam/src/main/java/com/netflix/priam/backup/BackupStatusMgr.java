@@ -30,7 +30,8 @@ import java.util.*;
  * A means to manage metadata for various types of backups (snapshots, incrementals)
  */
 @Singleton
-public abstract class BackupStatusMgr implements IBackupStatusMgr {
+public abstract class BackupStatusMgr implements IBackupStatusMgr
+{
 
     private static final Logger logger = LoggerFactory.getLogger(BackupStatusMgr.class);
 
@@ -44,11 +45,12 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     private InstanceState instanceState;
 
     /**
-     * @param capacity Capacity to hold in-memory snapshot status days.
+     * @param capacity      Capacity to hold in-memory snapshot status days.
      * @param instanceState Status of the instance encapsulating health and other metadata of Priam and Cassandra.
      */
     @Inject
-    public BackupStatusMgr(int capacity, InstanceState instanceState) {
+    public BackupStatusMgr(int capacity, InstanceState instanceState)
+    {
         this.capacity = capacity;
         this.instanceState = instanceState;
         // This is to avoid us loading lot of status in memory.
@@ -57,22 +59,26 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     }
 
     @Override
-    public int getCapacity() {
+    public int getCapacity()
+    {
         return capacity;
     }
 
     @Override
-    public Map<String, LinkedList<BackupMetadata>> getAllSnapshotStatus() {
+    public Map<String, LinkedList<BackupMetadata>> getAllSnapshotStatus()
+    {
         return backupMetadataMap;
     }
 
     @Override
-    public LinkedList<BackupMetadata> locate(Date snapshotDate) {
+    public LinkedList<BackupMetadata> locate(Date snapshotDate)
+    {
         return locate(DateUtil.formatyyyyMMdd(snapshotDate));
     }
 
     @Override
-    public LinkedList<BackupMetadata> locate(String snapshotDate) {
+    public LinkedList<BackupMetadata> locate(String snapshotDate)
+    {
         if (StringUtils.isEmpty(snapshotDate))
             return null;
 
@@ -89,10 +95,12 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     }
 
     @Override
-    public void start(BackupMetadata backupMetadata) {
+    public void start(BackupMetadata backupMetadata)
+    {
         LinkedList<BackupMetadata> metadataLinkedList = locate(backupMetadata.getSnapshotDate());
 
-        if (metadataLinkedList == null) {
+        if (metadataLinkedList == null)
+        {
             metadataLinkedList = new LinkedList<>();
         }
 
@@ -104,7 +112,8 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     }
 
     @Override
-    public void finish(BackupMetadata backupMetadata) {
+    public void finish(BackupMetadata backupMetadata)
+    {
         //validate that it has actually finished. If not, then set the status and current date.
         if (backupMetadata.getStatus() != Status.FINISHED)
             backupMetadata.setStatus(Status.FINISHED);
@@ -122,18 +131,22 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
 
     }
 
-    private void retrieveAndUpdate(final BackupMetadata backupMetadata) {
+    private void retrieveAndUpdate(final BackupMetadata backupMetadata)
+    {
         //Retrieve the snapshot metadata and then update the date/status.
         LinkedList<BackupMetadata> metadataLinkedList = locate(backupMetadata.getSnapshotDate());
 
-        if (metadataLinkedList == null || metadataLinkedList.isEmpty()) {
-            logger.error("No previous backupMetaData found. This should not happen. Creating new to ensure app keeps running.");
+        if (metadataLinkedList == null || metadataLinkedList.isEmpty())
+        {
+            logger.error(
+                    "No previous backupMetaData found. This should not happen. Creating new to ensure app keeps running.");
             metadataLinkedList = new LinkedList<>();
             metadataLinkedList.addFirst(backupMetadata);
         }
 
         metadataLinkedList.forEach(backupMetadata1 -> {
-            if (backupMetadata1.equals(backupMetadata)) {
+            if (backupMetadata1.equals(backupMetadata))
+            {
                 backupMetadata1.setCompleted(backupMetadata.getCompleted());
                 backupMetadata1.setStatus(backupMetadata.getStatus());
                 return;
@@ -142,7 +155,8 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     }
 
     @Override
-    public void failed(BackupMetadata backupMetadata) {
+    public void failed(BackupMetadata backupMetadata)
+    {
         //validate that it has actually failed. If not, then set the status and current date.
         if (backupMetadata.getCompleted() == null)
             backupMetadata.setCompleted(Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTime());
@@ -176,7 +190,8 @@ public abstract class BackupStatusMgr implements IBackupStatusMgr {
     public abstract LinkedList<BackupMetadata> fetch(String snapshotDate);
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         final StringBuffer sb = new StringBuffer("BackupStatusMgr{");
         sb.append("backupMetadataMap=").append(backupMetadataMap);
         sb.append(", capacity=").append(capacity);

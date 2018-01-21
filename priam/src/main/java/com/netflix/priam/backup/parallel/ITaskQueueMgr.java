@@ -24,7 +24,8 @@ package com.netflix.priam.backup.parallel;
  * - Guarantee delivery of task to only one consumer.
  * - Provide relevant metrics including number of tasks in queue, number of tasks processed.
  */
-public interface ITaskQueueMgr<E> {
+public interface ITaskQueueMgr<E>
+{
 
     public void add(E task);
 
@@ -45,7 +46,6 @@ public interface ITaskQueueMgr<E> {
      * *Note: "completed" here can mean success or failure.
      */
     public void taskPostProcessing(E completedTask);
-
 
     public Integer getNumOfTasksToBeProessed();
 

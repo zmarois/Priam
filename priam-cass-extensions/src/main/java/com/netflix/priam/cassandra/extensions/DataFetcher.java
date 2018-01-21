@@ -16,15 +16,15 @@
  */
 package com.netflix.priam.cassandra.extensions;
 
+import com.google.common.base.Charsets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.FilterInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import com.google.common.base.Charsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DataFetcher
 {
@@ -61,7 +61,7 @@ public class DataFetcher
         {
             try
             {
-                if(responseStream != null)
+                if (responseStream != null)
                     responseStream.close();
             }
             catch (Exception e)

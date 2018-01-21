@@ -27,7 +27,8 @@ import java.util.Map;
  * to register, update, delete or list instances from the registry
  */
 @ImplementedBy(SDBInstanceFactory.class)
-public interface IPriamInstanceFactory<T> {
+public interface IPriamInstanceFactory<T>
+{
     /**
      * Return a list of all Cassandra server nodes registered.
      *
@@ -58,7 +59,8 @@ public interface IPriamInstanceFactory<T> {
      * @param token
      * @return the new node
      */
-    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac, Map<String, Object> volumes, String token);
+    public PriamInstance create(String app, int id, String instanceID, String hostname, String ip, String rac,
+            Map<String, Object> volumes, String token);
 
     /**
      * Delete the server node from the registry

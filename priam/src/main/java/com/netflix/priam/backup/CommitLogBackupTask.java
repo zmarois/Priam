@@ -15,11 +15,9 @@
  */
 package com.netflix.priam.backup;
 
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.IMessageObserver.BACKUP_MESSAGE_TYPE;
 import com.netflix.priam.notification.BackupNotificationMgr;
@@ -32,76 +30,86 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
 //Provide this to be run as a Quart job
 @Singleton
-public class CommitLogBackupTask extends AbstractBackup {
-    public static String JOBNAME = "CommitLogBackup";
-
+public class CommitLogBackupTask extends AbstractBackup
+{
     private static final Logger logger = LoggerFactory.getLogger(CommitLogBackupTask.class);
-    private final List<String> clRemotePaths = new ArrayList<String>();
+    public static String JOBNAME = "CommitLogBackup";
     static List<IMessageObserver> observers = new ArrayList<IMessageObserver>();
+    private final List<String> clRemotePaths = new ArrayList<String>();
     private final CommitLogBackup clBackup;
-
 
     @Inject
     public CommitLogBackupTask(IConfiguration config, Provider<AbstractBackupPath> pathFactory,
-                               CommitLogBackup clBackup, IFileSystemContext backupFileSystemCtx
+            CommitLogBackup clBackup, IFileSystemContext backupFileSystemCtx
             , BackupNotificationMgr backupNotificationMgr
-    ) {
+    )
+    {
         super(config, backupFileSystemCtx, pathFactory, backupNotificationMgr);
         this.clBackup = clBackup;
     }
 
+    public static TaskTimer getTimer(IConfiguration config)
+    {
+        return new SimpleTimer(JOBNAME, 60L * 1000); //every 1 min
+    }
+
+    public static void addObserver(IMessageObserver observer)
+    {
+        observers.add(observer);
+    }
+
+    public static void removeObserver(IMessageObserver observer)
+    {
+        observers.remove(observer);
+    }
 
     @Override
-    public void execute() throws Exception {
-        try {
+    public void execute() throws Exception
+    {
+        try
+        {
             logger.debug("Checking for any archived commitlogs");
             //double-check the permission
             if (config.isBackingUpCommitLogs())
                 clBackup.upload(config.getCommitLogBackupRestoreFromDirs(), null);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error(e.getMessage(), e);
         }
     }
 
-
     @Override
-    public String getName() {
+    public String getName()
+    {
         return JOBNAME;
     }
 
-    public static TaskTimer getTimer(IConfiguration config) {
-        return new SimpleTimer(JOBNAME, 60L * 1000); //every 1 min
-    }
-
-
-    public static void addObserver(IMessageObserver observer) {
-        observers.add(observer);
-    }
-
-    public static void removeObserver(IMessageObserver observer) {
-        observers.remove(observer);
-    }
-
-    public void notifyObservers() {
-        for (IMessageObserver observer : observers) {
-            if (observer != null) {
+    public void notifyObservers()
+    {
+        for (IMessageObserver observer : observers)
+        {
+            if (observer != null)
+            {
                 logger.debug("Updating CL observers now ...");
                 observer.update(BACKUP_MESSAGE_TYPE.COMMITLOG, clRemotePaths);
-            } else
+            }
+            else
                 logger.info("Observer is Null, hence can not notify ...");
         }
     }
 
     @Override
-    protected void backupUploadFlow(File backupDir) throws Exception {
+    protected void backupUploadFlow(File backupDir) throws Exception
+    {
         //Do nothing.
     }
 
     @Override
-    protected void addToRemotePath(String remotePath) {
+    protected void addToRemotePath(String remotePath)
+    {
         clRemotePaths.add(remotePath);
     }
 }

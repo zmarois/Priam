@@ -29,7 +29,8 @@ import java.util.Map;
  * Interface for Priam's configuration
  */
 @ImplementedBy(PriamConfiguration.class)
-public interface IConfiguration {
+public interface IConfiguration
+{
 
     public void intialize();
 
@@ -100,6 +101,8 @@ public interface IConfiguration {
      */
     public List<String> getRestoreKeySpaces();
 
+    public void setRestoreKeySpaces(List<String> keyspaces);
+
     /**
      * @return Location of the local data dir
      */
@@ -136,7 +139,6 @@ public interface IConfiguration {
      * @return Enables Remote JMX connections n C*
      */
     public boolean enableRemoteJMX();
-
 
     /**
      * Cassandra storage/cluster communication port
@@ -224,8 +226,8 @@ public interface IConfiguration {
 
     /*
      * Column Family(ies), comma delimited, to filter from backup.
-     * *Note:  the expected format is keyspace.cfname  
-     * 
+     * *Note:  the expected format is keyspace.cfname
+     *
      * @return Column Family(ies), comma delimited, to filter from backup.  If no filter is applied, returns null.
      */
     public String getSnapshotCFFilter();
@@ -237,8 +239,8 @@ public interface IConfiguration {
 
     /*
      * Column Family(ies), comma delimited, to filter from backup.
-     * *Note:  the expected format is keyspace.cfname  
-     * 
+     * *Note:  the expected format is keyspace.cfname
+     *
      * @return Column Family(ies), comma delimited, to filter from backup.  If no filter is applied, returns null.
      */
     public String getIncrementalCFFilter();
@@ -250,8 +252,8 @@ public interface IConfiguration {
 
     /*
      * Column Family(ies), comma delimited, to filter from backup.
-     * Note:  the expected format is keyspace.cfname  
-     * 
+     * Note:  the expected format is keyspace.cfname
+     *
      * @return Column Family(ies), comma delimited, to filter from restore.  If no filter is applied, returns null or empty string.
      */
     public String getRestoreCFFilter();
@@ -333,7 +335,8 @@ public interface IConfiguration {
     /**
      * @return InstanceDataRetriever which encapsulates meta-data about the running instance like region, RAC, name, ip address etc.
      */
-    InstanceDataRetriever getInstanceDataRetriever() throws InstantiationException, IllegalAccessException, ClassNotFoundException;
+    InstanceDataRetriever getInstanceDataRetriever()
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException;
 
     /**
      * @return true if Priam should local config file for tokens and seeds
@@ -472,6 +475,7 @@ public interface IConfiguration {
 
     /**
      * Enable/disable backup/restore of commit logs.
+     *
      * @return boolean value true if commit log backup/restore is enabled, false otherwise. Default: false.
      */
     public boolean isBackingUpCommitLogs();
@@ -492,8 +496,6 @@ public interface IConfiguration {
      * @return true/false, if Cassandra is running in a VPC environment
      */
     public boolean isVpcRing();
-
-    public void setRestoreKeySpaces(List<String> keyspaces);
 
     public boolean isClientSslEnabled();
 
@@ -563,6 +565,7 @@ public interface IConfiguration {
 
     /**
      * Data that needs to be restored is encrypted?
+     *
      * @return true if data that needs to be restored is encrypted. Note that setting this value does not play any role until {@link #getRestoreSnapshot()} is set to a non-null value.
      */
     public boolean isRestoreEncrypted();
@@ -689,7 +692,6 @@ public interface IConfiguration {
      */
     public String getBackupStatusFileLoc();
 
-
     /**
      * @return Decides whether to use sudo to start C* or not
      */
@@ -699,6 +701,7 @@ public interface IConfiguration {
      * SNS Notification topic to be used for sending backup event notifications.
      * One start event is sent before uploading any file and one complete/failure event is sent after the file is uploaded/failed. This applies to both incremental and snapshot.
      * Default: no notifications i.e. this value is set to EMPTY VALUE
+     *
      * @return SNS Topic ARN to be used to send notification.
      */
     public String getBackupNotificationTopicArn();

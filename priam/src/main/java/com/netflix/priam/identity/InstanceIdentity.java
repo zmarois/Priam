@@ -45,34 +45,39 @@ import java.util.List;
  * the instance - token, seeds etc.
  */
 @Singleton
-public class InstanceIdentity {
-    private static final Logger logger = LoggerFactory.getLogger(InstanceIdentity.class);
+public class InstanceIdentity
+{
     public static final String DUMMY_INSTANCE_ID = "new_slot";
-
-    private final ListMultimap<String, PriamInstance> locMap = Multimaps.newListMultimap(new HashMap<String, Collection<PriamInstance>>(), new Supplier<List<PriamInstance>>() {
-        public List<PriamInstance> get() {
-            return Lists.newArrayList();
-        }
-    });
+    private static final Logger logger = LoggerFactory.getLogger(InstanceIdentity.class);
+    private final ListMultimap<String, PriamInstance> locMap = Multimaps
+            .newListMultimap(new HashMap<String, Collection<PriamInstance>>(), new Supplier<List<PriamInstance>>()
+            {
+                public List<PriamInstance> get()
+                {
+                    return Lists.newArrayList();
+                }
+            });
     private final IPriamInstanceFactory<PriamInstance> factory;
     private final IMembership membership;
     private final IConfiguration config;
     private final Sleeper sleeper;
     private final ITokenManager tokenManager;
-
-    private final Predicate<PriamInstance> differentHostPredicate = new Predicate<PriamInstance>() {
+    private PriamInstance myInstance;
+    private final Predicate<PriamInstance> differentHostPredicate = new Predicate<PriamInstance>()
+    {
         @Override
-        public boolean apply(PriamInstance instance) {
-            return (!instance.getInstanceId().equalsIgnoreCase(DUMMY_INSTANCE_ID) && !instance.getHostName().equals(myInstance.getHostName()));
+        public boolean apply(PriamInstance instance)
+        {
+            return (!instance.getInstanceId().equalsIgnoreCase(DUMMY_INSTANCE_ID) && !instance.getHostName()
+                    .equals(myInstance.getHostName()));
         }
 
         @Override
-        public boolean test(PriamInstance input) {
+        public boolean test(PriamInstance input)
+        {
             return apply(input);
         }
     };
-
-    private PriamInstance myInstance;
     private boolean isReplace = false;
     private boolean isTokenPregenerated = false;
     private String replacedIp = "";
@@ -83,11 +88,12 @@ public class InstanceIdentity {
     @Inject
     //Note: do not parameterized the generic type variable to an implementation as it confuses Guice in the binding.
     public InstanceIdentity(IPriamInstanceFactory factory, IMembership membership, IConfiguration config,
-                            Sleeper sleeper, ITokenManager tokenManager
+            Sleeper sleeper, ITokenManager tokenManager
             , IDeadTokenRetriever deadTokenRetriever
             , IPreGeneratedTokenRetriever preGeneratedTokenRetriever
             , INewTokenRetriever newTokenRetriever
-    ) throws Exception {
+    ) throws Exception
+    {
         this.factory = factory;
         this.membership = membership;
         this.config = config;
@@ -99,29 +105,40 @@ public class InstanceIdentity {
         init();
     }
 
-    public PriamInstance getInstance() {
+    private static boolean isInstanceDummy(PriamInstance instance)
+    {
+        return instance.getInstanceId().equals(DUMMY_INSTANCE_ID);
+    }
+
+    public PriamInstance getInstance()
+    {
         return myInstance;
     }
 
-    public void init() throws Exception {
+    public void init() throws Exception
+    {
         // try to grab the token which was already assigned
-        myInstance = new RetryableCallable<PriamInstance>() {
+        myInstance = new RetryableCallable<PriamInstance>()
+        {
             @Override
-            public PriamInstance retriableCall() throws Exception {
+            public PriamInstance retriableCall() throws Exception
+            {
                 // Check if this node is decomissioned
                 List<PriamInstance> deadInstances = factory.getAllIds(config.getAppName() + "-dead");
-                for (PriamInstance ins : deadInstances) {
+                for (PriamInstance ins : deadInstances)
+                {
                     logger.info("[Dead] Iterating though the hosts: {}", ins.getInstanceId());
-                    if (ins.getInstanceId().equals(config.getInstanceName())) {
+                    if (ins.getInstanceId().equals(config.getInstanceName()))
+                    {
                         ins.setOutOfService(true);
                         logger.info("[Dead]  found that this node is dead."
-                                + " application: {}"
-                                + ", id: {}"
-                                + ", instance: {}"
-                                + ", region: {}"
-                                + ", host ip: {}"
-                                + ", host name: {}"
-                                + ", token: {}",
+                                        + " application: {}"
+                                        + ", id: {}"
+                                        + ", instance: {}"
+                                        + ", region: {}"
+                                        + ", host ip: {}"
+                                        + ", host name: {}"
+                                        + ", token: {}",
                                 ins.getApp(), ins.getId(), ins.getInstanceId(),
                                 ins.getDC(), ins.getHostIP(), ins.getHostName(),
                                 ins.getToken());
@@ -129,17 +146,20 @@ public class InstanceIdentity {
                     }
                 }
                 List<PriamInstance> aliveInstances = factory.getAllIds(config.getAppName());
-                for (PriamInstance ins : aliveInstances) {
-                    logger.info("[Alive] Iterating though the hosts: {} My id = [{}]", ins.getInstanceId(), ins.getId());
-                    if (ins.getInstanceId().equals(config.getInstanceName())) {
+                for (PriamInstance ins : aliveInstances)
+                {
+                    logger.info("[Alive] Iterating though the hosts: {} My id = [{}]", ins.getInstanceId(),
+                            ins.getId());
+                    if (ins.getInstanceId().equals(config.getInstanceName()))
+                    {
                         logger.info("[Alive]  found that this node is alive."
-                                + " application: {}"
-                                + ", id: {}"
-                                + ", instance: {}"
-                                + ", region: {}"
-                                + ", host ip: {}"
-                                + ", host name: {}"
-                                + ", token: {}",
+                                        + " application: {}"
+                                        + ", id: {}"
+                                        + ", instance: {}"
+                                        + ", region: {}"
+                                        + ", host ip: {}"
+                                        + ", host name: {}"
+                                        + ", token: {}",
                                 ins.getApp(), ins.getId(), ins.getInstanceId(),
                                 ins.getDC(), ins.getHostIP(), ins.getHostName(),
                                 ins.getToken());
@@ -152,18 +172,23 @@ public class InstanceIdentity {
         }.call();
 
         // Grab a dead token
-        if (null == myInstance) {
-            myInstance = new RetryableCallable<PriamInstance>() {
+        if (null == myInstance)
+        {
+            myInstance = new RetryableCallable<PriamInstance>()
+            {
 
                 @Override
-                public PriamInstance retriableCall() throws Exception {
+                public PriamInstance retriableCall() throws Exception
+                {
                     PriamInstance result = null;
                     result = deadTokenRetriever.get();
-                    if (result != null) {
+                    if (result != null)
+                    {
 
                         isReplace = true; //indicate that we are acquiring a dead instance's token
 
-                        if (deadTokenRetriever.getReplaceIp() != null) { //The IP address of the dead instance to which we will acquire its token
+                        if (deadTokenRetriever.getReplaceIp() != null)
+                        { //The IP address of the dead instance to which we will acquire its token
                             replacedIp = deadTokenRetriever.getReplaceIp();
                         }
 
@@ -173,7 +198,8 @@ public class InstanceIdentity {
                 }
 
                 @Override
-                public void forEachExecution() {
+                public void forEachExecution()
+                {
                     populateRacMap();
                     deadTokenRetriever.setLocMap(locMap);
                 }
@@ -181,24 +207,28 @@ public class InstanceIdentity {
             }.call();
         }
 
-
         // Grab a pre-generated token if there is such one
-        if (null == myInstance) {
+        if (null == myInstance)
+        {
 
-            myInstance = new RetryableCallable<PriamInstance>() {
+            myInstance = new RetryableCallable<PriamInstance>()
+            {
 
                 @Override
-                public PriamInstance retriableCall() throws Exception {
+                public PriamInstance retriableCall() throws Exception
+                {
                     PriamInstance result = null;
                     result = preGeneratedTokenRetriever.get();
-                    if (result != null) {
+                    if (result != null)
+                    {
                         isTokenPregenerated = true;
                     }
                     return result;
                 }
 
                 @Override
-                public void forEachExecution() {
+                public void forEachExecution()
+                {
                     populateRacMap();
                     preGeneratedTokenRetriever.setLocMap(locMap);
                 }
@@ -207,31 +237,38 @@ public class InstanceIdentity {
 
         }
 
-
         // Grab a new token
-        if (null == myInstance) {
+        if (null == myInstance)
+        {
 
-            if (this.config.isCreateNewTokenEnable()) {
+            if (this.config.isCreateNewTokenEnable())
+            {
 
-                myInstance = new RetryableCallable<PriamInstance>() {
+                myInstance = new RetryableCallable<PriamInstance>()
+                {
 
                     @Override
-                    public PriamInstance retriableCall() throws Exception {
+                    public PriamInstance retriableCall() throws Exception
+                    {
                         super.set(100, 100);
                         newTokenRetriever.setLocMap(locMap);
                         return newTokenRetriever.get();
                     }
 
                     @Override
-                    public void forEachExecution() {
+                    public void forEachExecution()
+                    {
                         populateRacMap();
                         newTokenRetriever.setLocMap(locMap);
                     }
 
                 }.call();
 
-            } else {
-                throw new IllegalStateException("Node attempted to erroneously create a new token when we should be grabbing an existing token.");
+            }
+            else
+            {
+                throw new IllegalStateException(
+                        "Node attempted to erroneously create a new token when we should be grabbing an existing token.");
             }
 
         }
@@ -239,26 +276,33 @@ public class InstanceIdentity {
         logger.info("My token: {}", myInstance.getToken());
     }
 
-    private void populateRacMap() {
+    private void populateRacMap()
+    {
         locMap.clear();
         List<PriamInstance> instances = factory.getAllIds(config.getAppName());
-        for (PriamInstance ins : instances) {
+        for (PriamInstance ins : instances)
+        {
             locMap.put(ins.getRac(), ins);
         }
     }
 
-    public List<String> getSeeds() throws UnknownHostException {
+    public List<String> getSeeds() throws UnknownHostException
+    {
         populateRacMap();
         List<String> seeds = new LinkedList<String>();
         // Handle single zone deployment
-        if (config.getRacs().size() == 1) {
+        if (config.getRacs().size() == 1)
+        {
             // Return empty list if all nodes are not up
             if (membership.getRacMembershipSize() != locMap.get(myInstance.getRac()).size())
                 return seeds;
             // If seed node, return the next node in the list
-            if (locMap.get(myInstance.getRac()).size() > 1 && locMap.get(myInstance.getRac()).get(0).getHostIP().equals(myInstance.getHostIP())) {
+            if (locMap.get(myInstance.getRac()).size() > 1 && locMap.get(myInstance.getRac()).get(0).getHostIP()
+                    .equals(myInstance.getHostIP()))
+            {
                 PriamInstance instance = locMap.get(myInstance.getRac()).get(1);
-                if (instance != null && !isInstanceDummy(instance)) {
+                if (instance != null && !isInstanceDummy(instance))
+                {
                     if (config.isMultiDC())
                         seeds.add(instance.getHostIP());
                     else
@@ -266,9 +310,11 @@ public class InstanceIdentity {
                 }
             }
         }
-        for (String loc : locMap.keySet()) {
+        for (String loc : locMap.keySet())
+        {
             PriamInstance instance = Iterables.tryFind(locMap.get(loc), differentHostPredicate).orNull();
-            if (instance != null && !isInstanceDummy(instance)) {
+            if (instance != null && !isInstanceDummy(instance))
+            {
                 if (config.isMultiDC())
                     seeds.add(instance.getHostIP());
                 else
@@ -278,25 +324,25 @@ public class InstanceIdentity {
         return seeds;
     }
 
-    public boolean isSeed() {
+    public boolean isSeed()
+    {
         populateRacMap();
         String ip = locMap.get(myInstance.getRac()).get(0).getHostName();
         return myInstance.getHostName().equals(ip);
     }
 
-    public boolean isReplace() {
+    public boolean isReplace()
+    {
         return isReplace;
     }
 
-    public boolean isTokenPregenerated() {
+    public boolean isTokenPregenerated()
+    {
         return isTokenPregenerated;
     }
 
-    public String getReplacedIp() {
+    public String getReplacedIp()
+    {
         return replacedIp;
-    }
-
-    private static boolean isInstanceDummy(PriamInstance instance) {
-        return instance.getInstanceId().equals(DUMMY_INSTANCE_ID);
     }
 }

@@ -36,29 +36,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class GoogleCryptographyRestoreStrategy extends EncryptedRestoreBase {
-    private static final Logger logger = LoggerFactory.getLogger(GoogleCryptographyRestoreStrategy.class);
+public class GoogleCryptographyRestoreStrategy extends EncryptedRestoreBase
+{
     public static final String JOBNAME = "GOOGLECLOUDSTORAGE_RESTORE_JOB";
+    private static final Logger logger = LoggerFactory.getLogger(GoogleCryptographyRestoreStrategy.class);
 
     @Inject
-    public GoogleCryptographyRestoreStrategy(final IConfiguration config, ICassandraProcess cassProcess, @Named("gcsencryptedbackup") IBackupFileSystem fs, Sleeper sleeper
+    public GoogleCryptographyRestoreStrategy(final IConfiguration config, ICassandraProcess cassProcess,
+            @Named("gcsencryptedbackup") IBackupFileSystem fs, Sleeper sleeper
             , @Named("filecryptoalgorithm") IFileCryptography fileCryptography
             , @Named("pgpcredential") ICredentialGeneric credential
             , ICompression compress, Provider<AbstractBackupPath> pathProvider,
-                                             InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState
-    ) {
-        super(config, fs, JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector, credential, fileCryptography, compress, metaData, instanceState);
+            InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState
+    )
+    {
+        super(config, fs, JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector, credential, fileCryptography,
+                compress, metaData, instanceState);
     }
-
 
     /**
      * @return a timer used by the scheduler to determine when "this" should be run.
      */
-    public static TaskTimer getTimer() {
+    public static TaskTimer getTimer()
+    {
         return new SimpleTimer(JOBNAME);
     }
-
-
-
 
 }

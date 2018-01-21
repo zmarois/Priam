@@ -28,7 +28,8 @@ import java.util.List;
 /**
  * Represents an S3 object key
  */
-public class S3BackupPath extends AbstractBackupPath {
+public class S3BackupPath extends AbstractBackupPath
+{
     /*
      * Checking if request came from Cassandra 1.0 or 1.1 
      * In Cassandra 1.0, Number of path elements = 8
@@ -37,7 +38,8 @@ public class S3BackupPath extends AbstractBackupPath {
     public static final int NUM_PATH_ELEMENTS_CASS_1_0 = 8;
 
     @Inject
-    public S3BackupPath(IConfiguration config, InstanceIdentity factory) {
+    public S3BackupPath(IConfiguration config, InstanceIdentity factory)
+    {
         super(config, factory);
     }
 
@@ -49,7 +51,8 @@ public class S3BackupPath extends AbstractBackupPath {
      * BASE/REGION/CLUSTER/TOKEN/[SNAPSHOTTIME]/[SST|SNP|META]/KEYSPACE/COLUMNFAMILY/FILE
      */
     @Override
-    public String getRemotePath() {
+    public String getRemotePath()
+    {
         StringBuffer buff = new StringBuffer();
         buff.append(baseDir).append(S3BackupPath.PATH_SEP); // Base dir
         buff.append(region).append(S3BackupPath.PATH_SEP);
@@ -57,7 +60,8 @@ public class S3BackupPath extends AbstractBackupPath {
         buff.append(token).append(S3BackupPath.PATH_SEP);
         buff.append(formatDate(time)).append(S3BackupPath.PATH_SEP);
         buff.append(type).append(S3BackupPath.PATH_SEP);
-        if (type != BackupFileType.META && type != BackupFileType.CL) {
+        if (type != BackupFileType.META && type != BackupFileType.CL)
+        {
             if (isCassandra1_0)
                 buff.append(keyspace).append(S3BackupPath.PATH_SEP);
             else
@@ -68,11 +72,13 @@ public class S3BackupPath extends AbstractBackupPath {
     }
 
     @Override
-    public void parseRemote(String remoteFilePath) {
+    public void parseRemote(String remoteFilePath)
+    {
         String[] elements = remoteFilePath.split(String.valueOf(S3BackupPath.PATH_SEP));
         // parse out things which are empty
         List<String> pieces = Lists.newArrayList();
-        for (String ele : elements) {
+        for (String ele : elements)
+        {
             if (ele.equals(""))
                 continue;
             pieces.add(ele);
@@ -86,7 +92,8 @@ public class S3BackupPath extends AbstractBackupPath {
         token = pieces.get(3);
         time = parseDate(pieces.get(4));
         type = BackupFileType.valueOf(pieces.get(5));
-        if (type != BackupFileType.META && type != BackupFileType.CL) {
+        if (type != BackupFileType.META && type != BackupFileType.CL)
+        {
             keyspace = pieces.get(6);
             if (!isCassandra1_0)
                 columnFamily = pieces.get(7);
@@ -96,11 +103,13 @@ public class S3BackupPath extends AbstractBackupPath {
     }
 
     @Override
-    public void parsePartialPrefix(String remoteFilePath) {
+    public void parsePartialPrefix(String remoteFilePath)
+    {
         String[] elements = remoteFilePath.split(String.valueOf(S3BackupPath.PATH_SEP));
         // parse out things which are empty
         List<String> pieces = Lists.newArrayList();
-        for (String ele : elements) {
+        for (String ele : elements)
+        {
             if (ele.equals(""))
                 continue;
             pieces.add(ele);
@@ -113,7 +122,8 @@ public class S3BackupPath extends AbstractBackupPath {
     }
 
     @Override
-    public String remotePrefix(Date start, Date end, String location) {
+    public String remotePrefix(Date start, Date end, String location)
+    {
         StringBuffer buff = new StringBuffer(clusterPrefix(location));
         token = factory.getInstance().getToken();
         buff.append(token).append(S3BackupPath.PATH_SEP);
@@ -123,14 +133,18 @@ public class S3BackupPath extends AbstractBackupPath {
     }
 
     @Override
-    public String clusterPrefix(String location) {
+    public String clusterPrefix(String location)
+    {
         StringBuffer buff = new StringBuffer();
         String[] elements = location.split(String.valueOf(S3BackupPath.PATH_SEP));
-        if (elements.length <= 1) {
+        if (elements.length <= 1)
+        {
             baseDir = config.getBackupLocation();
             region = config.getDC();
             clusterName = config.getAppName();
-        } else {
+        }
+        else
+        {
             assert elements.length >= 4 : "Too few elements in path " + location;
             baseDir = elements[1];
             region = elements[2];

@@ -20,37 +20,45 @@ package com.netflix.priam.merics;
  * <p>
  * Created by vinhn on 10/14/16.
  */
-public class NodeToolFlushMeasurement implements IMeasurement<Object> {
+public class NodeToolFlushMeasurement implements IMeasurement<Object>
+{
     private int failure = 0, success = 0;
 
     @Override
-    public MMEASUREMENT_TYPE getType() {
+    public MMEASUREMENT_TYPE getType()
+    {
         return MMEASUREMENT_TYPE.NODETOOLFLUSH;
     }
 
-    public void incrementFailureCnt(int val) {
+    public void incrementFailureCnt(int val)
+    {
         this.failure += val;
     }
 
-    public int getFailureCnt() {
+    public int getFailureCnt()
+    {
         return this.failure;
     }
 
-    public void incrementSuccessCnt(int val) {
+    public void incrementSuccessCnt(int val)
+    {
         this.success += val;
     }
 
-    public int getSuccessCnt() {
+    public int getSuccessCnt()
+    {
         return this.success;
     }
 
     @Override
-    public Object getVal() {
+    public Object getVal()
+    {
         return null;
     }
 
     @Override
-    public void setVal(Object val) {
+    public void setVal(Object val)
+    {
         //NO op;
     }
 

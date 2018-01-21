@@ -22,12 +22,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-public final class PropertiesConfigSourceTest {
+public final class PropertiesConfigSourceTest
+{
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertiesConfigSourceTest.class.getName());
 
     @Test
-    public void readFile() {
+    public void readFile()
+    {
         PropertiesConfigSource configSource = new PropertiesConfigSource("conf/Priam.properties");
         configSource.intialize("asgName", "region");
 
@@ -38,7 +39,8 @@ public final class PropertiesConfigSourceTest {
     }
 
     @Test
-    public void updateKey() {
+    public void updateKey()
+    {
         PropertiesConfigSource configSource = new PropertiesConfigSource("conf/Priam.properties");
         configSource.intialize("asgName", "region");
 

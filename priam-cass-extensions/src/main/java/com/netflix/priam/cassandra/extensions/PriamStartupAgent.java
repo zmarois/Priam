@@ -24,7 +24,6 @@ import org.json.simple.parser.JSONParser;
 import java.lang.instrument.Instrumentation;
 import java.util.Iterator;
 
-
 /**
  * A <a href="http://docs.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html">PreMain</a> class
  * to run inside of the cassandra process. Contacts Priam for essential cassandra startup information
@@ -32,7 +31,8 @@ import java.util.Iterator;
  */
 public class PriamStartupAgent
 {
-	public static String REPLACED_ADDRESS_MIN_VER = "1.2.11";
+    public static String REPLACED_ADDRESS_MIN_VER = "1.2.11";
+
     public static void premain(String agentArgs, Instrumentation inst)
     {
         PriamStartupAgent agent = new PriamStartupAgent();
@@ -46,16 +46,18 @@ public class PriamStartupAgent
         boolean isReplace = false;
         String replacedIp = "";
         String extraEnvParams = null;
-        
+
         while (true)
         {
             try
             {
                 token = DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/get_token");
                 seeds = DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/get_seeds");
-                isReplace = Boolean.parseBoolean(DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/is_replace_token"));
+                isReplace = Boolean.parseBoolean(
+                        DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/is_replace_token"));
                 replacedIp = DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/get_replaced_ip");
-                extraEnvParams = DataFetcher.fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/get_extra_env_params");
+                extraEnvParams = DataFetcher
+                        .fetchData("http://127.0.0.1:8080/Priam/REST/v1/cassconfig/get_extra_env_params");
 
             }
             catch (Exception e)
@@ -63,7 +65,7 @@ public class PriamStartupAgent
                 System.out.println("Failed to obtain startup data from priam, can not start yet. will retry shortly");
                 e.printStackTrace();
             }
-  
+
             if (token != null && seeds != null)
                 break;
             try
@@ -75,36 +77,43 @@ public class PriamStartupAgent
                 // do nothing.
             }
         }
-        
+
         System.setProperty("cassandra.initial_token", token);
 
         setExtraEnvParams(extraEnvParams);
 
         if (isReplace)
-        {	
-        	System.out.println("Detect cassandra version : " + FBUtilities.getReleaseVersionString());
-        	if (FBUtilities.getReleaseVersionString().compareTo(REPLACED_ADDRESS_MIN_VER) < 0)
-        	{
-        		System.setProperty("cassandra.replace_token", token);
-        	} else 
-        	{	
-               System.setProperty("cassandra.replace_address", replacedIp);
-        	}
+        {
+            System.out.println("Detect cassandra version : " + FBUtilities.getReleaseVersionString());
+            if (FBUtilities.getReleaseVersionString().compareTo(REPLACED_ADDRESS_MIN_VER) < 0)
+            {
+                System.setProperty("cassandra.replace_token", token);
+            }
+            else
+            {
+                System.setProperty("cassandra.replace_address", replacedIp);
+            }
         }
 
     }
 
-    private void setExtraEnvParams(String extraEnvParams)  {
-        try {
-            if (null != extraEnvParams && extraEnvParams.length() > 0) {
+    private void setExtraEnvParams(String extraEnvParams)
+    {
+        try
+        {
+            if (null != extraEnvParams && extraEnvParams.length() > 0)
+            {
                 JSONParser parser = new JSONParser();
                 Object obj = parser.parse(extraEnvParams);
                 JSONObject jsonObj = (JSONObject) obj;
-                if(jsonObj.size()>0) {
-                    for (Iterator iterator = jsonObj.keySet().iterator(); iterator.hasNext(); ) {
+                if (jsonObj.size() > 0)
+                {
+                    for (Iterator iterator = jsonObj.keySet().iterator(); iterator.hasNext(); )
+                    {
                         String key = (String) iterator.next();
                         String val = (String) jsonObj.get(key);
-                        if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(val)) {
+                        if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(val))
+                        {
                             System.setProperty(key.trim(), val.trim());
                         }
                     }
@@ -113,7 +122,8 @@ public class PriamStartupAgent
         }
         catch (Exception e)
         {
-            System.out.println("Failed to parse extra env params: "+extraEnvParams+". However, ignoring the exception.");
+            System.out.println(
+                    "Failed to parse extra env params: " + extraEnvParams + ". However, ignoring the exception.");
             e.printStackTrace();
         }
     }

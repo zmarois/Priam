@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.Reader;
 import java.util.Properties;
 
@@ -37,31 +36,36 @@ import static org.apache.cassandra.locator.SnitchProperties.RACKDC_PROPERTY_FILE
  * @author jason brown
  * @author minh do
  */
-public class DseTuner extends StandardTuner {
+public class DseTuner extends StandardTuner
+{
     private static final Logger logger = LoggerFactory.getLogger(DseTuner.class);
     private final IDseConfiguration dseConfig;
     private final IAuditLogTuner auditLogTuner;
 
     @Inject
-    public DseTuner(IConfiguration config, IDseConfiguration dseConfig, IAuditLogTuner auditLogTuner) {
+    public DseTuner(IConfiguration config, IDseConfiguration dseConfig, IAuditLogTuner auditLogTuner)
+    {
         super(config);
         this.dseConfig = dseConfig;
         this.auditLogTuner = auditLogTuner;
     }
 
-    public void writeAllProperties(String yamlLocation, String hostname, String seedProvider) throws Exception {
+    public void writeAllProperties(String yamlLocation, String hostname, String seedProvider) throws Exception
+    {
         super.writeAllProperties(yamlLocation, hostname, seedProvider);
         writeCassandraSnitchProperties();
         auditLogTuner.tuneAuditLog();
     }
 
-    private void writeCassandraSnitchProperties() {
+    private void writeCassandraSnitchProperties()
+    {
         final NodeType nodeType = dseConfig.getNodeType();
         if (nodeType == NodeType.REAL_TIME_QUERY)
             return;
 
         Reader reader = null;
-        try {
+        try
+        {
             String filePath = config.getCassHome() + "/conf/" + RACKDC_PROPERTY_FILENAME;
             reader = new FileReader(filePath);
             Properties properties = new Properties();
@@ -78,14 +82,19 @@ public class DseTuner extends StandardTuner {
 
             properties.put("dc_suffix", suffix);
             properties.store(new FileWriter(filePath), "");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Unable to read " + RACKDC_PROPERTY_FILENAME, e);
-        } finally {
+        }
+        finally
+        {
             FileUtils.closeQuietly(reader);
         }
     }
 
-    protected String getSnitch() {
+    protected String getSnitch()
+    {
         return dseConfig.getDseDelegatingSnitch();
     }
 }

@@ -24,8 +24,8 @@ import java.io.InputStream;
 import java.security.NoSuchProviderException;
 import java.util.Iterator;
 
-
-public class PgpUtil {
+public class PgpUtil
+{
 
     /**
      * Search a secret key ring collection for a secret key corresponding to keyID if it
@@ -38,18 +38,22 @@ public class PgpUtil {
      * @throws PGPException
      * @throws NoSuchProviderException
      */
-    public static PGPPrivateKey findSecretKey(PGPSecretKeyRingCollection pgpSec, long keyID, char[] pass) throws PGPException, NoSuchProviderException {
+    public static PGPPrivateKey findSecretKey(PGPSecretKeyRingCollection pgpSec, long keyID, char[] pass)
+            throws PGPException, NoSuchProviderException
+    {
 
         PGPSecretKey pgpSecKey = pgpSec.getSecretKey(keyID);
 
-        if (pgpSecKey == null) {
+        if (pgpSecKey == null)
+        {
             return null;
         }
 
         return pgpSecKey.extractPrivateKey(pass, "BC");
     }
 
-    public static PGPPublicKey readPublicKey(String fileName) throws IOException, PGPException {
+    public static PGPPublicKey readPublicKey(String fileName) throws IOException, PGPException
+    {
         InputStream keyIn = new BufferedInputStream(new FileInputStream(fileName));
         PGPPublicKey pubKey = readPublicKey(keyIn);
         keyIn.close();
@@ -66,7 +70,8 @@ public class PgpUtil {
      * @throws PGPException
      */
     @SuppressWarnings("rawtypes")
-    public static PGPPublicKey readPublicKey(InputStream input) throws IOException, PGPException {
+    public static PGPPublicKey readPublicKey(InputStream input) throws IOException, PGPException
+    {
 
         PGPPublicKeyRingCollection pgpPub = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(input));
 
@@ -76,14 +81,17 @@ public class PgpUtil {
         //
 
         Iterator keyRingIter = pgpPub.getKeyRings();
-        while (keyRingIter.hasNext()) {
+        while (keyRingIter.hasNext())
+        {
             PGPPublicKeyRing keyRing = (PGPPublicKeyRing) keyRingIter.next();
 
             Iterator keyIter = keyRing.getPublicKeys();
-            while (keyIter.hasNext()) {
+            while (keyIter.hasNext())
+            {
                 PGPPublicKey key = (PGPPublicKey) keyIter.next();
 
-                if (key.isEncryptionKey()) {
+                if (key.isEncryptionKey())
+                {
                     return key;
                 }
             }
@@ -91,6 +99,5 @@ public class PgpUtil {
 
         throw new IllegalArgumentException("Can't find encryption key in key ring.");
     }
-
 
 }

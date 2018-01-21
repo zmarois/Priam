@@ -15,7 +15,8 @@
  */
 package com.netflix.priam.backup;
 
-public interface IIncrementalBackup {
+public interface IIncrementalBackup
+{
 
     public static long INCREMENTAL_INTERVAL_IN_MILLISECS = 10L * 1000;
 

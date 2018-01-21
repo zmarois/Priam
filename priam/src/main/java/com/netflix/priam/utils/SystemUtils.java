@@ -32,17 +32,20 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.List;
 
-
-public class SystemUtils {
+public class SystemUtils
+{
     private static final Logger logger = LoggerFactory.getLogger(SystemUtils.class);
 
-    public static String getDataFromUrl(String url) {
-        try {
+    public static String getDataFromUrl(String url)
+    {
+        try
+        {
             HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setConnectTimeout(1000);
             conn.setReadTimeout(1000);
             conn.setRequestMethod("GET");
-            if (conn.getResponseCode() != 200) {
+            if (conn.getResponseCode() != 200)
+            {
                 throw new RuntimeException("Unable to get data for URL " + url);
             }
             byte[] b = new byte[2048];
@@ -55,41 +58,51 @@ public class SystemUtils {
             logger.info("Calling URL API: {} returns: {}", url, return_);
             conn.disconnect();
             return return_;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             throw new RuntimeException(ex);
         }
 
     }
 
-
     /**
      * delete all the files/dirs in the given Directory but dont delete the dir
      * itself.
      */
-    public static void cleanupDir(String dirPath, List<String> childdirs) throws IOException {
+    public static void cleanupDir(String dirPath, List<String> childdirs) throws IOException
+    {
         if (childdirs == null || childdirs.size() == 0)
             FileUtils.cleanDirectory(new File(dirPath));
-        else {
+        else
+        {
             for (String cdir : childdirs)
                 FileUtils.cleanDirectory(new File(dirPath + "/" + cdir));
         }
     }
 
-    public static void createDirs(String location) {
+    public static void createDirs(String location)
+    {
         File dirFile = new File(location);
-        if (dirFile.exists() && dirFile.isFile()) {
+        if (dirFile.exists() && dirFile.isFile())
+        {
             dirFile.delete();
             dirFile.mkdirs();
-        } else if (!dirFile.exists())
+        }
+        else if (!dirFile.exists())
             dirFile.mkdirs();
     }
 
-    public static byte[] md5(byte[] buf) {
-        try {
+    public static byte[] md5(byte[] buf)
+    {
+        try
+        {
             MessageDigest mdigest = MessageDigest.getInstance("MD5");
             mdigest.update(buf, 0, buf.length);
             return mdigest.digest();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException(e);
         }
     }
@@ -97,22 +110,31 @@ public class SystemUtils {
     /**
      * Get a Md5 string which is similar to OS Md5sum
      */
-    public static String md5(File file) {
-        try {
+    public static String md5(File file)
+    {
+        try
+        {
             HashCode hc = Files.hash(file, Hashing.md5());
             return toHex(hc.asBytes());
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException(e);
         }
     }
 
-    public static String toHex(byte[] digest) {
+    public static String toHex(byte[] digest)
+    {
         StringBuffer sb = new StringBuffer(digest.length * 2);
-        for (int i = 0; i < digest.length; i++) {
+        for (int i = 0; i < digest.length; i++)
+        {
             String hex = Integer.toHexString(digest[i]);
-            if (hex.length() == 1) {
+            if (hex.length() == 1)
+            {
                 sb.append("0");
-            } else if (hex.length() == 8) {
+            }
+            else if (hex.length() == 8)
+            {
                 hex = hex.substring(6);
             }
             sb.append(hex);
@@ -120,24 +142,33 @@ public class SystemUtils {
         return sb.toString().toLowerCase();
     }
 
-    public static String toBase64(byte[] md5) {
+    public static String toBase64(byte[] md5)
+    {
         byte encoded[] = Base64.encodeBase64(md5, false);
         return new String(encoded);
     }
 
-    public static void closeQuietly(JMXNodeTool tool) {
-        try {
+    public static void closeQuietly(JMXNodeTool tool)
+    {
+        try
+        {
             tool.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.warn("failed to close jxm node tool", e);
         }
 
     }
 
-    public static void closeQuietly(JMXConnector jmc) {
-        try {
+    public static void closeQuietly(JMXConnector jmc)
+    {
+        try
+        {
             jmc.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.warn("failed to close JMXConnectorMgr", e);
         }
     }
@@ -146,7 +177,8 @@ public class SystemUtils {
     @param absolute path to input file
     @return handle to input file
      */
-    public static BufferedReader readFile(String absPathToFile) throws IOException {
+    public static BufferedReader readFile(String absPathToFile) throws IOException
+    {
         InputStream is = new FileInputStream(absPathToFile);
         InputStreamReader isr = new InputStreamReader(is);
         return new BufferedReader(isr);
@@ -157,12 +189,15 @@ public class SystemUtils {
     @param absolute path to file
     @param input line
     */
-    public static void writeToFile(String filename, String line) {
+    public static void writeToFile(String filename, String line)
+    {
         File f = new File(filename);
         PrintWriter pw = null;
         FileWriter fw = null;
-        try {
-            if (!f.exists()) {
+        try
+        {
+            if (!f.exists())
+            {
                 f.createNewFile();
                 logger.info("File created, absolute path: {}", f.getAbsolutePath());
             }
@@ -171,10 +206,15 @@ public class SystemUtils {
             pw = new PrintWriter(fw);
             pw.print(line);
 
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new IllegalStateException("Exception processing file: " + filename, e);
-        } finally {
-            if (pw != null) {
+        }
+        finally
+        {
+            if (pw != null)
+            {
                 pw.flush();
                 pw.close();
             }

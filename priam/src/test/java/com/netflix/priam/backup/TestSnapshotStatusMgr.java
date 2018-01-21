@@ -35,7 +35,8 @@ import java.util.List;
 /**
  * Created by aagrawal on 7/11/17.
  */
-public class TestSnapshotStatusMgr {
+public class TestSnapshotStatusMgr
+{
     private static final Logger logger = LoggerFactory.getLogger(TestSnapshotStatusMgr.class);
 
     private static Injector injector;
@@ -43,7 +44,8 @@ public class TestSnapshotStatusMgr {
     private static IConfiguration configuration;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup()
+    {
         injector = Guice.createInjector(new BRTestModule());
         //cleanup old saved file, if any
         configuration = injector.getInstance(IConfiguration.class);
@@ -55,7 +57,8 @@ public class TestSnapshotStatusMgr {
     }
 
     @Test
-    public void testSnapshotStatusAddFinish() throws Exception {
+    public void testSnapshotStatusAddFinish() throws Exception
+    {
         Date startTime = DateUtil.getDate("198407110720");
 
         BackupMetadata backupMetadata = new BackupMetadata("123", startTime);
@@ -78,7 +81,8 @@ public class TestSnapshotStatusMgr {
     }
 
     @Test
-    public void testSnapshotStatusAddFailed() throws Exception {
+    public void testSnapshotStatusAddFailed() throws Exception
+    {
         Date startTime = DateUtil.getDate("198407120720");
 
         BackupMetadata backupMetadata = new BackupMetadata("123", startTime);
@@ -101,11 +105,13 @@ public class TestSnapshotStatusMgr {
     }
 
     @Test
-    public void testSnapshotStatusMultiAddFinishInADay() throws Exception {
+    public void testSnapshotStatusMultiAddFinishInADay() throws Exception
+    {
         final int noOfEntries = 10;
         Date startTime = DateUtil.getDate("19840101");
 
-        for (int i = 0; i < noOfEntries; i++) {
+        for (int i = 0; i < noOfEntries; i++)
+        {
             Date time = new DateTime(startTime.getTime()).plusHours(i).toDate();
             BackupMetadata backupMetadata = new BackupMetadata("123", time);
             backupStatusMgr.start(backupMetadata);
@@ -118,10 +124,12 @@ public class TestSnapshotStatusMgr {
 
         //Ensure that list is always maintained from latest to eldest
         Date latest = null;
-        for (BackupMetadata backupMetadata : metadataList) {
+        for (BackupMetadata backupMetadata : metadataList)
+        {
             if (latest == null)
                 latest = backupMetadata.getStart();
-            else {
+            else
+            {
                 Assert.assertTrue(backupMetadata.getStart().before(latest));
                 latest = backupMetadata.getStart();
             }
@@ -129,11 +137,13 @@ public class TestSnapshotStatusMgr {
     }
 
     @Test
-    public void testSnapshotStatusSize() throws Exception {
+    public void testSnapshotStatusSize() throws Exception
+    {
         final int noOfEntries = backupStatusMgr.getCapacity() + 1;
         Date startTime = DateUtil.getDate("19850101");
 
-        for (int i = 0; i < noOfEntries; i++) {
+        for (int i = 0; i < noOfEntries; i++)
+        {
             Date time = new DateTime(startTime.getTime()).plusDays(i).toDate();
             BackupMetadata backupMetadata = new BackupMetadata("123", time);
             backupStatusMgr.start(backupMetadata);

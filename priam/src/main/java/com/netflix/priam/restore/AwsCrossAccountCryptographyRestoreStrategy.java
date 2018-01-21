@@ -41,9 +41,10 @@ import org.slf4j.LoggerFactory;
  */
 
 @Singleton
-public class AwsCrossAccountCryptographyRestoreStrategy extends EncryptedRestoreBase {
-    private static final Logger logger = LoggerFactory.getLogger(AwsCrossAccountCryptographyRestoreStrategy.class);
+public class AwsCrossAccountCryptographyRestoreStrategy extends EncryptedRestoreBase
+{
     public static final String JOBNAME = "AWS_CROSS_ACCT_CRYPTOGRAPHY_RESTORE_JOB";
+    private static final Logger logger = LoggerFactory.getLogger(AwsCrossAccountCryptographyRestoreStrategy.class);
 
     //Note: see javadoc for S3CrossAccountFileSystem for reason why we inject a concrete class (S3CrossAccountFileSystem) instead of the inteface IBackupFileSystem
     @Inject
@@ -53,15 +54,18 @@ public class AwsCrossAccountCryptographyRestoreStrategy extends EncryptedRestore
             , @Named("filecryptoalgorithm") IFileCryptography fileCryptography
             , @Named("pgpcredential") ICredentialGeneric credential
             , ICompression compress, Provider<AbstractBackupPath> pathProvider,
-                                                      InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState) {
+            InstanceIdentity id, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState)
+    {
 
-        super(config, crossAcctfs.getBackupFileSystem(), JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector, credential, fileCryptography, compress, metaData, instanceState);
+        super(config, crossAcctfs.getBackupFileSystem(), JOBNAME, sleeper, cassProcess, pathProvider, id, tokenSelector,
+                credential, fileCryptography, compress, metaData, instanceState);
     }
 
     /**
      * @return a timer used by the scheduler to determine when "this" should be run.
      */
-    public static TaskTimer getTimer() {
+    public static TaskTimer getTimer()
+    {
         return new SimpleTimer(JOBNAME);
     }
 }

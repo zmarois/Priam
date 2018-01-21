@@ -25,6 +25,7 @@ import com.google.inject.ImplementedBy;
  * Created by aagrawal on 8/8/17.
  */
 @ImplementedBy(AuditLogTunerYaml.class)
-public interface IAuditLogTuner {
+public interface IAuditLogTuner
+{
     void tuneAuditLog();
 }

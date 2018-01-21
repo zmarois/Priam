@@ -22,12 +22,17 @@ import com.google.inject.ImplementedBy;
  * Created by vchella on 01/10/18.
  */
 @ImplementedBy(CassMonitorMetrics.class)
-public interface ICassMonitorMetrics {
+public interface ICassMonitorMetrics
+{
     void incCassStop();
+
     void incCassAutoStart();
+
     void incCassStart();
 
     int getCassStop();
+
     int getCassAutoStart();
+
     int getCassStart();
 }

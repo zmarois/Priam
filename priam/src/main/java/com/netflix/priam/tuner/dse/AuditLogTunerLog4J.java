@@ -35,17 +35,19 @@ import java.util.List;
  * Use this instead of AuditLogTunerYaml if you are on DSE version 3.x.
  * Created by aagrawal on 8/8/17.
  */
-public class AuditLogTunerLog4J implements IAuditLogTuner {
+public class AuditLogTunerLog4J implements IAuditLogTuner
+{
 
-    private IConfiguration config;
-    private IDseConfiguration dseConfig;
     protected static final String AUDIT_LOG_ADDITIVE_ENTRY = "log4j.additivity.DataAudit";
     protected static final String AUDIT_LOG_FILE = "/conf/log4j-server.properties";
     protected static final String PRIMARY_AUDIT_LOG_ENTRY = "log4j.logger.DataAudit";
     private static final Logger logger = LoggerFactory.getLogger(AuditLogTunerLog4J.class);
+    private IConfiguration config;
+    private IDseConfiguration dseConfig;
 
     @Inject
-    public AuditLogTunerLog4J(IConfiguration config, IDseConfiguration dseConfig) {
+    public AuditLogTunerLog4J(IConfiguration config, IDseConfiguration dseConfig)
+    {
         this.config = config;
         this.dseConfig = dseConfig;
     }
@@ -57,9 +59,11 @@ public class AuditLogTunerLog4J implements IAuditLogTuner {
      * entries in the value are DataStax themselves and this program, and that the original
      * property names are somehow still preserved. Otherwise, YMMV.
      */
-    public void tuneAuditLog() {
+    public void tuneAuditLog()
+    {
         BufferedWriter writer = null;
-        try {
+        try
+        {
             final File srcFile = new File(config.getCassHome() + AUDIT_LOG_FILE);
             final List<String> lines = Files.readLines(srcFile, Charset.defaultCharset());
             final File backupFile = new File(config.getCassHome() + AUDIT_LOG_FILE + "." + System.currentTimeMillis());
@@ -67,34 +71,52 @@ public class AuditLogTunerLog4J implements IAuditLogTuner {
             writer = Files.newWriter(srcFile, Charset.defaultCharset());
 
             String loggerPrefix = "log4j.appender.";
-            try {
+            try
+            {
                 loggerPrefix += findAuditLoggerName(lines);
-            } catch (IllegalStateException ise) {
-                logger.warn("cannot locate " + PRIMARY_AUDIT_LOG_ENTRY + " property, will ignore any audit log updating");
+            }
+            catch (IllegalStateException ise)
+            {
+                logger.warn(
+                        "cannot locate " + PRIMARY_AUDIT_LOG_ENTRY + " property, will ignore any audit log updating");
                 return;
             }
 
-            for (String line : lines) {
-                if (line.contains(loggerPrefix) || line.contains(PRIMARY_AUDIT_LOG_ENTRY) || line.contains(AUDIT_LOG_ADDITIVE_ENTRY)) {
-                    if (dseConfig.isAuditLogEnabled()) {
+            for (String line : lines)
+            {
+                if (line.contains(loggerPrefix) || line.contains(PRIMARY_AUDIT_LOG_ENTRY) || line
+                        .contains(AUDIT_LOG_ADDITIVE_ENTRY))
+                {
+                    if (dseConfig.isAuditLogEnabled())
+                    {
                         //first, check to see if we need to uncomment the line
-                        while (line.startsWith("#")) {
+                        while (line.startsWith("#"))
+                        {
                             line = line.substring(1);
                         }
 
                         //next, check if we need to change the prop's value
-                        if (line.contains("ActiveCategories")) {
+                        if (line.contains("ActiveCategories"))
+                        {
                             final String cats = Joiner.on(",").join(dseConfig.getAuditLogCategories());
                             line = line.substring(0, line.indexOf("=") + 1).concat(cats);
-                        } else if (line.contains("ExemptKeyspaces")) {
-                            line = line.substring(0, line.indexOf("=") + 1).concat(dseConfig.getAuditLogExemptKeyspaces());
                         }
-                    } else {
-                        if (line.startsWith("#")) {
+                        else if (line.contains("ExemptKeyspaces"))
+                        {
+                            line = line.substring(0, line.indexOf("=") + 1)
+                                    .concat(dseConfig.getAuditLogExemptKeyspaces());
+                        }
+                    }
+                    else
+                    {
+                        if (line.startsWith("#"))
+                        {
                             //make sure there's only one # at the beginning of the line
                             while (line.charAt(1) == '#')
                                 line = line.substring(1);
-                        } else {
+                        }
+                        else
+                        {
                             line = "#" + line;
                         }
                     }
@@ -102,19 +124,25 @@ public class AuditLogTunerLog4J implements IAuditLogTuner {
                 writer.append(line);
                 writer.newLine();
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             throw new RuntimeException("Unable to read " + AUDIT_LOG_FILE, e);
 
-        } finally {
+        }
+        finally
+        {
             FileUtils.closeQuietly(writer);
         }
     }
 
-
-    private final String findAuditLoggerName(List<String> lines) throws IllegalStateException {
-        for (final String l : lines) {
-            if (l.contains(PRIMARY_AUDIT_LOG_ENTRY)) {
+    private final String findAuditLoggerName(List<String> lines) throws IllegalStateException
+    {
+        for (final String l : lines)
+        {
+            if (l.contains(PRIMARY_AUDIT_LOG_ENTRY))
+            {
                 final String[] valTokens = l.split(",");
                 return valTokens[valTokens.length - 1].trim();
             }

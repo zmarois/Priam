@@ -24,9 +24,9 @@ import com.netflix.priam.IConfiguration;
 import com.netflix.priam.backup.BRTestModule;
 import com.netflix.priam.health.InstanceState;
 import com.netflix.priam.merics.ICassMonitorMetrics;
-import org.junit.Assert;
 import mockit.*;
 import org.apache.cassandra.tools.NodeProbe;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +36,8 @@ import java.io.InputStream;
 /**
  * Created by aagrawal on 7/18/17.
  */
-public class TestCassandraMonitor {
+public class TestCassandraMonitor
+{
     private static CassandraMonitor monitor;
     private static InstanceState instanceState;
     private static ICassMonitorMetrics cassMonitorMetrics;
@@ -51,7 +52,8 @@ public class TestCassandraMonitor {
     private ICassandraProcess cassProcess;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         Injector injector = Guice.createInjector(new BRTestModule());
         config = injector.getInstance(IConfiguration.class);
         if (instanceState == null)
@@ -63,7 +65,8 @@ public class TestCassandraMonitor {
     }
 
     @Test
-    public void testCassandraMonitor() throws Exception {
+    public void testCassandraMonitor() throws Exception
+    {
         monitor.execute();
         Assert.assertFalse(monitor.isCassadraStarted());
 
@@ -75,27 +78,36 @@ public class TestCassandraMonitor {
     }
 
     @Test
-    public void testNoAutoRemediation() throws Exception {
+    public void testNoAutoRemediation() throws Exception
+    {
         new MockUp<JMXNodeTool>()
         {
             @Mock
-            NodeProbe instance(IConfiguration config) {
+            NodeProbe instance(IConfiguration config)
+            {
                 return nodeProbe;
             }
         };
         final InputStream mockOutput = new ByteArrayInputStream("a process".getBytes());
-        new Expectations() {{
-            mockProcess.getInputStream(); result= mockOutput;
-            nodeProbe.isGossipRunning(); result=true;
-            nodeProbe.isNativeTransportRunning(); result=true;
-            nodeProbe.isThriftServerRunning(); result=true;
+        new Expectations()
+        {{
+            mockProcess.getInputStream();
+            result = mockOutput;
+            nodeProbe.isGossipRunning();
+            result = true;
+            nodeProbe.isNativeTransportRunning();
+            result = true;
+            nodeProbe.isThriftServerRunning();
+            result = true;
         }};
         // Mock out the ps call
         final Runtime r = Runtime.getRuntime();
-        String[] cmd = { "/bin/sh", "-c", "ps -ef |grep -v -P \"\\sgrep\\s\" | grep " + config.getCassProcessName()};
-        new Expectations(r) {
+        String[] cmd = { "/bin/sh", "-c", "ps -ef |grep -v -P \"\\sgrep\\s\" | grep " + config.getCassProcessName() };
+        new Expectations(r)
+        {
             {
-                r.exec(cmd); result=mockProcess;
+                r.exec(cmd);
+                result = mockProcess;
             }
         };
         instanceState.setShouldCassandraBeAlive(false);
@@ -105,26 +117,38 @@ public class TestCassandraMonitor {
 
         Assert.assertTrue(!instanceState.shouldCassandraBeAlive());
         Assert.assertTrue(instanceState.isCassandraProcessAlive());
-        new Verifications() {
-            { cassProcess.start(anyBoolean); times=0; }
+        new Verifications()
+        {
+            {
+                cassProcess.start(anyBoolean);
+                times = 0;
+            }
         };
     }
 
     @Test
-    public void testAutoRemediationRateLimit() throws Exception {
+    public void testAutoRemediationRateLimit() throws Exception
+    {
         final InputStream mockOutput = new ByteArrayInputStream("".getBytes());
         instanceState.setShouldCassandraBeAlive(true);
-        new Expectations() {{
+        new Expectations()
+        {{
             // 6 calls to execute should = 12 calls to getInputStream();
-            mockProcess.getInputStream(); result=mockOutput; times=12;
-            cassProcess.start(true); minTimes=2; maxTimes=4;
+            mockProcess.getInputStream();
+            result = mockOutput;
+            times = 12;
+            cassProcess.start(true);
+            minTimes = 2;
+            maxTimes = 4;
         }};
         // Mock out the ps call
         final Runtime r = Runtime.getRuntime();
-        String[] cmd = { "/bin/sh", "-c", "ps -ef |grep -v -P \"\\sgrep\\s\" | grep " + config.getCassProcessName()};
-        new Expectations(r) {
+        String[] cmd = { "/bin/sh", "-c", "ps -ef |grep -v -P \"\\sgrep\\s\" | grep " + config.getCassProcessName() };
+        new Expectations(r)
+        {
             {
-                r.exec(cmd); result=mockProcess;
+                r.exec(cmd);
+                result = mockProcess;
             }
         };
         // Sleep ahead to ensure we have permits in the rate limiter
@@ -137,6 +161,8 @@ public class TestCassandraMonitor {
         monitor.execute();
         monitor.execute();
 
-        new Verifications() {};
+        new Verifications()
+        {
+        };
     }
 }

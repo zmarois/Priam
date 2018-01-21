@@ -23,19 +23,24 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
-public class Restorer {
+public class Restorer
+{
     private static final Logger logger = LoggerFactory.getLogger(Restorer.class);
 
-    static void displayHelp() {
+    static void displayHelp()
+    {
         System.out.println("Usage: command_name FROM_DATE TO_DATE");
     }
 
-    public static void main(String[] args) {
-        try {
+    public static void main(String[] args)
+    {
+        try
+        {
             Application.initialize();
 
             Date startTime, endTime;
-            if (args.length < 2) {
+            if (args.length < 2)
+            {
                 displayHelp();
                 return;
             }
@@ -44,12 +49,17 @@ public class Restorer {
             endTime = path.parseDate(args[1]);
 
             Restore restorer = Application.getInjector().getInstance(Restore.class);
-            try {
+            try
+            {
                 restorer.restore(startTime, endTime);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 logger.error("Unable to restore: ", e);
             }
-        } finally {
+        }
+        finally
+        {
             Application.shutdownAdditionalThreads();
         }
     }

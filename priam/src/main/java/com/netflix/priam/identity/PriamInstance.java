@@ -22,7 +22,8 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.Map;
 
-public class PriamInstance implements Serializable {
+public class PriamInstance implements Serializable
+{
     private static final long serialVersionUID = 5606412386974488659L;
     private static final Logger logger = LoggerFactory.getLogger(PriamInstance.class);
     private String hostname;
@@ -39,104 +40,128 @@ public class PriamInstance implements Serializable {
     //Handles Storage objects
     private Map<String, Object> volumes;
 
-    public String getApp() {
+    public String getApp()
+    {
         return app;
     }
 
-    public void setApp(String app) {
+    public void setApp(String app)
+    {
         this.app = app;
     }
 
-    public int getId() {
+    public int getId()
+    {
         return Id;
     }
 
-    public void setId(int id) {
+    public void setId(int id)
+    {
         Id = id;
     }
 
-    public String getInstanceId() {
+    public String getInstanceId()
+    {
         return instanceId;
     }
 
-    public void setInstanceId(String instanceId) {
+    public void setInstanceId(String instanceId)
+    {
         this.instanceId = instanceId;
     }
 
-    public String getRac() {
+    public String getRac()
+    {
         return availabilityZone;
     }
 
-    public void setRac(String availabilityZone) {
+    public void setRac(String availabilityZone)
+    {
         this.availabilityZone = availabilityZone;
     }
 
-    public String getHostName() {
+    public String getHostName()
+    {
         return hostname;
     }
 
-    public String getHostIP() {
+    public String getHostIP()
+    {
         return publicip;
     }
 
-    public void setHost(String hostname, String publicip) {
+    public void setHostIP(String publicip)
+    {
+        this.publicip = publicip;
+    }
+
+    public void setHost(String hostname, String publicip)
+    {
         this.hostname = hostname;
         this.publicip = publicip;
     }
 
-    public void setHost(String hostname) {
+    public void setHost(String hostname)
+    {
         this.hostname = hostname;
     }
 
-    public void setHostIP(String publicip) {
-        this.publicip = publicip;
-    }
-
-    public String getToken() {
+    public String getToken()
+    {
         return token;
     }
 
-    public void setToken(String token) {
+    public void setToken(String token)
+    {
         this.token = token;
     }
 
-    public Map<String, Object> getVolumes() {
+    public Map<String, Object> getVolumes()
+    {
         return volumes;
     }
 
-    public void setVolumes(Map<String, Object> volumes) {
+    public void setVolumes(Map<String, Object> volumes)
+    {
         this.volumes = volumes;
     }
 
     @Override
-    public String toString() {
-        return String.format("Hostname: %s, InstanceId: %s, APP_NAME: %s, RAC : %s Location %s, Id: %s: Token: %s", getHostName(), getInstanceId(), getApp(), getRac(), getDC(), getId(),
+    public String toString()
+    {
+        return String.format("Hostname: %s, InstanceId: %s, APP_NAME: %s, RAC : %s Location %s, Id: %s: Token: %s",
+                getHostName(), getInstanceId(), getApp(), getRac(), getDC(), getId(),
                 getToken());
     }
 
-    public String getDC() {
+    public String getDC()
+    {
         return location;
     }
 
-    public void setDC(String location) {
+    public void setDC(String location)
+    {
         this.location = location;
     }
 
-    public long getUpdatetime() {
+    public long getUpdatetime()
+    {
         return updatetime;
     }
 
-    public void setUpdatetime(long updatetime) {
+    public void setUpdatetime(long updatetime)
+    {
         this.updatetime = updatetime;
     }
 
-    public boolean isOutOfService() {
+    public boolean isOutOfService()
+    {
         return outOfService;
     }
 
-    public void setOutOfService(boolean outOfService) {
+    public void setOutOfService(boolean outOfService)
+    {
         this.outOfService = outOfService;
     }
-
 
 }

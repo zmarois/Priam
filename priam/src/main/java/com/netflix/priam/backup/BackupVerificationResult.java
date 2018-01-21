@@ -22,7 +22,8 @@ import java.util.List;
  * This class holds the result from BackupVerification. The default are all null and false.
  */
 
-public class BackupVerificationResult {
+public class BackupVerificationResult
+{
     public boolean snapshotAvailable = false;
     public boolean valid = false;
     public boolean metaFileFound = false;

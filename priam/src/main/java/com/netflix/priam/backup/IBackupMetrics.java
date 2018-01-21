@@ -19,7 +19,8 @@ package com.netflix.priam.backup;
  * A means to keep track of various metata about backups
  * Created by vinhn on 2/13/17.
  */
-public interface IBackupMetrics {
+public interface IBackupMetrics
+{
     public int getValidUploads();
 
     public void incrementValidUploads();

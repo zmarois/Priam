@@ -28,19 +28,17 @@ import java.text.ParseException;
 /**
  * Runs jobs at the specified absolute time and frequency
  */
-public class CronTimer implements TaskTimer {
+public class CronTimer implements TaskTimer
+{
     private static final Logger logger = LoggerFactory.getLogger(CronTimer.class);
     private String cronExpression;
     private String name;
 
-    public enum DayOfWeek {
-        SUN, MON, TUE, WED, THU, FRI, SAT
-    }
-
     /*
      * interval in terms of minutes
      */
-    public CronTimer(String name, int min) {
+    public CronTimer(String name, int min)
+    {
         this.name = name;
         cronExpression = "*" + " " + "0/" + min + " " + "* * * ?";
     }
@@ -48,7 +46,8 @@ public class CronTimer implements TaskTimer {
     /**
      * Hourly cron.
      */
-    public CronTimer(String name, int minute, int sec) {
+    public CronTimer(String name, int minute, int sec)
+    {
         this.name = name;
         cronExpression = sec + " " + minute + " 0/1 * * ?";
     }
@@ -56,7 +55,8 @@ public class CronTimer implements TaskTimer {
     /**
      * Daily Cron
      */
-    public CronTimer(String name, int hour, int minute, int sec) {
+    public CronTimer(String name, int hour, int minute, int sec)
+    {
         this.name = name;
         cronExpression = sec + " " + minute + " " + hour + " * * ?";
     }
@@ -64,7 +64,8 @@ public class CronTimer implements TaskTimer {
     /**
      * Weekly cron jobs
      */
-    public CronTimer(String name, DayOfWeek dayofweek, int hour, int minute, int sec) {
+    public CronTimer(String name, DayOfWeek dayofweek, int hour, int minute, int sec)
+    {
         this.name = name;
         cronExpression = sec + " " + minute + " " + hour + " * * " + dayofweek;
     }
@@ -72,21 +73,31 @@ public class CronTimer implements TaskTimer {
     /**
      * Cron Expression.
      */
-    public CronTimer(String expression) {
+    public CronTimer(String expression)
+    {
         this.cronExpression = expression;
     }
 
-    public CronTimer(String name, String expression) {
+    public CronTimer(String name, String expression)
+    {
         this.name = name;
         this.cronExpression = expression;
     }
 
-    public Trigger getTrigger() throws ParseException {
-        return TriggerBuilder.newTrigger().withIdentity(name, Scheduler.DEFAULT_GROUP).withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
+    public Trigger getTrigger() throws ParseException
+    {
+        return TriggerBuilder.newTrigger().withIdentity(name, Scheduler.DEFAULT_GROUP)
+                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)).build();
     }
 
     @Override
-    public String getCronExpression() {
+    public String getCronExpression()
+    {
         return this.cronExpression;
+    }
+
+    public enum DayOfWeek
+    {
+        SUN, MON, TUE, WED, THU, FRI, SAT
     }
 }

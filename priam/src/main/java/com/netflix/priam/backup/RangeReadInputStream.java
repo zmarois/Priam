@@ -32,7 +32,8 @@ import java.io.InputStream;
  * This will make it easier to retry a failed read - which is important if we don't want to \
  * throw away a 100Gb file and restart after reading 99Gb and failing.
  */
-public class RangeReadInputStream extends InputStream {
+public class RangeReadInputStream extends InputStream
+{
     private static final Logger logger = LoggerFactory.getLogger(RangeReadInputStream.class);
 
     private final AmazonS3 s3Client;
@@ -40,15 +41,17 @@ public class RangeReadInputStream extends InputStream {
     private final AbstractBackupPath path;
     private long offset;
 
-    public RangeReadInputStream(AmazonS3 s3Client, String bucketName, AbstractBackupPath path) {
+    public RangeReadInputStream(AmazonS3 s3Client, String bucketName, AbstractBackupPath path)
+    {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
         this.path = path;
     }
 
-    public int read(final byte b[], final int off, final int len) throws IOException {
-//        logger.info(String.format("incoming buf req's size = %d, off = %d, len to read = %d, on file size %d, cur offset = %d path = %s",
-//                b.length, off, len, path.getSize(), offset, path.getRemotePath()));
+    public int read(final byte b[], final int off, final int len) throws IOException
+    {
+        //        logger.info(String.format("incoming buf req's size = %d, off = %d, len to read = %d, on file size %d, cur offset = %d path = %s",
+        //                b.length, off, len, path.getSize(), offset, path.getRemotePath()));
         final long fileSize = path.getSize();
         if (fileSize > 0 && offset >= fileSize)
             return -1;
@@ -59,45 +62,55 @@ public class RangeReadInputStream extends InputStream {
         //need to subtract one as the call to getRange is inclusive
         //meaning if you want to download the first 10 bytes of a file, request bytes 0..9
         final long endByte = curEndByte - 1;
-//        logger.info(String.format("start byte = %d, end byte = %d", firstByte, endByte));
-        try {
-            Integer cnt = new RetryableCallable<Integer>() {
-                public Integer retriableCall() throws IOException {
+        //        logger.info(String.format("start byte = %d, end byte = %d", firstByte, endByte));
+        try
+        {
+            Integer cnt = new RetryableCallable<Integer>()
+            {
+                public Integer retriableCall() throws IOException
+                {
                     GetObjectRequest req = new GetObjectRequest(bucketName, path.getRemotePath());
                     req.setRange(firstByte, endByte);
                     S3ObjectInputStream is = null;
-                    try {
+                    try
+                    {
                         is = s3Client.getObject(req).getObjectContent();
 
                         byte[] readBuf = new byte[4092];
                         int rCnt;
                         int readTotal = 0;
                         int incomingOffet = off;
-                        while ((rCnt = is.read(readBuf, 0, readBuf.length)) >= 0) {
+                        while ((rCnt = is.read(readBuf, 0, readBuf.length)) >= 0)
+                        {
                             System.arraycopy(readBuf, 0, b, incomingOffet, rCnt);
                             readTotal += rCnt;
                             incomingOffet += rCnt;
-//                            logger.info("    local read cnt = " + rCnt + "Current Thread Name = "+Thread.currentThread().getName());
+                            //                            logger.info("    local read cnt = " + rCnt + "Current Thread Name = "+Thread.currentThread().getName());
                         }
                         if (readTotal == 0 && rCnt == -1)
                             return -1;
                         offset += readTotal;
                         return Integer.valueOf(readTotal);
-                    } finally {
+                    }
+                    finally
+                    {
                         IOUtils.closeQuietly(is);
                     }
                 }
             }.call();
-//            logger.info("read cnt = " + cnt);
+            //            logger.info("read cnt = " + cnt);
             return cnt.intValue();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             String msg = String.format("failed to read offset range %d-%d of file %s whose size is %d",
                     firstByte, endByte, path.getRemotePath(), path.getSize());
             throw new IOException(msg, e);
         }
     }
 
-    public int read() throws IOException {
+    public int read() throws IOException
+    {
         logger.warn("read() called RangeReadInputStream");
         return -1;
     }

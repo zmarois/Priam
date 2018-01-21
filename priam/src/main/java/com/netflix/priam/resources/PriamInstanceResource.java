@@ -35,7 +35,8 @@ import java.util.List;
  */
 @Path("/v1/instances")
 @Produces(MediaType.TEXT_PLAIN)
-public class PriamInstanceResource {
+public class PriamInstanceResource
+{
     private static final Logger log = LoggerFactory.getLogger(PriamInstanceResource.class);
 
     private final IConfiguration config;
@@ -43,9 +44,15 @@ public class PriamInstanceResource {
 
     @Inject
     //Note: do not parameterized the generic type variable to an implementation as it confuses Guice in the binding.    
-    public PriamInstanceResource(IConfiguration config, IPriamInstanceFactory factory) {
+    public PriamInstanceResource(IConfiguration config, IPriamInstanceFactory factory)
+    {
         this.config = config;
         this.factory = factory;
+    }
+
+    private static WebApplicationException notFound(String message)
+    {
+        return new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(message).build());
     }
 
     /**
@@ -54,10 +61,12 @@ public class PriamInstanceResource {
      * @return the list of all priam instances
      */
     @GET
-    public String getInstances() {
+    public String getInstances()
+    {
         StringBuilder response = new StringBuilder();
         List<PriamInstance> allInstances = factory.getAllIds(config.getAppName());
-        for (PriamInstance node : allInstances) {
+        for (PriamInstance node : allInstances)
+        {
             response.append(node.toString());
             response.append("\n");
         }
@@ -72,7 +81,8 @@ public class PriamInstanceResource {
      */
     @GET
     @Path("{id}")
-    public String getInstance(@PathParam("id") int id) {
+    public String getInstance(@PathParam("id") int id)
+    {
         PriamInstance node = getByIdIfFound(id);
         return node.toString();
     }
@@ -87,7 +97,8 @@ public class PriamInstanceResource {
     public Response createInstance(
             @QueryParam("id") int id, @QueryParam("instanceID") String instanceID,
             @QueryParam("hostname") String hostname, @QueryParam("ip") String ip,
-            @QueryParam("rack") String rack, @QueryParam("token") String token) {
+            @QueryParam("rack") String rack, @QueryParam("token") String token)
+    {
         log.info("Creating instance [id={}, instanceId={}, hostname={}, ip={}, rack={}, token={}",
                 id, instanceID, hostname, ip, rack, token);
         PriamInstance instance = factory.create(config.getAppName(), id, instanceID, hostname, ip, rack, null, token);
@@ -103,7 +114,8 @@ public class PriamInstanceResource {
      */
     @DELETE
     @Path("{id}")
-    public Response deleteInstance(@PathParam("id") int id) {
+    public Response deleteInstance(@PathParam("id") int id)
+    {
         PriamInstance instance = getByIdIfFound(id);
         factory.delete(instance);
         return Response.noContent().build();
@@ -116,15 +128,13 @@ public class PriamInstanceResource {
      * @param id the node id
      * @return PriamInstance with the given {@code id}
      */
-    private PriamInstance getByIdIfFound(int id) {
+    private PriamInstance getByIdIfFound(int id)
+    {
         PriamInstance instance = factory.getInstance(config.getAppName(), config.getDC(), id);
-        if (instance == null) {
+        if (instance == null)
+        {
             throw notFound(String.format("No priam instance with id %s found", id));
         }
         return instance;
-    }
-
-    private static WebApplicationException notFound(String message) {
-        return new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity(message).build());
     }
 }

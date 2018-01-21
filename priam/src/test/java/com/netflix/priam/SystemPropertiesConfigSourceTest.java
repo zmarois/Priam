@@ -22,11 +22,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class SystemPropertiesConfigSourceTest {
+public final class SystemPropertiesConfigSourceTest
+{
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemPropertiesConfigSourceTest.class.getName());
 
     @Test
-    public void read() {
+    public void read()
+    {
         final String key = "java.version";
         SystemPropertiesConfigSource configSource = new SystemPropertiesConfigSource();
         configSource.intialize("asgName", "region");

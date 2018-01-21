@@ -1,15 +1,15 @@
 apply plugin: 'release'
 
-[ uploadIvyLocal: 'uploadLocal', uploadArtifactory: 'artifactoryPublish', buildWithArtifactory: 'build' ].each { key, value ->
+[uploadIvyLocal: 'uploadLocal', uploadArtifactory: 'artifactoryPublish', buildWithArtifactory: 'build'].each { key, value ->
     // Call out to compile against internal repository
     task "${key}"(type: GradleBuild) {
         startParameter = project.gradle.startParameter.newInstance()
         doFirst {
             startParameter.projectProperties = [status: project.status, preferredStatus: project.status]
         }
-        startParameter.addInitScript( file('gradle/netflix-oss.gradle') )
+        startParameter.addInitScript(file('gradle/netflix-oss.gradle'))
         startParameter.getExcludedTaskNames().add('check')
-        tasks = [ 'build', value ]
+        tasks = ['build', value]
     }
 }
 

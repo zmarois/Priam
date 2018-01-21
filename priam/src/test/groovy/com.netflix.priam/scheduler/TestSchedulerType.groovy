@@ -4,10 +4,11 @@ package com.netflix.priam.scheduler
  * Created by aagrawal on 3/16/17.
  * This is used to test SchedulerType with all the values you might get.
  */
-import spock.lang.*
+import spock.lang.Specification
+import spock.lang.Unroll
 
 @Unroll
-class TestSchedulerType extends Specification{
+class TestSchedulerType extends Specification {
 
     def "Exception for value #schedulerType , #acceptNullorEmpty , #acceptIllegalValue"() {
         when:
@@ -17,10 +18,10 @@ class TestSchedulerType extends Specification{
         def error = thrown(expectedException)
 
         where:
-        schedulerType  | acceptNullorEmpty | acceptIllegalValue || expectedException
-        "sdf"          | true              | false              || UnsupportedTypeException
-        ""             | false             | true               || UnsupportedTypeException
-        null           | false             | true               || UnsupportedTypeException
+        schedulerType | acceptNullorEmpty | acceptIllegalValue || expectedException
+        "sdf"         | true              | false              || UnsupportedTypeException
+        ""            | false             | true               || UnsupportedTypeException
+        null          | false             | true               || UnsupportedTypeException
 
     }
 

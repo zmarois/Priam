@@ -27,7 +27,8 @@ import java.util.List;
  * nodes in RAC etc. Also perform ACL updates used in multi-regional clusters
  */
 @ImplementedBy(AWSMembership.class)
-public interface IMembership {
+public interface IMembership
+{
     /**
      * Get a list of Instances in the current RAC
      *

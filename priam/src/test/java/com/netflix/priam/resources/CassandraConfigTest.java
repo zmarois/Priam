@@ -38,7 +38,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(JMockit.class)
-public class CassandraConfigTest {
+public class CassandraConfigTest
+{
     private
     @Mocked
     PriamServer priamServer;
@@ -48,14 +49,17 @@ public class CassandraConfigTest {
     private CassandraConfig resource;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         resource = new CassandraConfig(priamServer, doubleRing);
     }
 
     @Test
-    public void getSeeds(@Mocked final InstanceIdentity identity) throws Exception {
+    public void getSeeds(@Mocked final InstanceIdentity identity) throws Exception
+    {
         final List<String> seeds = ImmutableList.of("seed1", "seed2", "seed3");
-        new Expectations() {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -72,9 +76,11 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getSeeds_notFound(@Mocked final InstanceIdentity identity) throws Exception {
+    public void getSeeds_notFound(@Mocked final InstanceIdentity identity) throws Exception
+    {
         final List<String> seeds = ImmutableList.of();
-        new Expectations() {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -90,8 +96,10 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getSeeds_handlesUnknownHostException(@Mocked final InstanceIdentity identity) throws Exception {
-        new Expectations() {
+    public void getSeeds_handlesUnknownHostException(@Mocked final InstanceIdentity identity) throws Exception
+    {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -105,9 +113,11 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getToken(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance) {
+    public void getToken(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance)
+    {
         final String token = "myToken";
-        new Expectations() {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -127,9 +137,11 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getToken_notFound(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance) {
+    public void getToken_notFound(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance)
+    {
         final String token = "";
-        new Expectations() {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -145,8 +157,10 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getToken_handlesException(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance) {
-        new Expectations() {
+    public void getToken_handlesException(@Mocked final InstanceIdentity identity, @Mocked final PriamInstance instance)
+    {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -162,8 +176,10 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void isReplaceToken(@Mocked final InstanceIdentity identity) {
-        new Expectations() {
+    public void isReplaceToken(@Mocked final InstanceIdentity identity)
+    {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -178,8 +194,10 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void isReplaceToken_handlesException(@Mocked final InstanceIdentity identity) {
-        new Expectations() {
+    public void isReplaceToken_handlesException(@Mocked final InstanceIdentity identity)
+    {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -193,9 +211,11 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void getReplacedAddress(@Mocked final InstanceIdentity identity) {
+    public void getReplacedAddress(@Mocked final InstanceIdentity identity)
+    {
         final String replacedIp = "127.0.0.1";
-        new Expectations() {
+        new Expectations()
+        {
             {
                 priamServer.getId();
                 result = identity;
@@ -210,8 +230,10 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void doubleRing() throws Exception {
-        new Expectations() {{
+    public void doubleRing() throws Exception
+    {
+        new Expectations()
+        {{
             doubleRing.backup();
             doubleRing.doubleSlots();
         }};
@@ -221,25 +243,32 @@ public class CassandraConfigTest {
     }
 
     @Test
-    public void doubleRing_ioExceptionInBackup() throws Exception {
+    public void doubleRing_ioExceptionInBackup() throws Exception
+    {
         final IOException exception = new IOException();
-        new Expectations() {{
+        new Expectations()
+        {{
             doubleRing.backup();
             result = exception;
             doubleRing.restore();
         }};
 
-        try {
+        try
+        {
             resource.doubleRing();
             fail("Excepted RuntimeException");
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             assertEquals(exception, e.getCause());
         }
     }
 
     @Test(expected = IOException.class)
-    public void doubleRing_ioExceptionInRestore() throws Exception {
-        new Expectations() {{
+    public void doubleRing_ioExceptionInRestore() throws Exception
+    {
+        new Expectations()
+        {{
             doubleRing.backup();
             result = new IOException();
             doubleRing.restore();
@@ -250,8 +279,10 @@ public class CassandraConfigTest {
     }
 
     @Test(expected = ClassNotFoundException.class)
-    public void doubleRing_classNotFoundExceptionInRestore() throws Exception {
-        new Expectations() {{
+    public void doubleRing_classNotFoundExceptionInRestore() throws Exception
+    {
+        new Expectations()
+        {{
             doubleRing.backup();
             result = new IOException();
             doubleRing.restore();

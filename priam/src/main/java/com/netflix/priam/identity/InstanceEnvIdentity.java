@@ -18,7 +18,8 @@ package com.netflix.priam.identity;
 /*
  * A means to determine the environment for the running instance
  */
-public interface InstanceEnvIdentity {
+public interface InstanceEnvIdentity
+{
     /*
      * @return true if running instance is in "classic", false otherwise.
      */
@@ -34,7 +35,8 @@ public interface InstanceEnvIdentity {
      */
     public Boolean isNonDefaultVpc();
 
-    public static enum InstanceEnvironent {
+    public static enum InstanceEnvironent
+    {
         CLASSIC, DEFAULT_VPC, NONDEFAULT_VPC
     }
 

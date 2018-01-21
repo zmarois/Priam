@@ -24,7 +24,8 @@ import org.slf4j.LoggerFactory;
 /*
  * Performs an upload of a file, with retries.
  */
-public class IncrementalConsumer implements Runnable {
+public class IncrementalConsumer implements Runnable
+{
     private static final Logger logger = LoggerFactory.getLogger(IncrementalConsumer.class);
 
     private AbstractBackupPath bp;
@@ -39,7 +40,8 @@ public class IncrementalConsumer implements Runnable {
      */
     public IncrementalConsumer(AbstractBackupPath bp, IBackupFileSystem fs
             , BackupPostProcessingCallback<AbstractBackupPath> callback
-    ) {
+    )
+    {
         this.bp = bp;
         this.bp.setType(AbstractBackupPath.BackupFileType.SST);  //Tag this is an incremental upload, not snapshot
         this.fs = fs;
@@ -51,38 +53,52 @@ public class IncrementalConsumer implements Runnable {
      * Upload specified file, with retries logic.
 	 * File will be deleted only if uploaded successfully.
 	 */
-    public void run() {
+    public void run()
+    {
 
         logger.info("Consumer - about to upload file: {}", this.bp.getFileName());
 
-        try {
+        try
+        {
 
-            new RetryableCallable<Void>() {
+            new RetryableCallable<Void>()
+            {
                 @Override
-                public Void retriableCall() throws Exception {
+                public Void retriableCall() throws Exception
+                {
 
                     java.io.InputStream is = null;
-                    try {
+                    try
+                    {
                         is = bp.localReader();
-                    } catch (java.io.FileNotFoundException | RuntimeException e) {
-                        if (is != null) {
+                    }
+                    catch (java.io.FileNotFoundException | RuntimeException e)
+                    {
+                        if (is != null)
+                        {
                             is.close();
                         }
                         throw new java.util.concurrent.CancellationException("Someone beat me to uploading this file"
                                 + ", no need to retry.  Most likely not needed but to be safe, checked and released handle to file if appropriate.");
                     }
 
-                    try {
-                        if (is == null) {
+                    try
+                    {
+                        if (is == null)
+                        {
                             throw new NullPointerException("Unable to get handle on file: " + bp.getFileName());
                         }
                         fs.upload(bp, is);
                         bp.setCompressedFileSize(fs.getBytesUploaded());
                         bp.setAWSSlowDownExceptionCounter(fs.getAWSSlowDownExceptionCounter());
                         return null;
-                    } catch (Exception e) {
-                        logger.error("Exception uploading local file {},  releasing handle, and will retry.", bp.getFileName());
-                        if (is != null) {
+                    }
+                    catch (Exception e)
+                    {
+                        logger.error("Exception uploading local file {},  releasing handle, and will retry.",
+                                bp.getFileName());
+                        if (is != null)
+                        {
                             is.close();
                         }
                         throw e;
@@ -92,11 +108,18 @@ public class IncrementalConsumer implements Runnable {
 
             this.bp.getBackupFile().delete(); //resource cleanup
             this.callback.postProcessing(bp); //post processing
-        } catch (Exception e) {
-            if (e instanceof java.util.concurrent.CancellationException) {
-                logger.debug("Failed to upload local file {}. Ignoring to continue with rest of backup.  Msg: {}", this.bp.getFileName(), e.getLocalizedMessage());
-            } else {
-                logger.error("Failed to upload local file {}. Ignoring to continue with rest of backup.  Msg: {}", this.bp.getFileName(), e.getLocalizedMessage());
+        }
+        catch (Exception e)
+        {
+            if (e instanceof java.util.concurrent.CancellationException)
+            {
+                logger.debug("Failed to upload local file {}. Ignoring to continue with rest of backup.  Msg: {}",
+                        this.bp.getFileName(), e.getLocalizedMessage());
+            }
+            else
+            {
+                logger.error("Failed to upload local file {}. Ignoring to continue with rest of backup.  Msg: {}",
+                        this.bp.getFileName(), e.getLocalizedMessage());
             }
         }
     }

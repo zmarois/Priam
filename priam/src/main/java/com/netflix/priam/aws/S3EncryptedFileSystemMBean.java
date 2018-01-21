@@ -15,7 +15,8 @@
  */
 package com.netflix.priam.aws;
 
-public interface S3EncryptedFileSystemMBean {
+public interface S3EncryptedFileSystemMBean
+{
 
     String ENCRYPTED_FILE_SYSTEM_MBEAN_NAME = "com.priam.aws.S3EncryptedFileSystemMBean:name=S3EncryptedFileSystemMBean";
 

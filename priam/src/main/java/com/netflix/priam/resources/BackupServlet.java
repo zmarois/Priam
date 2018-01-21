@@ -30,7 +30,10 @@ import com.netflix.priam.identity.PriamInstance;
 import com.netflix.priam.restore.Restore;
 import com.netflix.priam.scheduler.PriamScheduler;
 import com.netflix.priam.tuner.ICassandraTuner;
-import com.netflix.priam.utils.*;
+import com.netflix.priam.utils.CassandraMonitor;
+import com.netflix.priam.utils.DateUtil;
+import com.netflix.priam.utils.ITokenManager;
+import com.netflix.priam.utils.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.jettison.json.JSONArray;
@@ -55,7 +58,8 @@ import java.util.stream.Collectors;
 
 @Path("/v1/backup")
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupServlet {
+public class BackupServlet
+{
     private static final Logger logger = LoggerFactory.getLogger(BackupServlet.class);
 
     private static final String REST_SUCCESS = "[\"ok\"]";
@@ -72,7 +76,8 @@ public class BackupServlet {
     private static final String REST_LOCR_FILEEXTENSION = "verifyfileextension";
     private static final String SSTABLE2JSON_DIR_LOCATION = "/tmp/priam_sstables";
     private static final String SSTABLE2JSON_COMMAND_FROM_CASSHOME = "/bin/sstable2json";
-
+    private final ITokenManager tokenManager;
+    private final ICassandraProcess cassProcess;
     private PriamServer priamServer;
     private IConfiguration config;
     private IBackupFileSystem backupFs;
@@ -82,8 +87,6 @@ public class BackupServlet {
     private ICassandraTuner tuner;
     private SnapshotBackup snapshotBackup;
     private IPriamInstanceFactory factory;
-    private final ITokenManager tokenManager;
-    private final ICassandraProcess cassProcess;
     private BackupVerification backupVerification;
     @Inject
     private PriamScheduler scheduler;
@@ -93,9 +96,13 @@ public class BackupServlet {
     private IBackupStatusMgr completedBkups;
 
     @Inject
-    public BackupServlet(PriamServer priamServer, IConfiguration config, @Named("backup") IBackupFileSystem backupFs, @Named("backup_status") IBackupFileSystem bkpStatusFs, Restore restoreObj, Provider<AbstractBackupPath> pathProvider, ICassandraTuner tuner,
-                         SnapshotBackup snapshotBackup, IPriamInstanceFactory factory, ITokenManager tokenManager, ICassandraProcess cassProcess
-            , IBackupStatusMgr completedBkups, BackupVerification backupVerification) {
+    public BackupServlet(PriamServer priamServer, IConfiguration config, @Named("backup") IBackupFileSystem backupFs,
+            @Named("backup_status") IBackupFileSystem bkpStatusFs, Restore restoreObj,
+            Provider<AbstractBackupPath> pathProvider, ICassandraTuner tuner,
+            SnapshotBackup snapshotBackup, IPriamInstanceFactory factory, ITokenManager tokenManager,
+            ICassandraProcess cassProcess
+            , IBackupStatusMgr completedBkups, BackupVerification backupVerification)
+    {
         this.priamServer = priamServer;
         this.config = config;
         this.backupFs = backupFs;
@@ -113,18 +120,19 @@ public class BackupServlet {
 
     @GET
     @Path("/do_snapshot")
-    public Response backup() throws Exception {
+    public Response backup() throws Exception
+    {
         snapshotBackup.execute();
         return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON).build();
     }
 
     @GET
     @Path("/incremental_backup")
-    public Response backupIncrementals() throws Exception {
+    public Response backupIncrementals() throws Exception
+    {
         scheduler.addTask("IncrementalBackup", IncrementalBackup.class, IncrementalBackup.getTimer());
         return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON).build();
     }
-
 
     @GET
     @Path("/list")
@@ -135,14 +143,19 @@ public class BackupServlet {
      * @param filter.  The type of data files fetched.  E.g. META will only fetch the dailsy snapshot meta data file (meta.json).
      * @return the list of files in json format as part of the Http response body.
      */
-    public Response list(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_FILTER) @DefaultValue("") String filter) throws Exception {
+    public Response list(@QueryParam(REST_HEADER_RANGE) String daterange,
+            @QueryParam(REST_HEADER_FILTER) @DefaultValue("") String filter) throws Exception
+    {
         Date startTime;
         Date endTime;
 
-        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default")) {
+        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default"))
+        {
             startTime = new DateTime().minusDays(1).toDate();
             endTime = new DateTime().toDate();
-        } else {
+        }
+        else
+        {
             String[] restore = daterange.split(",");
             AbstractBackupPath path = pathProvider.get();
             startTime = path.parseDate(restore[0]);
@@ -158,11 +171,11 @@ public class BackupServlet {
         return Response.ok(object.toString(2), MediaType.APPLICATION_JSON).build();
     }
 
-
     @GET
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response status() throws Exception {
+    public Response status() throws Exception
+    {
         int restoreTCount = restoreObj.getActiveCount(); //Active threads performing the restore
         logger.debug("Thread counts for restore is: {}", restoreTCount);
         int backupTCount = backupFs.getActivecount();
@@ -182,38 +195,54 @@ public class BackupServlet {
     @GET
     @Path("/status/{date}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response statusByDate(@PathParam("date") String date) throws Exception {
+    public Response statusByDate(@PathParam("date") String date) throws Exception
+    {
         JSONObject object = new JSONObject();
         List<BackupMetadata> metadataLinkedList = this.completedBkups.locate(date);
 
-        if (metadataLinkedList != null && !metadataLinkedList.isEmpty()) {
+        if (metadataLinkedList != null && !metadataLinkedList.isEmpty())
+        {
             // backup exist base on requested date, lets fetch more of its metadata
             BackupMetadata bkupMetadata = metadataLinkedList.get(0);
             object.put("Snapshotstatus", true);
             String token = bkupMetadata.getToken();
-            if (token != null && !token.isEmpty()) {
+            if (token != null && !token.isEmpty())
+            {
                 object.put("token", bkupMetadata.getToken());
-            } else {
+            }
+            else
+            {
                 object.put("token", "not available");
             }
-            if (bkupMetadata.getStart() != null) {
+            if (bkupMetadata.getStart() != null)
+            {
                 object.put("starttime", DateUtil.formatyyyyMMddHHmm(bkupMetadata.getStart()));
-            } else {
+            }
+            else
+            {
                 object.put("starttime", "not available");
             }
 
-            if (bkupMetadata.getCompleted() != null) {
+            if (bkupMetadata.getCompleted() != null)
+            {
                 object.put("completetime", DateUtil.formatyyyyMMddHHmm(bkupMetadata.getCompleted()));
-            } else {
+            }
+            else
+            {
                 object.put("completetime", "not_available");
             }
 
-        } else { //Backup do not exist for that date.
+        }
+        else
+        { //Backup do not exist for that date.
             object.put("Snapshotstatus", false);
             String token = SystemUtils.getDataFromUrl("http://localhost:8080/Priam/REST/v1/cassconfig/get_token");
-            if (token != null && !token.isEmpty()) {
+            if (token != null && !token.isEmpty())
+            {
                 object.put("token", token);
-            } else {
+            }
+            else
+            {
                 object.put("token", "not available");
             }
         }
@@ -230,28 +259,36 @@ public class BackupServlet {
     @GET
     @Path("/status/{date}/snapshots")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response snapshotsByDate(@PathParam("date") String date) throws Exception {
+    public Response snapshotsByDate(@PathParam("date") String date) throws Exception
+    {
         List<BackupMetadata> metadata = this.completedBkups.locate(date);
         JSONObject object = new JSONObject();
         List<String> snapshots = new ArrayList<String>();
 
         if (metadata != null && !metadata.isEmpty())
-            snapshots.addAll(metadata.stream().map(backupMetadata -> DateUtil.formatyyyyMMddHHmm(backupMetadata.getStart())).collect(Collectors.toList()));
+            snapshots.addAll(metadata.stream()
+                    .map(backupMetadata -> DateUtil.formatyyyyMMddHHmm(backupMetadata.getStart()))
+                    .collect(Collectors.toList()));
 
         object.put("Snapshots", snapshots);
         return Response.ok(object.toString(), MediaType.APPLICATION_JSON).build();
     }
 
-    private List<BackupMetadata> getLatestBackupMetadata(Date startTime, Date endTime) {
+    private List<BackupMetadata> getLatestBackupMetadata(Date startTime, Date endTime)
+    {
         List<BackupMetadata> backupMetadata = this.completedBkups.locate(endTime);
         if (backupMetadata != null && !backupMetadata.isEmpty())
             return backupMetadata;
-        if (DateUtil.formatyyyyMMdd(startTime).equals(DateUtil.formatyyyyMMdd(endTime))) {
+        if (DateUtil.formatyyyyMMdd(startTime).equals(DateUtil.formatyyyyMMdd(endTime)))
+        {
             logger.info("Start & end date are same. No SNAPSHOT found for date: {}", DateUtil.formatyyyyMMdd(endTime));
             return null;
-        } else {
+        }
+        else
+        {
             Date previousDay = new Date(endTime.getTime());
-            do {
+            do
+            {
                 //We need to find the latest backupmetadata in this date range.
                 previousDay = new DateTime(previousDay.getTime()).minusDays(1).toDate();
                 logger.info("Will try to find snapshot for previous day: {}", DateUtil.formatyyyyMMdd(previousDay));
@@ -272,15 +309,19 @@ public class BackupServlet {
     @GET
     @Path("/validate/snapshot/{daterange}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response validateSnapshotByDate(@PathParam("daterange") String daterange) throws Exception {
+    public Response validateSnapshotByDate(@PathParam("daterange") String daterange) throws Exception
+    {
 
         Date startTime;
         Date endTime;
 
-        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default")) {
+        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default"))
+        {
             startTime = new DateTime().minusDays(1).toDate();
             endTime = new DateTime().toDate();
-        } else {
+        }
+        else
+        {
             String[] dates = daterange.split(",");
             startTime = DateUtil.getDate(dates[0]);
             endTime = DateUtil.getDate(dates[1]);
@@ -289,7 +330,8 @@ public class BackupServlet {
         JSONObject jsonReply = new JSONObject();
         jsonReply.put("inputStartDate", DateUtil.formatyyyyMMddHHmm(startTime));
         jsonReply.put("inputEndDate", DateUtil.formatyyyyMMddHHmm(endTime));
-        logger.info("Will try to validate latest backup during startTime: {}, and endTime: {}", DateUtil.formatyyyyMMddHHmm(startTime), DateUtil.formatyyyyMMddHHmm(endTime));
+        logger.info("Will try to validate latest backup during startTime: {}, and endTime: {}",
+                DateUtil.formatyyyyMMddHHmm(startTime), DateUtil.formatyyyyMMddHHmm(endTime));
 
         List<BackupMetadata> metadata = getLatestBackupMetadata(startTime, endTime);
         BackupVerificationResult result = backupVerification.verifyBackup(metadata, startTime);
@@ -344,7 +386,8 @@ public class BackupServlet {
             @QueryParam(REST_LOCR_ROWKEY) String rowkey,
             @QueryParam(REST_LOCR_KEYSPACE) String ks,
             @QueryParam(REST_LOCR_COLUMNFAMILY) String cf,
-            @QueryParam(REST_LOCR_FILEEXTENSION) String fileExtension) throws Exception {
+            @QueryParam(REST_LOCR_FILEEXTENSION) String fileExtension) throws Exception
+    {
 
         Date startTime;
         Date endTime;
@@ -352,11 +395,14 @@ public class BackupServlet {
         SystemUtils.createDirs(SSTABLE2JSON_DIR_LOCATION);
         String JSON_FILE_PATH = "";
 
-        try {
+        try
+        {
 
             if (StringUtils.isBlank(daterange)
-                    || daterange.equalsIgnoreCase("default")) {
-                return Response.ok("\n[\"daterange can't be blank or default.eg.201311250000,201311260000\"]\n", MediaType.APPLICATION_JSON)
+                    || daterange.equalsIgnoreCase("default"))
+            {
+                return Response.ok("\n[\"daterange can't be blank or default.eg.201311250000,201311260000\"]\n",
+                        MediaType.APPLICATION_JSON)
                         .build();
             }
 
@@ -366,10 +412,10 @@ public class BackupServlet {
             endTime = path.parseDate(restore[1]);
 
             String origRestorePrefix = config.getRestorePrefix();
-            if (StringUtils.isNotBlank(restorePrefix)) {
+            if (StringUtils.isNotBlank(restorePrefix))
+            {
                 config.setRestorePrefix(restorePrefix);
             }
-
 
             restore(token, region, startTime, endTime, keyspaces);
 
@@ -386,9 +432,13 @@ public class BackupServlet {
             //Convert SSTable2Json and search for given rowkey
             checkSSTablesForKey(rowkey, ks, cf, fileExtension, JSON_FILE_PATH);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.info(ExceptionUtils.getStackTrace(e));
-        } finally {
+        }
+        finally
+        {
             removeAllDataFiles(ks);
         }
 
@@ -406,27 +456,34 @@ public class BackupServlet {
      * @param keyspaces Comma seperated list of keyspaces to restore
      * @throws Exception if restore is not successful
      */
-    private void restore(String token, String region, Date startTime, Date endTime, String keyspaces) throws Exception {
+    private void restore(String token, String region, Date startTime, Date endTime, String keyspaces) throws Exception
+    {
         String origRegion = config.getDC();
         String origToken = priamServer.getId().getInstance().getToken();
         if (StringUtils.isNotBlank(token))
             priamServer.getId().getInstance().setToken(token);
 
         if (config.isRestoreClosestToken())
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
 
-        if (StringUtils.isNotBlank(region)) {
+        if (StringUtils.isNotBlank(region))
+        {
             config.setDC(region);
             logger.info("Restoring from region {}", region);
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
             logger.info("Restore will use token {}", priamServer.getId().getInstance().getToken());
         }
 
         setRestoreKeyspaces(keyspaces);
 
-        try {
+        try
+        {
             restoreObj.restore(startTime, endTime);
-        } finally {
+        }
+        finally
+        {
             config.setDC(origRegion);
             priamServer.getId().getInstance().setToken(origToken);
         }
@@ -437,10 +494,12 @@ public class BackupServlet {
     /**
      * Find closest token in the specified region
      */
-    private String closestToken(String token, String region) {
+    private String closestToken(String token, String region)
+    {
         List<PriamInstance> plist = factory.getAllIds(config.getAppName());
         List<BigInteger> tokenList = Lists.newArrayList();
-        for (PriamInstance ins : plist) {
+        for (PriamInstance ins : plist)
+        {
             if (ins.getDC().equalsIgnoreCase(region))
                 tokenList.add(new BigInteger(ins.getToken()));
         }
@@ -451,8 +510,10 @@ public class BackupServlet {
      * TODO: decouple the servlet, config, and restorer. this should not rely on a side
      *       effect of a list mutation on the config object (treating it as global var).
      */
-    private void setRestoreKeyspaces(String keyspaces) {
-        if (StringUtils.isNotBlank(keyspaces)) {
+    private void setRestoreKeyspaces(String keyspaces)
+    {
+        if (StringUtils.isNotBlank(keyspaces))
+        {
             List<String> newKeyspaces = Lists.newArrayList(keyspaces.split(","));
             config.setRestoreKeySpaces(newKeyspaces);
         }
@@ -468,13 +529,17 @@ public class BackupServlet {
      * @param backup meta data file filter.  Currently, the only supported filter is META, all others will be ignore.
      * @return a list of files in Json format.
      */
-    private JSONObject constructJsonResponse(JSONObject object, Iterator<AbstractBackupPath> it, String filter) throws Exception {
+    private JSONObject constructJsonResponse(JSONObject object, Iterator<AbstractBackupPath> it, String filter)
+            throws Exception
+    {
         int fileCnt = 0;
         filter = filter.contains("?") ? filter.substring(0, filter.indexOf("?")) : filter;
 
-        try {
+        try
+        {
             JSONArray jArray = new JSONArray();
-            while (it.hasNext()) {
+            while (it.hasNext())
+            {
                 AbstractBackupPath p = it.next();
                 if (!filter.isEmpty() && BackupFileType.valueOf(filter) != p.getType())
                     continue;
@@ -489,15 +554,20 @@ public class BackupServlet {
                         .getInstance().getInstanceId());
                 backupJSON.put("uploaded_ts",
                         new DateTime(p.getUploadedTs()).toString(FMT));
-                if ("meta".equalsIgnoreCase(filter)) { //only check for existence of meta file
-                    p.setFileName("meta.json"); //ignore incremental meta files, we are only interested in daily snapshot
-                    if (metaData.doesExist(p)) {
+                if ("meta".equalsIgnoreCase(filter))
+                { //only check for existence of meta file
+                    p.setFileName(
+                            "meta.json"); //ignore incremental meta files, we are only interested in daily snapshot
+                    if (metaData.doesExist(p))
+                    {
                         //if here, snapshot completed.
                         fileCnt++;
                         jArray.put(backupJSON);
                         backupJSON.put("num_files", "1");
                     }
-                } else { //account for every file (data, and meta) .
+                }
+                else
+                { //account for every file (data, and meta) .
                     fileCnt++;
                     jArray.put(backupJSON);
                 }
@@ -505,7 +575,9 @@ public class BackupServlet {
             }
             object.put("files", jArray);
             object.put("num_files", fileCnt);
-        } catch (JSONException jse) {
+        }
+        catch (JSONException jse)
+        {
             logger.info("Caught JSON Exception --> {}", jse.getMessage());
         }
         return object;
@@ -514,51 +586,67 @@ public class BackupServlet {
     /**
      * Convert SSTable2Json and search for given key
      */
-    public void checkSSTablesForKey(String rowkey, String keyspace, String cf, String fileExtension, String jsonFilePath) throws Exception {
-        try {
+    public void checkSSTablesForKey(String rowkey, String keyspace, String cf, String fileExtension,
+            String jsonFilePath) throws Exception
+    {
+        try
+        {
             logger.info("Starting SSTable2Json conversion ...");
             //Setting timeout to 10 Mins
             long TIMEOUT_PERIOD = 10L;
             String unixCmd = formulateCommandToRun(rowkey, keyspace, cf, fileExtension, jsonFilePath);
 
-            String[] cmd = {"/bin/sh", "-c", unixCmd};
+            String[] cmd = { "/bin/sh", "-c", unixCmd };
             final Process p = Runtime
                     .getRuntime()
                     .exec(cmd);
 
-            Callable<Integer> callable = new Callable<Integer>() {
+            Callable<Integer> callable = new Callable<Integer>()
+            {
                 @Override
-                public Integer call() throws Exception {
+                public Integer call() throws Exception
+                {
                     int returnCode = p.waitFor();
                     return returnCode;
                 }
             };
 
             ExecutorService exeService = Executors.newSingleThreadExecutor();
-            try {
+            try
+            {
                 Future<Integer> future = exeService.submit(callable);
                 int returnVal = future.get(TIMEOUT_PERIOD, TimeUnit.MINUTES);
                 if (returnVal == 0)
                     logger.info("Finished SSTable2Json conversion and search.");
                 else
                     logger.error("Error occurred during SSTable2Json conversion and search.");
-            } catch (TimeoutException e) {
+            }
+            catch (TimeoutException e)
+            {
                 logger.error(ExceptionUtils.getStackTrace(e));
                 throw e;
-            } finally {
+            }
+            finally
+            {
                 p.destroy();
                 exeService.shutdown();
             }
 
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             logger.error(ExceptionUtils.getStackTrace(e));
         }
     }
 
-    public String formulateCommandToRun(String rowkey, String keyspace, String cf, String fileExtension, String jsonFilePath) {
+    public String formulateCommandToRun(String rowkey, String keyspace, String cf, String fileExtension,
+            String jsonFilePath)
+    {
         StringBuffer sbuff = new StringBuffer();
 
-        sbuff.append("for i in $(ls " + config.getDataFileLocation() + File.separator + keyspace + File.separator + cf + File.separator + fileExtension + "-*-Data.db); do " + config.getCassHome() + SSTABLE2JSON_COMMAND_FROM_CASSHOME + " $i -k ");
+        sbuff.append("for i in $(ls " + config.getDataFileLocation() + File.separator + keyspace + File.separator + cf
+                + File.separator + fileExtension + "-*-Data.db); do " + config.getCassHome()
+                + SSTABLE2JSON_COMMAND_FROM_CASSHOME + " $i -k ");
         sbuff.append(rowkey);
         sbuff.append("  | grep ");
         sbuff.append(rowkey);
@@ -571,7 +659,8 @@ public class BackupServlet {
         return sbuff.toString();
     }
 
-    public void removeAllDataFiles(String ks) throws Exception {
+    public void removeAllDataFiles(String ks) throws Exception
+    {
         String cleanupDirPath = config.getDataFileLocation() + File.separator + ks;
         logger.info("Starting to clean all the files inside <{}>", cleanupDirPath);
         SystemUtils.cleanupDir(cleanupDirPath, null);

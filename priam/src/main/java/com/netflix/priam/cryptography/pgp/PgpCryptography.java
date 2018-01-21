@@ -31,58 +31,97 @@ import java.security.Security;
 import java.util.Date;
 import java.util.Iterator;
 
-public class PgpCryptography implements IFileCryptography {
+public class PgpCryptography implements IFileCryptography
+{
     private static final Logger logger = LoggerFactory.getLogger(PgpCryptography.class);
 
-    private IConfiguration config;
-
-    static {
+    static
+    {
         Security.addProvider(new BouncyCastleProvider()); //tell the JVM the security provider is PGP
     }
 
+    private IConfiguration config;
+
     @Inject
-    public PgpCryptography(IConfiguration config) {
+    public PgpCryptography(IConfiguration config)
+    {
 
         this.config = config;
 
+    }
+
+    /*
+     * Extract the PGP private key from the encrypted content.  Since the PGP key file contains N number of keys, this method will fetch the
+     * private key by "keyID".
+     *
+     * @param securityCollection - handle to the PGP key file.
+     * @param keyID - fetch private key for this value.
+     * @param pass - pass phrase used to extract the PGP private key from the encrypted content.
+     * @return PGP private key, null if not found.
+     */
+    private static PGPPrivateKey findSecretKey(PGPSecretKeyRingCollection securityCollection, long keyID, char[] pass)
+            throws PGPException, NoSuchProviderException
+    {
+
+        PGPSecretKey privateKey = securityCollection.getSecretKey(keyID);
+        if (privateKey == null)
+        {
+            return null;
+        }
+
+        return privateKey.extractPrivateKey(pass, "BC");
 
     }
 
-    private PGPSecretKeyRingCollection getPgpSecurityCollection() {
+    private PGPSecretKeyRingCollection getPgpSecurityCollection()
+    {
 
         InputStream keyIn;
-        try {
+        try
+        {
             keyIn = new BufferedInputStream(new FileInputStream(config.getPrivateKeyLocation()));
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e)
+        {
             throw new IllegalStateException("PGP private key file not found.  file: " + config.getPrivateKeyLocation());
         }
 
-        try {
+        try
+        {
 
             return new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(keyIn));
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error("Exception in reading PGP security collection ring.  Msg: {}", e.getLocalizedMessage());
             throw new IllegalStateException("Exception in reading PGP security collection ring", e);
         }
 
     }
 
-    private PGPPublicKey getPubKey() {
+    private PGPPublicKey getPubKey()
+    {
         InputStream pubKeyIS;
-        try {
+        try
+        {
             pubKeyIS = new BufferedInputStream(new FileInputStream(config.getPgpPublicKeyLoc()));
 
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e)
+        {
             logger.error("Exception in reading PGP security collection ring.  Msg: {}", e.getLocalizedMessage());
             throw new RuntimeException("Exception in reading PGP public key", e);
         }
 
-        try {
+        try
+        {
 
             return PgpUtil.readPublicKey(pubKeyIS);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Exception in reading & deriving the PGP public key.", e);
         }
     }
@@ -94,7 +133,8 @@ public class PgpCryptography implements IFileCryptography {
      * @return a handle to the decrypted, uncompress data stream.
      */
     @Override
-    public InputStream decryptStream(InputStream in, char[] passwd, String objectName) throws Exception {
+    public InputStream decryptStream(InputStream in, char[] passwd, String objectName) throws Exception
+    {
 
         logger.info("Start to decrypt object: {}", objectName);
 
@@ -108,73 +148,72 @@ public class PgpCryptography implements IFileCryptography {
         if (o instanceof PGPEncryptedDataList)
             encryptedDataList = (PGPEncryptedDataList) o;
         else
-            encryptedDataList = (PGPEncryptedDataList) inPgpReader.nextObject(); //first object was a marker, the real data is the next one.
+            encryptedDataList = (PGPEncryptedDataList) inPgpReader
+                    .nextObject(); //first object was a marker, the real data is the next one.
 
-        Iterator encryptedDataIterator = encryptedDataList.getEncryptedDataObjects();  //get the iterator so we can iterate through all the encrypted data.
+        Iterator encryptedDataIterator = encryptedDataList
+                .getEncryptedDataObjects();  //get the iterator so we can iterate through all the encrypted data.
 
         PGPPrivateKey privateKey = null; //to be use for decryption
         PGPPublicKeyEncryptedData encryptedDataStreamHandle = null; //a handle to the encrypted data stream
-        while (privateKey == null && encryptedDataIterator.hasNext()) {
-            encryptedDataStreamHandle = (PGPPublicKeyEncryptedData) encryptedDataIterator.next(); //a handle to the encrypted data stream
+        while (privateKey == null && encryptedDataIterator.hasNext())
+        {
+            encryptedDataStreamHandle = (PGPPublicKeyEncryptedData) encryptedDataIterator
+                    .next(); //a handle to the encrypted data stream
 
-            try {
+            try
+            {
                 privateKey = findSecretKey(getPgpSecurityCollection(), encryptedDataStreamHandle.getKeyID(), passwd);
-            } catch (Exception ex) {
-                throw new IllegalStateException("decryption exception:  object: " + objectName + ", Exception when fetching private key using key: " + encryptedDataStreamHandle.getKeyID(), ex);
+            }
+            catch (Exception ex)
+            {
+                throw new IllegalStateException("decryption exception:  object: " + objectName
+                        + ", Exception when fetching private key using key: " + encryptedDataStreamHandle.getKeyID(),
+                        ex);
             }
 
         }
         if (privateKey == null)
-            throw new IllegalStateException("decryption exception:  object: " + objectName + ", Private key for message not found.");
+            throw new IllegalStateException(
+                    "decryption exception:  object: " + objectName + ", Private key for message not found.");
 
         //finally, lets decrypt the object
         InputStream decryptInputStream = encryptedDataStreamHandle.getDataStream(privateKey, "BC");
         PGPObjectFactory decryptedDataReader = new PGPObjectFactory(decryptInputStream);
 
         //the decrypted data object is compressed, lets decompress it.
-        PGPCompressedData comporessedDataReader = (PGPCompressedData) decryptedDataReader.nextObject(); //get a handle to the decrypted, compress data stream
+        PGPCompressedData comporessedDataReader = (PGPCompressedData) decryptedDataReader
+                .nextObject(); //get a handle to the decrypted, compress data stream
         InputStream compressedStream = new BufferedInputStream(comporessedDataReader.getDataStream());
         PGPObjectFactory compressedStreamReader = new PGPObjectFactory(compressedStream);
         Object data = compressedStreamReader.nextObject();
-        if (data instanceof PGPLiteralData) {
+        if (data instanceof PGPLiteralData)
+        {
             PGPLiteralData dataPgpReader = (PGPLiteralData) data;
             return dataPgpReader.getInputStream(); //a handle to the decrypted, uncompress data stream
 
-        } else if (data instanceof PGPOnePassSignatureList) {
-            throw new PGPException("decryption exception:  object: " + objectName + ", encrypted data contains a signed message - not literal data.");
-        } else {
-            throw new PGPException("decryption exception:  object: " + objectName + ", data is not a simple encrypted file - type unknown.");
         }
-
-
-    }
-
-    /*
-     * Extract the PGP private key from the encrypted content.  Since the PGP key file contains N number of keys, this method will fetch the
-     * private key by "keyID".
-     *
-     * @param securityCollection - handle to the PGP key file.
-     * @param keyID - fetch private key for this value.
-     * @param pass - pass phrase used to extract the PGP private key from the encrypted content.
-     * @return PGP private key, null if not found.
-     */
-    private static PGPPrivateKey findSecretKey(PGPSecretKeyRingCollection securityCollection, long keyID, char[] pass) throws PGPException, NoSuchProviderException {
-
-        PGPSecretKey privateKey = securityCollection.getSecretKey(keyID);
-        if (privateKey == null) {
-            return null;
+        else if (data instanceof PGPOnePassSignatureList)
+        {
+            throw new PGPException("decryption exception:  object: " + objectName
+                    + ", encrypted data contains a signed message - not literal data.");
         }
-
-        return privateKey.extractPrivateKey(pass, "BC");
+        else
+        {
+            throw new PGPException("decryption exception:  object: " + objectName
+                    + ", data is not a simple encrypted file - type unknown.");
+        }
 
     }
 
     @Override
-    public Iterator<byte[]> encryptStream(InputStream is, String fileName) {
+    public Iterator<byte[]> encryptStream(InputStream is, String fileName)
+    {
         return new ChunkEncryptorStream(is, fileName, getPubKey());
     }
 
-    public class ChunkEncryptorStream implements Iterator<byte[]> {
+    public class ChunkEncryptorStream implements Iterator<byte[]>
+    {
 
         // Chunk sizes of 10 MB
         private static final int MAX_CHUNK = 10 * 1024 * 1024;
@@ -185,7 +224,8 @@ public class PgpCryptography implements IFileCryptography {
         private ByteArrayOutputStream bos;
         private BufferedOutputStream pgout;
 
-        public ChunkEncryptorStream(InputStream is, String fileName, PGPPublicKey pubKey) {
+        public ChunkEncryptorStream(InputStream is, String fileName, PGPPublicKey pubKey)
+        {
             this.is = is;
 
             this.bos = new ByteArrayOutputStream();
@@ -194,7 +234,8 @@ public class PgpCryptography implements IFileCryptography {
         }
 
         @Override
-        public boolean hasNext() {
+        public boolean hasNext()
+        {
             return this.hasnext;
 
         }
@@ -205,25 +246,32 @@ public class PgpCryptography implements IFileCryptography {
          * @return a buffer of ciphertext
          */
         @Override
-        public byte[] next() {
-            try {
+        public byte[] next()
+        {
+            try
+            {
 
                 byte buffer[] = new byte[2048];
                 int count;
-                while ((count = encryptedSrc.read(buffer, 0, buffer.length)) != -1) {
+                while ((count = encryptedSrc.read(buffer, 0, buffer.length)) != -1)
+                {
                     pgout.write(buffer, 0, count);
                     if (bos.size() >= MAX_CHUNK)
                         return returnSafe();
                 }
                 return done(); //flush remaining data in buffer and close resources.
 
-            } catch (Exception e) {
-                throw new RuntimeException("Error encountered returning next chunk of ciphertext.  Msg: " + e.getLocalizedMessage(), e);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(
+                        "Error encountered returning next chunk of ciphertext.  Msg: " + e.getLocalizedMessage(), e);
             }
         }
 
         @Override
-        public void remove() {
+        public void remove()
+        {
             // TODO Auto-generated method stub
 
         }
@@ -231,7 +279,8 @@ public class PgpCryptography implements IFileCryptography {
         /*
          * Copy the data in the buffer to the output[] and then reset the buffer to the beginning.
          */
-        private byte[] returnSafe() {
+        private byte[] returnSafe()
+        {
             byte[] returnData = this.bos.toByteArray();
             this.bos.reset();
             return returnData;
@@ -240,7 +289,8 @@ public class PgpCryptography implements IFileCryptography {
         /*
          * flush remaining data in buffer and close resources.
          */
-        private byte[] done() throws IOException {
+        private byte[] done() throws IOException
+        {
             pgout.flush(); //flush whatever is in the buffer to the output stream
 
             this.hasnext = false; //tell clients that there is no more data
@@ -255,7 +305,8 @@ public class PgpCryptography implements IFileCryptography {
 
     }
 
-    public class EncryptedInputStream extends InputStream {
+    public class EncryptedInputStream extends InputStream
+    {
 
         private InputStream srcHandle; //handle to the source stream
         private ByteArrayOutputStream bos = null; //Handle to encrypted stream
@@ -265,16 +316,23 @@ public class PgpCryptography implements IFileCryptography {
         private PGPCompressedDataGenerator compressedDataGenerator; //a means to compress data using PGP
         private String fileName; //TODO: eliminate once debugging is completed.
 
-        public EncryptedInputStream(InputStream is, String fileName, PGPPublicKey pubKey) {
+        public EncryptedInputStream(InputStream is, String fileName, PGPPublicKey pubKey)
+        {
             this.srcHandle = is;
             this.bos = new ByteArrayOutputStream();
 
             //creates a cipher stream which will have an integrity packet assocaited with it
-            PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(PGPEncryptedData.CAST5, true, new SecureRandom(), "BC");
-            try {
-                encryptedDataGenerator.addMethod(pubKey); //Add a key encryption method to be used to encrypt the session data associated with this encrypted data
-                pgpBosWrapper = encryptedDataGenerator.open(bos, new byte[1 << 15]); //wrapper around the buffer which will contain the encrypted data.
-            } catch (Exception e) {
+            PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(PGPEncryptedData.CAST5,
+                    true, new SecureRandom(), "BC");
+            try
+            {
+                encryptedDataGenerator.addMethod(
+                        pubKey); //Add a key encryption method to be used to encrypt the session data associated with this encrypted data
+                pgpBosWrapper = encryptedDataGenerator.open(bos,
+                        new byte[1 << 15]); //wrapper around the buffer which will contain the encrypted data.
+            }
+            catch (Exception e)
+            {
                 throw new RuntimeException("Exception when wrapping PGP around our output stream", e);
             }
 
@@ -292,15 +350,20 @@ public class PgpCryptography implements IFileCryptography {
 			 * @param the time of last modification we want stored.
 			 * @param the buffer to use for collecting data to put into chunks.
 			 */
-            try {
+            try
+            {
                 PGPLiteralDataGenerator literalDataGenerator = new PGPLiteralDataGenerator();
-                this.encryptedOsWrapper = literalDataGenerator.open(compressedDataGenerator.open(pgpBosWrapper), PGPLiteralData.BINARY, fileName, new Date(), new byte[1 << 15]);
-            } catch (Exception e) {
-                throw new RuntimeException("Exception when creating the PGP encrypted wrapper around the output stream.", e);
+                this.encryptedOsWrapper = literalDataGenerator
+                        .open(compressedDataGenerator.open(pgpBosWrapper), PGPLiteralData.BINARY, fileName, new Date(),
+                                new byte[1 << 15]);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(
+                        "Exception when creating the PGP encrypted wrapper around the output stream.", e);
             }
 
             this.fileName = fileName;  //TODO: eliminate once debugging is completed.
-
 
         }
 
@@ -313,8 +376,10 @@ public class PgpCryptography implements IFileCryptography {
          * @param max number of bytes to store in buffer
          */
         @Override
-        public synchronized int read(byte b[], int off, int len) throws IOException {
-            if (this.bosOff < this.bos.size()) {
+        public synchronized int read(byte b[], int off, int len) throws IOException
+        {
+            if (this.bosOff < this.bos.size())
+            {
                 //if here, you still have data in the encrypted stream, lets give it to the client
                 return copyToBuff(b, off, len);
             }
@@ -328,10 +393,11 @@ public class PgpCryptography implements IFileCryptography {
             byte[] buff = new byte[1 << 16];
             int bytesRead = 0; //num of bytes read from the source input stream
 
-            while (this.bos.size() < len && (bytesRead = this.srcHandle.read(buff, 0, len)) > 0) { //lets process each chunk from input until we fill our output stream or we reach end of input
+            while (this.bos.size() < len && (bytesRead = this.srcHandle.read(buff, 0, len)) > 0)
+            { //lets process each chunk from input until we fill our output stream or we reach end of input
 
 				/* TODO: msg was only for debug purposes
-				 * 
+                 *
 				logger.info("Reading input file: " + this.fileName + ", number of bytes read from input stream: " + bytesRead 
 						+ ", size of buffer: " 
 						+ buff.length
@@ -342,13 +408,15 @@ public class PgpCryptography implements IFileCryptography {
                 this.encryptedOsWrapper.write(buff, 0, bytesRead);
             }
 
-            if (bytesRead < 0) { //we have read everything from the source input, lets perform cleanup on any resources.
+            if (bytesRead < 0)
+            { //we have read everything from the source input, lets perform cleanup on any resources.
                 this.encryptedOsWrapper.close();
                 this.compressedDataGenerator.close();
                 this.pgpBosWrapper.close();
             }
 
-            if (bytesRead < 0 && this.bos.size() == 0) {
+            if (bytesRead < 0 && this.bos.size() == 0)
+            {
                 //if here, read all the bytes from the input and there is nothing in the encrypted stream.
                 return bytesRead;
             }
@@ -371,28 +439,33 @@ public class PgpCryptography implements IFileCryptography {
          * @param max size of output buffer
          * @return number of bytes copied from the encrypted stream to the output buffer
          */
-        private int copyToBuff(byte[] buff, int off, int len) {
+        private int copyToBuff(byte[] buff, int off, int len)
+        {
 			/*
 			 * num of bytes to copy within encrypted stream = (current size of bytes within encrypted stream - current position within encrypted stream)  < size of output buffer, 
 			 * then copy what is in the encrypted stream; otherwise, copy up to the max size of the output buffer. 
 			 */
             int wlen = (this.bos.size() - this.bosOff) < len ? (this.bos.size() - this.bosOff) : len;
-            System.arraycopy(this.bos.toByteArray(), this.bosOff, buff, off, wlen); //copy data within encrypted stream to the output buffer
+            System.arraycopy(this.bos.toByteArray(), this.bosOff, buff, off,
+                    wlen); //copy data within encrypted stream to the output buffer
 
             this.bosOff = this.bosOff + wlen; //now update the current position within the encrypted stream
             return wlen;
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() throws IOException
+        {
             this.encryptedOsWrapper.close();
             this.compressedDataGenerator.close();
             this.pgpBosWrapper.close();
         }
 
         @Override
-        public int read() throws IOException {
-            throw new UnsupportedOperationException("Not supported, invoke read(byte[] bytes, int off, int len) instead.");
+        public int read() throws IOException
+        {
+            throw new UnsupportedOperationException(
+                    "Not supported, invoke read(byte[] bytes, int off, int len) instead.");
         }
 
     }

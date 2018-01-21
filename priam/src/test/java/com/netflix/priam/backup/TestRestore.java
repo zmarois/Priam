@@ -22,7 +22,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.netflix.priam.FakeConfiguration;
-import com.netflix.priam.ICassandraProcess;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.restore.Restore;
 import org.apache.commons.io.FileUtils;
@@ -37,7 +36,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-public class TestRestore {
+public class TestRestore
+{
     private static Injector injector;
     private static FakeBackupFileSystem filesystem;
     private static ArrayList<String> fileList;
@@ -45,9 +45,11 @@ public class TestRestore {
     private static IConfiguration conf;
 
     @BeforeClass
-    public static void setup() throws InterruptedException, IOException {
+    public static void setup() throws InterruptedException, IOException
+    {
         injector = Guice.createInjector(new BRTestModule());
-        filesystem = (FakeBackupFileSystem) injector.getInstance(Key.get(IBackupFileSystem.class, Names.named("incr_restore")));
+        filesystem = (FakeBackupFileSystem) injector
+                .getInstance(Key.get(IBackupFileSystem.class, Names.named("incr_restore")));
         conf = injector.getInstance(IConfiguration.class);
         fileList = new ArrayList<String>();
         File cassdir = new File(conf.getDataFileLocation());
@@ -56,19 +58,26 @@ public class TestRestore {
     }
 
     @AfterClass
-    public static void cleanup() throws IOException {
+    public static void cleanup() throws IOException
+    {
         File file = new File("cass");
         FileUtils.deleteQuietly(file);
     }
 
-    public static void populateBackupFileSystem(String baseDir) {
+    public static void populateBackupFileSystem(String baseDir)
+    {
         fileList.clear();
         fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/META/meta.json");
-        fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks1/cf1/f1.db");
-        fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks1/cf1/f2.db");
-        fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks2/cf1/f2.db");
-        fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110530/SST/ks2/cf1/f3.db");
-        fileList.add(baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110600/SST/ks2/cf1/f4.db");
+        fileList.add(
+                baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks1/cf1/f1.db");
+        fileList.add(
+                baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks1/cf1/f2.db");
+        fileList.add(
+                baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110030/SNAP/ks2/cf1/f2.db");
+        fileList.add(
+                baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110530/SST/ks2/cf1/f3.db");
+        fileList.add(
+                baseDir + "/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110600/SST/ks2/cf1/f4.db");
         filesystem.baseDir = baseDir;
         filesystem.region = FakeConfiguration.FAKE_REGION;
         filesystem.clusterName = "fakecluster";
@@ -76,7 +85,8 @@ public class TestRestore {
     }
 
     @Test
-    public void testRestore() throws Exception {
+    public void testRestore() throws Exception
+    {
         populateBackupFileSystem("test_backup");
         File tmpdir = new File(conf.getDataFileLocation() + "/test");
         tmpdir.mkdir();
@@ -99,9 +109,11 @@ public class TestRestore {
 
     //Pick latest file
     @Test
-    public void testRestoreLatest() throws Exception {
+    public void testRestoreLatest() throws Exception
+    {
         populateBackupFileSystem("test_backup");
-        String metafile = "test_backup/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110130/META/meta.json";
+        String metafile =
+                "test_backup/" + FakeConfiguration.FAKE_REGION + "/fakecluster/123456/201108110130/META/meta.json";
         filesystem.addFile(metafile);
         Restore restore = injector.getInstance(Restore.class);
         cal.set(2011, Calendar.AUGUST, 11, 0, 30, 0);
@@ -119,8 +131,10 @@ public class TestRestore {
     }
 
     @Test
-    public void testNoSnapshots() throws Exception {
-        try {
+    public void testNoSnapshots() throws Exception
+    {
+        try
+        {
             filesystem.setupTest(new ArrayList<String>());
             Restore restore = injector.getInstance(Restore.class);
             cal.set(2011, Calendar.SEPTEMBER, 11, 0, 30);
@@ -128,17 +142,20 @@ public class TestRestore {
             cal.add(Calendar.HOUR, 5);
             restore.restore(startTime, cal.getTime());
             Assert.assertFalse(true);//No exception thrown
-        } catch (IllegalStateException e) {
+        }
+        catch (IllegalStateException e)
+        {
             //We are ok. No snapshot found.
-        }catch (Exception e)
+        }
+        catch (Exception e)
         {
             throw e;
         }
     }
 
-
     @Test
-    public void testRestoreFromDiffCluster() throws Exception {
+    public void testRestoreFromDiffCluster() throws Exception
+    {
         populateBackupFileSystem("test_backup_new");
         FakeConfiguration conf = (FakeConfiguration) injector.getInstance(IConfiguration.class);
         conf.setRestorePrefix("RESTOREBUCKET/test_backup_new/" + FakeConfiguration.FAKE_REGION + "/fakecluster");

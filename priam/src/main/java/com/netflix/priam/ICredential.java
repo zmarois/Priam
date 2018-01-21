@@ -25,7 +25,8 @@ import com.netflix.priam.defaultimpl.ClearCredential;
  * Access ID and key authentication
  */
 @ImplementedBy(ClearCredential.class)
-public interface ICredential {
+public interface ICredential
+{
     /**
      * @return AWS Credential Provider object
      */

@@ -28,10 +28,12 @@ import java.util.Date;
  * SimpleTimer allows jobs to run starting from specified time occurring at
  * regular frequency's. Frequency of the execution timestamp since epoch.
  */
-public class SimpleTimer implements TaskTimer {
+public class SimpleTimer implements TaskTimer
+{
     private Trigger trigger;
 
-    public SimpleTimer(String name, long interval) {
+    public SimpleTimer(String name, long interval)
+    {
         this.trigger = TriggerBuilder.newTrigger()
                 .withIdentity(name)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMilliseconds(interval)
@@ -43,7 +45,8 @@ public class SimpleTimer implements TaskTimer {
     /**
      * Run once at given time...
      */
-    public SimpleTimer(String name, String group, long startTime) {
+    public SimpleTimer(String name, String group, long startTime)
+    {
         this.trigger = TriggerBuilder.newTrigger()
                 .withIdentity(name, group)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
@@ -55,7 +58,8 @@ public class SimpleTimer implements TaskTimer {
     /**
      * Run immediatly and dont do that again.
      */
-    public SimpleTimer(String name) {
+    public SimpleTimer(String name)
+    {
         this.trigger = TriggerBuilder.newTrigger()
                 .withIdentity(name, Scheduler.DEFAULT_GROUP)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
@@ -64,12 +68,14 @@ public class SimpleTimer implements TaskTimer {
         //new SimpleTrigger(name, Scheduler.DEFAULT_GROUP);
     }
 
-    public Trigger getTrigger() throws ParseException {
+    public Trigger getTrigger() throws ParseException
+    {
         return trigger;
     }
 
     @Override
-    public String getCronExpression() {
+    public String getCronExpression()
+    {
         return null;
     }
 }

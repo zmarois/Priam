@@ -58,59 +58,76 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Main class for restoring data from backup. Backup restored using this way are not encrypted.
  */
 @Singleton
-public class Restore extends AbstractRestore {
+public class Restore extends AbstractRestore
+{
     public static final String JOBNAME = "AUTO_RESTORE_JOB";
     private static final Logger logger = LoggerFactory.getLogger(Restore.class);
     private final ThreadPoolExecutor executor;
     private AtomicInteger count = new AtomicInteger();
 
     @Inject
-    public Restore(IConfiguration config, @Named("backup") IBackupFileSystem fs, Sleeper sleeper, ICassandraProcess cassProcess,
-                   Provider<AbstractBackupPath> pathProvider,
-                   InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector, MetaData metaData, InstanceState instanceState) {
-        super(config, fs, JOBNAME, sleeper, pathProvider, instanceIdentity, tokenSelector, cassProcess, metaData, instanceState);
+    public Restore(IConfiguration config, @Named("backup") IBackupFileSystem fs, Sleeper sleeper,
+            ICassandraProcess cassProcess,
+            Provider<AbstractBackupPath> pathProvider,
+            InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector, MetaData metaData,
+            InstanceState instanceState)
+    {
+        super(config, fs, JOBNAME, sleeper, pathProvider, instanceIdentity, tokenSelector, cassProcess, metaData,
+                instanceState);
         executor = new NamedThreadPoolExecutor(config.getMaxBackupDownloadThreads(), JOBNAME);
         executor.allowCoreThreadTimeOut(true);
     }
 
+    public static TaskTimer getTimer()
+    {
+        return new SimpleTimer(JOBNAME);
+    }
+
     @Override
-    protected final void downloadFile(final AbstractBackupPath path, final File restoreLocation) throws Exception {
+    protected final void downloadFile(final AbstractBackupPath path, final File restoreLocation) throws Exception
+    {
         count.incrementAndGet();
-        executor.submit(new RetryableCallable<Integer>() {
+        executor.submit(new RetryableCallable<Integer>()
+        {
             @Override
-            public Integer retriableCall() throws Exception {
+            public Integer retriableCall() throws Exception
+            {
                 logger.info("Downloading file: {} to: {}", path.getRemotePath(), restoreLocation.getAbsolutePath());
                 fs.download(path, new FileOutputStream(restoreLocation), restoreLocation.getAbsolutePath());
                 tracker.adjustAndAdd(path);
                 // TODO: fix me -> if there is exception the why hang?
-                logger.info("Completed download of file: {} to: {}", path.getRemotePath(), restoreLocation.getAbsolutePath());
+                logger.info("Completed download of file: {} to: {}", path.getRemotePath(),
+                        restoreLocation.getAbsolutePath());
                 return count.decrementAndGet();
             }
         });
     }
 
     @Override
-    protected final void waitToComplete() {
-        while (count.get() != 0) {
-            try {
+    protected final void waitToComplete()
+    {
+        while (count.get() != 0)
+        {
+            try
+            {
                 sleeper.sleep(1000);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 logger.error("Interrupted: ", e);
                 Thread.currentThread().interrupt();
             }
         }
     }
 
-    public static TaskTimer getTimer() {
-        return new SimpleTimer(JOBNAME);
-    }
-
     @Override
-    public String getName() {
+    public String getName()
+    {
         return JOBNAME;
     }
 
-    public int getActiveCount() {
+    public int getActiveCount()
+    {
         return (executor == null) ? 0 : executor.getActiveCount();
     }
 }

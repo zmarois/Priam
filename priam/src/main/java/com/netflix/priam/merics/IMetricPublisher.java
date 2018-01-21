@@ -24,6 +24,7 @@ import com.google.inject.ImplementedBy;
  * Created by vinhn on 10/14/16.
  */
 @ImplementedBy(NoOpMetricPublisher.class)
-public interface IMetricPublisher {
+public interface IMetricPublisher
+{
     public void publish(IMeasurement metric);
 }

@@ -32,7 +32,8 @@ import java.util.List;
 /*
  * Represents a list of objects within Google Cloud Storage (GCS)
  */
-public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
+public class GoogleFileIterator implements Iterator<AbstractBackupPath>
+{
     private static final Logger logger = LoggerFactory.getLogger(GoogleFileIterator.class);
 
     private Date start;
@@ -56,7 +57,9 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
      * @param start - timeframe of object to restore
      * @param till - timeframe of object to restore
      */
-    public GoogleFileIterator(Provider<AbstractBackupPath> pathProvider, Storage gcsStorageHandle, String path, Date start, Date till) {
+    public GoogleFileIterator(Provider<AbstractBackupPath> pathProvider, Storage gcsStorageHandle, String path,
+            Date start, Date till)
+    {
 
         this.start = start;
         this.till = till;
@@ -64,12 +67,14 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
 
         this.objectsResoruceHandle = gcsStorageHandle.objects();
 
-        if (path == null) {
+        if (path == null)
+        {
             throw new NullPointerException("Path of object to fetch is null");
         }
 
         String[] paths = path.split(String.valueOf(S3BackupPath.PATH_SEP));
-        if (paths.length < 1) {
+        if (paths.length < 1)
+        {
             throw new IllegalStateException("Path of object to fetch is invalid.  Path: " + path);
         }
 
@@ -78,21 +83,29 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
 
         logger.info("Listing objects from GCS: {}, prefix: {}", this.bucketName, this.pathWithinBucket);
 
-        try {
+        try
+        {
 
-            this.listObjectsSrvcHandle = objectsResoruceHandle.list(bucketName);            //== list objects within bucket
+            this.listObjectsSrvcHandle = objectsResoruceHandle
+                    .list(bucketName);            //== list objects within bucket
 
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException("Unable to get gcslist handle to bucket: " + bucketName, e);
         }
 
-        this.listObjectsSrvcHandle.setPrefix(this.pathWithinBucket); //fetch elements within bucket that matches this prefix
+        this.listObjectsSrvcHandle
+                .setPrefix(this.pathWithinBucket); //fetch elements within bucket that matches this prefix
 
-        try {        //== Get the initial page of results
+        try
+        {        //== Get the initial page of results
 
             this.iterator = createIterator();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Exception encountered fetching elements, msg: ." + e.getLocalizedMessage(), e);
         }
     }
@@ -100,19 +113,25 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
     /*
      * Fetch a page of results
      */
-    private Iterator<AbstractBackupPath> createIterator() throws Exception {
+    private Iterator<AbstractBackupPath> createIterator() throws Exception
+    {
         List<AbstractBackupPath> temp = Lists.newArrayList(); //a container of results
 
-        this.objectsContainerHandle = listObjectsSrvcHandle.execute(); //Sends the metadata request to the server and returns the parsed metadata response.
+        this.objectsContainerHandle = listObjectsSrvcHandle
+                .execute(); //Sends the metadata request to the server and returns the parsed metadata response.
 
-        for (StorageObject object : this.objectsContainerHandle.getItems()) { //processing a page of results
+        for (StorageObject object : this.objectsContainerHandle.getItems())
+        { //processing a page of results
             String fileName = GoogleEncryptedFileSystem.parseObjectname(object.getName());
             logger.debug("id: {}, parse file name: {}, name: {}", object.getId(), fileName, object.getName());
 
             AbstractBackupPath path = pathProvider.get();
-            path.parseRemote(object.getName()); //e.g. of objectname: prod_backup/us-east-1/cass_account/113427455640312821154458202479064646083/201408250801/META/meta.json
-            logger.debug("New key {} path = {} start: {} end: {} my {}", object.getName(), path.getRemotePath(), start, till, path.getTime());
-            if ((path.getTime().after(start) && path.getTime().before(till)) || path.getTime().equals(start)) {
+            path.parseRemote(
+                    object.getName()); //e.g. of objectname: prod_backup/us-east-1/cass_account/113427455640312821154458202479064646083/201408250801/META/meta.json
+            logger.debug("New key {} path = {} start: {} end: {} my {}", object.getName(), path.getRemotePath(), start,
+                    till, path.getTime());
+            if ((path.getTime().after(start) && path.getTime().before(till)) || path.getTime().equals(start))
+            {
                 temp.add(path);
                 logger.debug("Added key {}", object.getName());
             }
@@ -124,25 +143,32 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
     }
 
     @Override
-    public boolean hasNext() {
+    public boolean hasNext()
+    {
         if (this.iterator == null)
             return false;
 
-        if (this.iterator.hasNext()) {
+        if (this.iterator.hasNext())
+        {
             return true;
         }
 
-        if (this.nextPageToken == null) { //there is no additional results
+        if (this.nextPageToken == null)
+        { //there is no additional results
             return false;
         }
 
-        try {//if here, you have iterated through all elements of the previous page, now, get the next page of results
+        try
+        {//if here, you have iterated through all elements of the previous page, now, get the next page of results
 
             this.listObjectsSrvcHandle.setPageToken(this.nextPageToken); //get the next page of results
             this.iterator = createIterator();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Exception encountered fetching elements, see previous messages for details.", e);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException("Exception encountered fetching elements, see previous messages for details.",
+                    e);
         }
 
         return this.iterator.hasNext();
@@ -150,12 +176,14 @@ public class GoogleFileIterator implements Iterator<AbstractBackupPath> {
     }
 
     @Override
-    public AbstractBackupPath next() {
+    public AbstractBackupPath next()
+    {
         return iterator.next();
     }
 
     @Override
-    public void remove() {
+    public void remove()
+    {
         // TODO Auto-generated method stub
 
     }

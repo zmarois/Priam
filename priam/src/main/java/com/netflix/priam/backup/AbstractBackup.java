@@ -41,20 +41,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Abstract Backup class for uploading files to backup location
  */
-public abstract class AbstractBackup extends Task implements EventGenerator<BackupEvent> {
+public abstract class AbstractBackup extends Task implements EventGenerator<BackupEvent>
+{
     private static final Logger logger = LoggerFactory.getLogger(AbstractBackup.class);
 
     protected final List<String> FILTER_KEYSPACE = Arrays.asList("OpsCenter");
-    protected final Map<String, List<String>> FILTER_COLUMN_FAMILY = ImmutableMap.of("system", Arrays.asList("local", "peers", "LocationInfo"));
+    protected final Map<String, List<String>> FILTER_COLUMN_FAMILY = ImmutableMap
+            .of("system", Arrays.asList("local", "peers", "LocationInfo"));
     protected final Provider<AbstractBackupPath> pathFactory;
-
-    protected IBackupFileSystem fs;
     private final CopyOnWriteArrayList<EventObserver<BackupEvent>> observers = new CopyOnWriteArrayList<>();
+    protected IBackupFileSystem fs;
 
     @Inject
     public AbstractBackup(IConfiguration config, IFileSystemContext backupFileSystemCtx,
-                          Provider<AbstractBackupPath> pathFactory,
-                          BackupNotificationMgr backupNotificationMgr) {
+            Provider<AbstractBackupPath> pathFactory,
+            BackupNotificationMgr backupNotificationMgr)
+    {
         super(config);
         this.pathFactory = pathFactory;
         this.fs = backupFileSystemCtx.getFileStrategy(config);
@@ -64,7 +66,8 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
     /**
      * A means to override the type of backup strategy chosen via BackupFileSystemContext
      */
-    protected void setFileSystem(IBackupFileSystem fs) {
+    protected void setFileSystem(IBackupFileSystem fs)
+    {
         this.fs = fs;
     }
 
@@ -77,18 +80,24 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
      * @return List of files that are successfully uploaded as part of backup
      * @throws Exception when there is failure in uploading files.
      */
-    protected List<AbstractBackupPath> upload(File parent, final BackupFileType type) throws Exception {
+    protected List<AbstractBackupPath> upload(File parent, final BackupFileType type) throws Exception
+    {
         final List<AbstractBackupPath> bps = Lists.newArrayList();
-        for (final File file : parent.listFiles()) {
+        for (final File file : parent.listFiles())
+        {
             //== decorate file with metadata
             final AbstractBackupPath bp = pathFactory.get();
             bp.parseLocal(file, type);
 
-            try {
+            try
+            {
                 logger.info("About to upload file {} for backup", file.getCanonicalFile());
 
-                AbstractBackupPath abp = new RetryableCallable<AbstractBackupPath>(3, RetryableCallable.DEFAULT_WAIT_TIME) {
-                    public AbstractBackupPath retriableCall() throws Exception {
+                AbstractBackupPath abp = new RetryableCallable<AbstractBackupPath>(3,
+                        RetryableCallable.DEFAULT_WAIT_TIME)
+                {
+                    public AbstractBackupPath retriableCall() throws Exception
+                    {
                         upload(bp);
                         file.delete();
                         return bp;
@@ -99,36 +108,47 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
                     bps.add(abp);
 
                 addToRemotePath(abp.getRemotePath());
-            } catch (Exception e) {
-                logger.error("Failed to upload local file {} within CF {}. Ignoring to continue with rest of backup.", file.getCanonicalFile(), parent.getAbsolutePath(), e);
+            }
+            catch (Exception e)
+            {
+                logger.error("Failed to upload local file {} within CF {}. Ignoring to continue with rest of backup.",
+                        file.getCanonicalFile(), parent.getAbsolutePath(), e);
             }
         }
         return bps;
     }
-
 
     /**
      * Upload specified file (RandomAccessFile) with retries
      *
      * @param bp backup path to be uplaoded.
      */
-    protected void upload(final AbstractBackupPath bp) throws Exception {
-        new RetryableCallable<Void>() {
+    protected void upload(final AbstractBackupPath bp) throws Exception
+    {
+        new RetryableCallable<Void>()
+        {
             @Override
-            public Void retriableCall() throws Exception {
+            public Void retriableCall() throws Exception
+            {
                 java.io.InputStream is = null;
-                try {
+                try
+                {
                     is = bp.localReader();
-                    if (is == null) {
+                    if (is == null)
+                    {
                         throw new NullPointerException("Unable to get handle on file: " + bp.fileName);
                     }
                     fs.upload(bp, is);
                     bp.setCompressedFileSize(fs.getBytesUploaded());
                     bp.setAWSSlowDownExceptionCounter(fs.getAWSSlowDownExceptionCounter());
                     return null;
-                } catch (Exception e) {
-                    logger.error("Exception uploading local file {},  releasing handle, and will retry.", bp.backupFile.getCanonicalFile());
-                    if (is != null) {
+                }
+                catch (Exception e)
+                {
+                    logger.error("Exception uploading local file {},  releasing handle, and will retry.",
+                            bp.backupFile.getCanonicalFile());
+                    if (is != null)
+                    {
                         is.close();
                     }
                     throw e;
@@ -138,35 +158,47 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
         }.call();
     }
 
-    protected final void initiateBackup(String monitoringFolder, BackupRestoreUtil backupRestoreUtil) throws IllegalArgumentException, Exception {
+    protected final void initiateBackup(String monitoringFolder, BackupRestoreUtil backupRestoreUtil)
+            throws IllegalArgumentException, Exception
+    {
 
         File dataDir = new File(config.getDataFileLocation());
-        if (!dataDir.exists()) {
+        if (!dataDir.exists())
+        {
             throw new IllegalArgumentException("The configured 'data file location' does not exist: "
                     + config.getDataFileLocation());
         }
         logger.debug("Scanning for backup in: {}", dataDir.getAbsolutePath());
-        for (File keyspaceDir : dataDir.listFiles()) {
+        for (File keyspaceDir : dataDir.listFiles())
+        {
             if (keyspaceDir.isFile())
                 continue;
 
             logger.debug("Entering {} keyspace..", keyspaceDir.getName());
 
-            for (File columnFamilyDir : keyspaceDir.listFiles()) {
+            for (File columnFamilyDir : keyspaceDir.listFiles())
+            {
                 File backupDir = new File(columnFamilyDir, monitoringFolder);
 
-                if (!isValidBackupDir(keyspaceDir, columnFamilyDir, backupDir)) {
+                if (!isValidBackupDir(keyspaceDir, columnFamilyDir, backupDir))
+                {
                     continue;
                 }
 
                 String dirName = columnFamilyDir.getName();
                 String columnFamilyName = dirName.split("-")[0];
 
-                if (backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.KEYSPACE, keyspaceDir.getName()) || //keyspace is filtered
-                        backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.CF, keyspaceDir.getName(), columnFamilyDir.getName()) //columnfamily is filtered
-                        || (FILTER_COLUMN_FAMILY.containsKey(keyspaceDir.getName()) && FILTER_COLUMN_FAMILY.get(keyspaceDir.getName()).contains(columnFamilyName)) //column family is in list of global CF filter
-                        ) {
-                    logger.info("Skipping: keyspace: {}, CF: {} is part of filter list. Will clean up files from: {}", keyspaceDir.getName(), columnFamilyDir.getName(), backupDir.getName());
+                if (backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.KEYSPACE, keyspaceDir.getName()) ||
+                        //keyspace is filtered
+                        backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.CF, keyspaceDir.getName(),
+                                columnFamilyDir.getName()) //columnfamily is filtered
+                        || (FILTER_COLUMN_FAMILY.containsKey(keyspaceDir.getName()) && FILTER_COLUMN_FAMILY
+                        .get(keyspaceDir.getName())
+                        .contains(columnFamilyName)) //column family is in list of global CF filter
+                        )
+                {
+                    logger.info("Skipping: keyspace: {}, CF: {} is part of filter list. Will clean up files from: {}",
+                            keyspaceDir.getName(), columnFamilyDir.getName(), backupDir.getName());
                     //Clean the backup/snapshot directory else files will keep getting accumulated.
                     SystemUtils.cleanupDir(backupDir.getAbsolutePath(), null);
                     continue;
@@ -183,11 +215,13 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
     /**
      * Filters unwanted keyspaces
      */
-    public boolean isValidBackupDir(File keyspaceDir, File columnFamilyDir, File backupDir) {
+    public boolean isValidBackupDir(File keyspaceDir, File columnFamilyDir, File backupDir)
+    {
         if (!backupDir.isDirectory() && !backupDir.exists())
             return false;
         String keyspaceName = keyspaceDir.getName();
-        if (FILTER_KEYSPACE.contains(keyspaceName)) {
+        if (FILTER_KEYSPACE.contains(keyspaceName))
+        {
             logger.debug("{} is not consider a valid keyspace backup directory, will be bypass.", keyspaceName);
             return false;
         }
@@ -201,7 +235,8 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
     protected abstract void addToRemotePath(String remotePath);
 
     @Override
-    public final void addObserver(EventObserver<BackupEvent> observer) {
+    public final void addObserver(EventObserver<BackupEvent> observer)
+    {
         if (observer == null)
             throw new NullPointerException("observer must not be null.");
 
@@ -209,7 +244,8 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
     }
 
     @Override
-    public void removeObserver(EventObserver<BackupEvent> observer) {
+    public void removeObserver(EventObserver<BackupEvent> observer)
+    {
         if (observer == null)
             throw new NullPointerException("observer must not be null.");
 
@@ -217,22 +253,26 @@ public abstract class AbstractBackup extends Task implements EventGenerator<Back
     }
 
     @Override
-    public void notifyEventStart(BackupEvent event) {
+    public void notifyEventStart(BackupEvent event)
+    {
         observers.forEach(eventObserver -> eventObserver.updateEventStart(event));
     }
 
     @Override
-    public void notifyEventSuccess(BackupEvent event) {
+    public void notifyEventSuccess(BackupEvent event)
+    {
         observers.forEach(eventObserver -> eventObserver.updateEventSuccess(event));
     }
 
     @Override
-    public void notifyEventFailure(BackupEvent event) {
+    public void notifyEventFailure(BackupEvent event)
+    {
         observers.forEach(eventObserver -> eventObserver.updateEventFailure(event));
     }
 
     @Override
-    public void notifyEventStop(BackupEvent event) {
+    public void notifyEventStop(BackupEvent event)
+    {
         observers.forEach(eventObserver -> eventObserver.updateEventStop(event));
     }
 }

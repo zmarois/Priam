@@ -45,40 +45,43 @@ import java.util.List;
 
 @Path("/v1")
 @Produces(MediaType.APPLICATION_JSON)
-public class RestoreServlet {
+public class RestoreServlet
+{
 
-	private static final Logger logger = LoggerFactory.getLogger(RestoreServlet.class);
-	private static final String REST_HEADER_RANGE = "daterange";
-	private static final String REST_HEADER_REGION = "region";
-	private static final String REST_HEADER_TOKEN = "token";
-	private static final String REST_KEYSPACES = "keyspaces";
-	private static final String REST_RESTORE_PREFIX = "restoreprefix";
-	private static final String REST_SUCCESS = "[\"ok\"]";
-	
-	private IConfiguration config;
-	private Restore restoreObj;
-	private Provider<AbstractBackupPath> pathProvider;
-	private PriamServer priamServer;
-	private IPriamInstanceFactory factory;
-	private ICassandraTuner tuner;
-	private ICassandraProcess cassProcess;
-	private ITokenManager tokenManager;
-	private InstanceState instanceState;
+    private static final Logger logger = LoggerFactory.getLogger(RestoreServlet.class);
+    private static final String REST_HEADER_RANGE = "daterange";
+    private static final String REST_HEADER_REGION = "region";
+    private static final String REST_HEADER_TOKEN = "token";
+    private static final String REST_KEYSPACES = "keyspaces";
+    private static final String REST_RESTORE_PREFIX = "restoreprefix";
+    private static final String REST_SUCCESS = "[\"ok\"]";
 
-	@Inject
-	public RestoreServlet(IConfiguration config, Restore restoreObj, Provider<AbstractBackupPath> pathProvider, PriamServer priamServer
-			, IPriamInstanceFactory factory, ICassandraTuner tuner, ICassandraProcess cassProcess, ITokenManager tokenManager, InstanceState instanceState) {
-		this.config = config;
-		this.restoreObj = restoreObj;
-		this.pathProvider = pathProvider;
-		this.priamServer = priamServer;
-		this.factory = factory;
-		this.tuner = tuner;
-		this.cassProcess = cassProcess;
-		this.tokenManager = tokenManager;
-		this.instanceState = instanceState;
-	}
+    private IConfiguration config;
+    private Restore restoreObj;
+    private Provider<AbstractBackupPath> pathProvider;
+    private PriamServer priamServer;
+    private IPriamInstanceFactory factory;
+    private ICassandraTuner tuner;
+    private ICassandraProcess cassProcess;
+    private ITokenManager tokenManager;
+    private InstanceState instanceState;
 
+    @Inject
+    public RestoreServlet(IConfiguration config, Restore restoreObj, Provider<AbstractBackupPath> pathProvider,
+            PriamServer priamServer
+            , IPriamInstanceFactory factory, ICassandraTuner tuner, ICassandraProcess cassProcess,
+            ITokenManager tokenManager, InstanceState instanceState)
+    {
+        this.config = config;
+        this.restoreObj = restoreObj;
+        this.pathProvider = pathProvider;
+        this.priamServer = priamServer;
+        this.factory = factory;
+        this.tuner = tuner;
+        this.cassProcess = cassProcess;
+        this.tokenManager = tokenManager;
+        this.instanceState = instanceState;
+    }
 
     /*
      * @return metadata of current restore.  If no restore in progress, returns the metadata of most recent restore attempt.
@@ -89,21 +92,28 @@ public class RestoreServlet {
      */
     @GET
     @Path("/restore/status")
-    public Response status() throws Exception {
+    public Response status() throws Exception
+    {
         return Response.ok(instanceState.getRestoreStatus().toString()).build();
     }
 
     @GET
     @Path("/restore")
-    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange, @QueryParam(REST_HEADER_REGION) String region, @QueryParam(REST_HEADER_TOKEN) String token,
-                            @QueryParam(REST_KEYSPACES) String keyspaces, @QueryParam(REST_RESTORE_PREFIX) String restorePrefix) throws Exception {
+    public Response restore(@QueryParam(REST_HEADER_RANGE) String daterange,
+            @QueryParam(REST_HEADER_REGION) String region, @QueryParam(REST_HEADER_TOKEN) String token,
+            @QueryParam(REST_KEYSPACES) String keyspaces, @QueryParam(REST_RESTORE_PREFIX) String restorePrefix)
+            throws Exception
+    {
         Date startTime;
         Date endTime;
 
-        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default")) {
+        if (StringUtils.isBlank(daterange) || daterange.equalsIgnoreCase("default"))
+        {
             startTime = new DateTime().minusDays(1).toDate();
             endTime = new DateTime().toDate();
-        } else {
+        }
+        else
+        {
             String[] restore = daterange.split(",");
             AbstractBackupPath path = pathProvider.get();
             startTime = path.parseDate(restore[0]);
@@ -111,11 +121,13 @@ public class RestoreServlet {
         }
 
         String origRestorePrefix = config.getRestorePrefix();
-        if (StringUtils.isNotBlank(restorePrefix)) {
+        if (StringUtils.isNotBlank(restorePrefix))
+        {
             config.setRestorePrefix(restorePrefix);
         }
 
-        logger.info("Parameters: { token: [{}], region: [{}], startTime: [{}], endTime: [{}], keyspaces: [{}], restorePrefix: [{}]}",
+        logger.info(
+                "Parameters: { token: [{}], region: [{}], startTime: [{}], endTime: [{}], keyspaces: [{}], restorePrefix: [{}]}",
                 token, region, startTime, endTime, keyspaces, restorePrefix);
 
         restore(token, region, startTime, endTime, keyspaces);
@@ -123,7 +135,8 @@ public class RestoreServlet {
         //Since this call is probably never called in parallel, config is multi-thread safe to be edited
         if (origRestorePrefix != null)
             config.setRestorePrefix(origRestorePrefix);
-        else config.setRestorePrefix("");
+        else
+            config.setRestorePrefix("");
 
         return Response.ok(REST_SUCCESS, MediaType.APPLICATION_JSON).build();
     }
@@ -138,27 +151,34 @@ public class RestoreServlet {
      * @param keyspaces Comma seperated list of keyspaces to restore
      * @throws Exception
      */
-    private void restore(String token, String region, Date startTime, Date endTime, String keyspaces) throws Exception {
+    private void restore(String token, String region, Date startTime, Date endTime, String keyspaces) throws Exception
+    {
         String origRegion = config.getDC();
         String origToken = priamServer.getId().getInstance().getToken();
         if (StringUtils.isNotBlank(token))
             priamServer.getId().getInstance().setToken(token);
 
         if (config.isRestoreClosestToken())
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), config.getDC()));
 
-        if (StringUtils.isNotBlank(region)) {
+        if (StringUtils.isNotBlank(region))
+        {
             config.setDC(region);
             logger.info("Restoring from region {}", region);
-            priamServer.getId().getInstance().setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
+            priamServer.getId().getInstance()
+                    .setToken(closestToken(priamServer.getId().getInstance().getToken(), region));
             logger.info("Restore will use token {}", priamServer.getId().getInstance().getToken());
         }
 
         setRestoreKeyspaces(keyspaces);
 
-        try {
+        try
+        {
             restoreObj.restore(startTime, endTime);
-        } finally {
+        }
+        finally
+        {
             config.setDC(origRegion);
             priamServer.getId().getInstance().setToken(origToken);
         }
@@ -169,10 +189,12 @@ public class RestoreServlet {
     /**
      * Find closest token in the specified region
      */
-    private String closestToken(String token, String region) {
+    private String closestToken(String token, String region)
+    {
         List<PriamInstance> plist = factory.getAllIds(config.getAppName());
         List<BigInteger> tokenList = Lists.newArrayList();
-        for (PriamInstance ins : plist) {
+        for (PriamInstance ins : plist)
+        {
             if (ins.getDC().equalsIgnoreCase(region))
                 tokenList.add(new BigInteger(ins.getToken()));
         }
@@ -183,8 +205,10 @@ public class RestoreServlet {
      * TODO: decouple the servlet, config, and restorer. this should not rely on a side
      *       effect of a list mutation on the config object (treating it as global var).
      */
-    private void setRestoreKeyspaces(String keyspaces) {
-        if (StringUtils.isNotBlank(keyspaces)) {
+    private void setRestoreKeyspaces(String keyspaces)
+    {
+        if (StringUtils.isNotBlank(keyspaces))
+        {
             List<String> newKeyspaces = Lists.newArrayList(keyspaces.split(","));
             config.setRestoreKeySpaces(newKeyspaces);
         }

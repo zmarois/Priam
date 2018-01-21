@@ -28,7 +28,8 @@ import java.util.Map;
  * Created by aagrawal on 1/30/17.
  */
 @ImplementedBy(FileSnapshotStatusMgr.class)
-public interface IBackupStatusMgr {
+public interface IBackupStatusMgr
+{
     /**
      * Return the list of snapshot executed on provided day or null if not present.
      *

@@ -17,7 +17,6 @@
 
 package com.netflix.priam.backup;
 
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
@@ -47,18 +46,23 @@ import org.quartz.impl.StdSchedulerFactory;
 import java.util.Arrays;
 
 @Ignore
-public class BRTestModule extends AbstractModule {
+public class BRTestModule extends AbstractModule
+{
 
     @Override
-    protected void configure() {
-        bind(IConfiguration.class).toInstance(new FakeConfiguration(FakeConfiguration.FAKE_REGION, "fake-app", "az1", "fakeInstance1"));
+    protected void configure()
+    {
+        bind(IConfiguration.class)
+                .toInstance(new FakeConfiguration(FakeConfiguration.FAKE_REGION, "fake-app", "az1", "fakeInstance1"));
         bind(IPriamInstanceFactory.class).to(FakePriamInstanceFactory.class);
         bind(SchedulerFactory.class).to(StdSchedulerFactory.class).in(Scopes.SINGLETON);
         bind(IMembership.class).toInstance(new FakeMembership(Arrays.asList("fakeInstance1")));
         bind(ICredential.class).to(FakeNullCredential.class).in(Scopes.SINGLETON);
-//        bind(IBackupFileSystem.class).to(FakeBackupFileSystem.class).in(Scopes.SINGLETON);
-        bind(IBackupFileSystem.class).annotatedWith(Names.named("backup")).to(FakeBackupFileSystem.class).in(Scopes.SINGLETON);
-        bind(IBackupFileSystem.class).annotatedWith(Names.named("incr_restore")).to(FakeBackupFileSystem.class).in(Scopes.SINGLETON);
+        //        bind(IBackupFileSystem.class).to(FakeBackupFileSystem.class).in(Scopes.SINGLETON);
+        bind(IBackupFileSystem.class).annotatedWith(Names.named("backup")).to(FakeBackupFileSystem.class)
+                .in(Scopes.SINGLETON);
+        bind(IBackupFileSystem.class).annotatedWith(Names.named("incr_restore")).to(FakeBackupFileSystem.class)
+                .in(Scopes.SINGLETON);
         bind(AbstractBackupPath.class).to(S3BackupPath.class);
         bind(ICompression.class).to(SnappyCompression.class);
         bind(Sleeper.class).to(FakeSleeper.class);
@@ -67,10 +71,13 @@ public class BRTestModule extends AbstractModule {
 
         bind(IDeadTokenRetriever.class).to(DeadTokenRetriever.class);
         bind(IPreGeneratedTokenRetriever.class).to(PreGeneratedTokenRetriever.class);
-        bind(INewTokenRetriever.class).to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens        
-        bind(IS3Credential.class).annotatedWith(Names.named("awss3roleassumption")).to(S3RoleAssumptionCredential.class);
+        bind(INewTokenRetriever.class)
+                .to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens
+        bind(IS3Credential.class).annotatedWith(Names.named("awss3roleassumption"))
+                .to(S3RoleAssumptionCredential.class);
 
-        bind(IBackupFileSystem.class).annotatedWith(Names.named("encryptedbackup")).to(FakedS3EncryptedFileSystem.class);
+        bind(IBackupFileSystem.class).annotatedWith(Names.named("encryptedbackup"))
+                .to(FakedS3EncryptedFileSystem.class);
         bind(IFileCryptography.class).annotatedWith(Names.named("filecryptoalgorithm")).to(PgpCryptography.class);
         bind(IIncrementalBackup.class).to(IncrementalBackup.class);
         bind(InstanceEnvIdentity.class).to(FakeInstanceEnvIdentity.class);

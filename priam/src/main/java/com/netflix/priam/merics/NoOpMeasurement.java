@@ -20,41 +20,49 @@ package com.netflix.priam.merics;
  * <p>
  * Created by vinhn on 10/14/16.
  */
-public class NoOpMeasurement implements IMeasurement<Object> {
+public class NoOpMeasurement implements IMeasurement<Object>
+{
     private int failure = 0, success = 0;
 
     @Override
-    public MMEASUREMENT_TYPE getType() {
+    public MMEASUREMENT_TYPE getType()
+    {
         return MMEASUREMENT_TYPE.NOOP;
     }
 
     @Override
-    public void incrementFailureCnt(int i) {
+    public void incrementFailureCnt(int i)
+    {
         this.failure = i;
     }
 
     @Override
-    public int getFailureCnt() {
+    public int getFailureCnt()
+    {
         return this.failure;
     }
 
     @Override
-    public void incrementSuccessCnt(int i) {
+    public void incrementSuccessCnt(int i)
+    {
         this.success = i;
     }
 
     @Override
-    public int getSuccessCnt() {
+    public int getSuccessCnt()
+    {
         return this.success;
     }
 
     @Override
-    public Object getVal() {
+    public Object getVal()
+    {
         return null;
     }
 
     @Override
-    public void setVal(Object val) {
+    public void setVal(Object val)
+    {
 
     }
 }

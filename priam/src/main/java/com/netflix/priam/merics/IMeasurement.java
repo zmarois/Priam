@@ -20,7 +20,8 @@ package com.netflix.priam.merics;
  * <p>
  * Created by vinhn on 10/14/16.
  */
-public interface IMeasurement<T> {
+public interface IMeasurement<T>
+{
 
     public MMEASUREMENT_TYPE getType();
 
@@ -42,7 +43,8 @@ public interface IMeasurement<T> {
      */
     public void setVal(T val);
 
-    public enum MMEASUREMENT_TYPE {
+    public enum MMEASUREMENT_TYPE
+    {
         NOOP, NODETOOLFLUSH, SNAPSHOTBACKUP, BACKUPUPLOADRATE, SNAPSHOTBACKUPUPNOTIFICATION, AWSSLOWDOWNEXCEPTION;
     }
 

@@ -38,19 +38,21 @@ import java.util.stream.Collectors;
  * Leave startTime as null to get the latest snapshot for the provided BackupMetadata.
  */
 @Singleton
-public class BackupVerification {
+public class BackupVerification
+{
 
     private static final Logger logger = LoggerFactory.getLogger(BackupVerification.class);
     private IBackupFileSystem bkpStatusFs;
     private IConfiguration config;
 
-    @Inject
-    BackupVerification(@Named("backup_status") IBackupFileSystem bkpStatusFs, IConfiguration config) {
+    @Inject BackupVerification(@Named("backup_status") IBackupFileSystem bkpStatusFs, IConfiguration config)
+    {
         this.bkpStatusFs = bkpStatusFs;
         this.config = config;
     }
 
-    public BackupVerificationResult verifyBackup(List<BackupMetadata> metadata, Date startTime) {
+    public BackupVerificationResult verifyBackup(List<BackupMetadata> metadata, Date startTime)
+    {
         BackupVerificationResult result = new BackupVerificationResult();
 
         if (metadata == null || metadata.isEmpty())
@@ -66,29 +68,36 @@ public class BackupVerification {
 
         //find the latest date (default) or verify if one provided
         Date latestDate = null;
-        for (BackupMetadata backupMetadata : metadata) {
+        for (BackupMetadata backupMetadata : metadata)
+        {
             if (latestDate == null || latestDate.before(backupMetadata.getStart()))
                 latestDate = backupMetadata.getStart();
 
             if (startTime != null &&
-                    DateUtil.formatyyyyMMddHHmm(backupMetadata.getStart()).equals(DateUtil.formatyyyyMMddHHmm(startTime))) {
+                    DateUtil.formatyyyyMMddHHmm(backupMetadata.getStart())
+                            .equals(DateUtil.formatyyyyMMddHHmm(startTime)))
+            {
                 latestDate = startTime;
                 break;
             }
         }
 
         result.snapshotTime = DateUtil.formatyyyyMMddHHmm(latestDate);
-        logger.info("Latest/Requested snapshot date found: {}, for selected/provided date: {}", result.snapshotTime, result.selectedDate);
+        logger.info("Latest/Requested snapshot date found: {}, for selected/provided date: {}", result.snapshotTime,
+                result.selectedDate);
 
         //Get Backup File Iterator
         String prefix = config.getBackupPrefix();
         logger.info("Looking for meta file in the location:  {}", prefix);
 
         Date strippedMsSnapshotTime = DateUtil.getDate(result.snapshotTime);
-        Iterator<AbstractBackupPath> backupfiles = bkpStatusFs.list(prefix, strippedMsSnapshotTime, strippedMsSnapshotTime);
+        Iterator<AbstractBackupPath> backupfiles = bkpStatusFs
+                .list(prefix, strippedMsSnapshotTime, strippedMsSnapshotTime);
         //Return validation fail if backup filesystem listing failed.
-        if (!backupfiles.hasNext()) {
-            logger.warn("ERROR: No files available while doing backup filesystem listing. Declaring the verification failed.");
+        if (!backupfiles.hasNext())
+        {
+            logger.warn(
+                    "ERROR: No files available while doing backup filesystem listing. Declaring the verification failed.");
             return result;
         }
 
@@ -97,7 +106,8 @@ public class BackupVerification {
         List<AbstractBackupPath> metas = new LinkedList<>();
         List<String> s3Listing = new ArrayList<>();
 
-        while (backupfiles.hasNext()) {
+        while (backupfiles.hasNext())
+        {
             AbstractBackupPath path = backupfiles.next();
             if (path.getFileName().equalsIgnoreCase("meta.json"))
                 metas.add(path);
@@ -105,7 +115,8 @@ public class BackupVerification {
                 s3Listing.add(path.getRemotePath());
         }
 
-        if (metas.size() == 0) {
+        if (metas.size() == 0)
+        {
             logger.error("No meta found for snapshotdate: {}", DateUtil.formatyyyyMMddHHmm(latestDate));
             return result;
         }
@@ -113,22 +124,28 @@ public class BackupVerification {
         result.metaFileFound = true;
         //Download meta.json from backup location and uncompress it.
         List<String> metaFileList = new ArrayList<>();
-        try {
+        try
+        {
             bkpStatusFs.download(metas.get(0), new FileOutputStream("tmp_meta.json"));
             logger.info("Meta file successfully downloaded to localhost: {}", metas.get(0));
 
             JSONParser jsonParser = new JSONParser();
-            org.json.simple.JSONArray fileList = (org.json.simple.JSONArray) jsonParser.parse(new FileReader("tmp_meta.json"));
+            org.json.simple.JSONArray fileList = (org.json.simple.JSONArray) jsonParser
+                    .parse(new FileReader("tmp_meta.json"));
             for (int i = 0; i < fileList.size(); i++)
                 metaFileList.add(fileList.get(i).toString());
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error("Error while fetching meta.json from path: {}", metas.get(0), e);
             return result;
         }
 
-        if (metaFileList.isEmpty() && s3Listing.isEmpty()) {
-            logger.info("Uncommon Scenario: Both meta file and backup filesystem listing is empty. Considering this as success");
+        if (metaFileList.isEmpty() && s3Listing.isEmpty())
+        {
+            logger.info(
+                    "Uncommon Scenario: Both meta file and backup filesystem listing is empty. Considering this as success");
             result.valid = true;
             return result;
         }

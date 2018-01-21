@@ -49,21 +49,38 @@ import java.util.Set;
  * amazons case).
  */
 @Singleton
-public class UpdateSecuritySettings extends Task {
-    private static final Logger logger = LoggerFactory.getLogger(UpdateSecuritySettings.class);
+public class UpdateSecuritySettings extends Task
+{
     public static final String JOBNAME = "Update_SG";
-    public static boolean firstTimeUpdated = false;
-
+    private static final Logger logger = LoggerFactory.getLogger(UpdateSecuritySettings.class);
     private static final Random ran = new Random();
+    public static boolean firstTimeUpdated = false;
     private final IMembership membership;
     private final IPriamInstanceFactory<PriamInstance> factory;
 
     @Inject
     //Note: do not parameterized the generic type variable to an implementation as it confuses Guice in the binding.
-    public UpdateSecuritySettings(IConfiguration config, IMembership membership, IPriamInstanceFactory factory) {
+    public UpdateSecuritySettings(IConfiguration config, IMembership membership, IPriamInstanceFactory factory)
+    {
         super(config);
         this.membership = membership;
         this.factory = factory;
+    }
+
+    public static TaskTimer getTimer(InstanceIdentity id)
+    {
+        SimpleTimer return_;
+        if (id.isSeed())
+        {
+            logger.info("Seed node.  Instance id: {}"
+                            + ", host ip: {}"
+                            + ", host name: {}",
+                    id.getInstance().getInstanceId(), id.getInstance().getHostIP(), id.getInstance().getHostName());
+            return_ = new SimpleTimer(JOBNAME, 120 * 1000 + ran.nextInt(120 * 1000));
+        }
+        else
+            return_ = new SimpleTimer(JOBNAME);
+        return return_;
     }
 
     /**
@@ -72,7 +89,8 @@ public class UpdateSecuritySettings extends Task {
      * Seeds in cassandra are the first node in each Availablity Zone.
      */
     @Override
-    public void execute() {
+    public void execute()
+    {
         // if seed dont execute.
         int port = config.getSSLStoragePort();
         List<String> acls = membership.listACL(port, port);
@@ -81,19 +99,22 @@ public class UpdateSecuritySettings extends Task {
         // iterate to add...
         Set<String> add = new HashSet<String>();
         List<PriamInstance> allInstances = factory.getAllIds(config.getAppName());
-        for (PriamInstance instance : allInstances) {
+        for (PriamInstance instance : allInstances)
+        {
             String range = instance.getHostIP() + "/32";
             if (!acls.contains(range))
                 add.add(range);
         }
-        if (add.size() > 0) {
+        if (add.size() > 0)
+        {
             membership.addACL(add, port, port);
             firstTimeUpdated = true;
         }
 
         // just iterate to generate ranges.
         List<String> currentRanges = Lists.newArrayList();
-        for (PriamInstance instance : instances) {
+        for (PriamInstance instance : instances)
+        {
             String range = instance.getHostIP() + "/32";
             currentRanges.add(range);
         }
@@ -103,27 +124,16 @@ public class UpdateSecuritySettings extends Task {
         for (String acl : acls)
             if (!currentRanges.contains(acl)) // if not found then remove....
                 remove.add(acl);
-        if (remove.size() > 0) {
+        if (remove.size() > 0)
+        {
             membership.removeACL(remove, port, port);
             firstTimeUpdated = true;
         }
     }
 
-    public static TaskTimer getTimer(InstanceIdentity id) {
-        SimpleTimer return_;
-        if (id.isSeed()) {
-            logger.info("Seed node.  Instance id: {}"
-                    + ", host ip: {}"
-                    + ", host name: {}",
-                    id.getInstance().getInstanceId(), id.getInstance().getHostIP(), id.getInstance().getHostName());
-            return_ = new SimpleTimer(JOBNAME, 120 * 1000 + ran.nextInt(120 * 1000));
-        } else
-            return_ = new SimpleTimer(JOBNAME);
-        return return_;
-    }
-
     @Override
-    public String getName() {
+    public String getName()
+    {
         return JOBNAME;
     }
 }

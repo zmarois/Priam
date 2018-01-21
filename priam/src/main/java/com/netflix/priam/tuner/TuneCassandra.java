@@ -29,28 +29,40 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 @Singleton
-public class TuneCassandra extends Task {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TuneCassandra.class);
+public class TuneCassandra extends Task
+{
     public static final String JOBNAME = "Tune-Cassandra";
+    private static final Logger LOGGER = LoggerFactory.getLogger(TuneCassandra.class);
     private final ICassandraTuner tuner;
     private InstanceState instanceState;
 
     @Inject
-    public TuneCassandra(IConfiguration config, ICassandraTuner tuner, InstanceState instanceState) {
+    public TuneCassandra(IConfiguration config, ICassandraTuner tuner, InstanceState instanceState)
+    {
         super(config);
         this.tuner = tuner;
         this.instanceState = instanceState;
     }
 
-    public void execute() throws Exception {
+    public static TaskTimer getTimer()
+    {
+        return new SimpleTimer(JOBNAME);
+    }
+
+    public void execute() throws Exception
+    {
         boolean isDone = false;
 
-        while (!isDone) {
-            try {
+        while (!isDone)
+        {
+            try
+            {
                 tuner.writeAllProperties(config.getYamlLocation(), null, config.getSeedProviderName());
                 isDone = true;
                 instanceState.setYmlWritten(true);
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 LOGGER.error("Fail wrting cassandra.yml file. Retry again!", e);
             }
         }
@@ -58,11 +70,8 @@ public class TuneCassandra extends Task {
     }
 
     @Override
-    public String getName() {
+    public String getName()
+    {
         return "Tune-Cassandra";
-    }
-
-    public static TaskTimer getTimer() {
-        return new SimpleTimer(JOBNAME);
     }
 }

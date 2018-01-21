@@ -25,18 +25,22 @@ import com.netflix.priam.backup.AbstractBackupPath;
  * without modifying AbstractBackupPath.
  * Created by aagrawal on 8/11/17.
  */
-public class BackupEvent {
+public class BackupEvent
+{
     private AbstractBackupPath abstractBackupPath;
 
-    public BackupEvent(AbstractBackupPath abstractBackupPath) {
+    public BackupEvent(AbstractBackupPath abstractBackupPath)
+    {
         this.abstractBackupPath = abstractBackupPath;
     }
 
-    public AbstractBackupPath getAbstractBackupPath() {
+    public AbstractBackupPath getAbstractBackupPath()
+    {
         return this.abstractBackupPath;
     }
 
-    public void setAbstractBackupPath(AbstractBackupPath abstractBackupPath) {
+    public void setAbstractBackupPath(AbstractBackupPath abstractBackupPath)
+    {
         this.abstractBackupPath = abstractBackupPath;
     }
 }

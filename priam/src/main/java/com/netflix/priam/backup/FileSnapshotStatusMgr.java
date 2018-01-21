@@ -34,7 +34,8 @@ import java.util.Map;
  * Created by aagrawal on 7/11/17.
  */
 @Singleton
-public class FileSnapshotStatusMgr extends BackupStatusMgr {
+public class FileSnapshotStatusMgr extends BackupStatusMgr
+{
     private static final Logger logger = LoggerFactory.getLogger(FileSnapshotStatusMgr.class);
     private static final int IN_MEMORY_SNAPSHOT_CAPACITY = 60;
     private IConfiguration config;
@@ -43,33 +44,44 @@ public class FileSnapshotStatusMgr extends BackupStatusMgr {
     /**
      * Constructor to initialize the file based snapshot status manager.
      *
-     * @param config {@link IConfiguration} of priam to find where file should be saved/read from.
+     * @param config        {@link IConfiguration} of priam to find where file should be saved/read from.
      * @param instanceState Status of the instance encapsulating health and other metadata of Priam and Cassandra.
      */
     @Inject
-    public FileSnapshotStatusMgr(IConfiguration config, InstanceState instanceState) {
+    public FileSnapshotStatusMgr(IConfiguration config, InstanceState instanceState)
+    {
         super(IN_MEMORY_SNAPSHOT_CAPACITY, instanceState); //Fetch capacity from properties, if required.
         this.config = config;
         this.filename = this.config.getBackupStatusFileLoc();
         init();
     }
 
-    private void init() {
+    private void init()
+    {
         //Retrieve entire file and re-populate the list.
         File snapshotFile = new File(filename);
-        if (!snapshotFile.exists()) {
+        if (!snapshotFile.exists())
+        {
             logger.info("Snapshot status file do not exist on system. Bypassing initilization phase.");
             return;
         }
 
-        try (final ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(snapshotFile))) {
+        try (final ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(snapshotFile)))
+        {
             backupMetadataMap = (Map<String, LinkedList<BackupMetadata>>) inputStream.readObject();
             logger.info("Snapshot status of size {} fetched successfully from {}", backupMetadataMap.size(), filename);
-        } catch (IOException e) {
-            logger.error("Error while trying to fetch snapshot status from {}. Error: {}. If this is first time after upgrading Priam, ignore this.", filename, e.getLocalizedMessage());
+        }
+        catch (IOException e)
+        {
+            logger.error(
+                    "Error while trying to fetch snapshot status from {}. Error: {}. If this is first time after upgrading Priam, ignore this.",
+                    filename, e.getLocalizedMessage());
             e.printStackTrace();
-        } catch (Exception e) {
-            logger.error("Error while trying to fetch snapshot status from {}. Error: {}.", filename, e.getLocalizedMessage());
+        }
+        catch (Exception e)
+        {
+            logger.error("Error while trying to fetch snapshot status from {}. Error: {}.", filename,
+                    e.getLocalizedMessage());
             e.printStackTrace();
         }
 
@@ -78,23 +90,29 @@ public class FileSnapshotStatusMgr extends BackupStatusMgr {
     }
 
     @Override
-    public void save(BackupMetadata backupMetadata) {
+    public void save(BackupMetadata backupMetadata)
+    {
         File snapshotFile = new File(filename);
         if (!snapshotFile.exists())
             snapshotFile.mkdirs();
 
         //Will save entire list to file.
-        try (final ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+        try (final ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename)))
+        {
             out.writeObject(backupMetadataMap);
             out.flush();
             logger.info("Snapshot status of size {} is saved to {}", backupMetadataMap.size(), filename);
-        } catch (IOException e) {
-            logger.error("Error while trying to persist snapshot status to {}. Error: {}", filename, e.getLocalizedMessage());
+        }
+        catch (IOException e)
+        {
+            logger.error("Error while trying to persist snapshot status to {}. Error: {}", filename,
+                    e.getLocalizedMessage());
         }
     }
 
     @Override
-    public LinkedList<BackupMetadata> fetch(String snapshotDate) {
+    public LinkedList<BackupMetadata> fetch(String snapshotDate)
+    {
         //No need to fetch from local machine as it was read once at start. No point reading again and again.
         return backupMetadataMap.get(snapshotDate);
     }

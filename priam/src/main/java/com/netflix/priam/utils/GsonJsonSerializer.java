@@ -30,7 +30,8 @@ import java.util.Date;
 /**
  * Created by aagrawal on 10/12/17.
  */
-public class GsonJsonSerializer {
+public class GsonJsonSerializer
+{
     private static final Gson gson = new GsonBuilder()
             .serializeNulls()
             .serializeSpecialFloatingPointValues()
@@ -40,25 +41,31 @@ public class GsonJsonSerializer {
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeTypeAdapter())
             .create();
 
-    public static Gson getGson(){
+    public static Gson getGson()
+    {
         return gson;
     }
 
-    static class DateTypeAdapter extends TypeAdapter<Date> {
+    static class DateTypeAdapter extends TypeAdapter<Date>
+    {
         @Override
         public void write(JsonWriter out, Date value)
-                throws IOException {
+                throws IOException
+        {
             out.value(DateUtil.formatyyyyMMddHHmm(value));
         }
 
         @Override
-        public Date read(JsonReader in) throws IOException {
-            if (in.peek() == JsonToken.NULL) {
+        public Date read(JsonReader in) throws IOException
+        {
+            if (in.peek() == JsonToken.NULL)
+            {
                 in.nextNull();
                 return null;
             }
             String result = in.nextString();
-            if ("".equals(result)) {
+            if ("".equals(result))
+            {
                 return null;
             }
             return DateUtil.getDate(result);
@@ -66,21 +73,26 @@ public class GsonJsonSerializer {
         }
     }
 
-    static class LocalDateTimeTypeAdapter extends TypeAdapter<LocalDateTime> {
+    static class LocalDateTimeTypeAdapter extends TypeAdapter<LocalDateTime>
+    {
         @Override
         public void write(JsonWriter out, LocalDateTime value)
-                throws IOException {
+                throws IOException
+        {
             out.value(DateUtil.formatyyyyMMddHHmm(value));
         }
 
         @Override
-        public LocalDateTime read(JsonReader in) throws IOException {
-            if (in.peek() == JsonToken.NULL) {
+        public LocalDateTime read(JsonReader in) throws IOException
+        {
+            if (in.peek() == JsonToken.NULL)
+            {
                 in.nextNull();
                 return null;
             }
             String result = in.nextString();
-            if ("".equals(result)) {
+            if ("".equals(result))
+            {
                 return null;
             }
             return DateUtil.getLocalDateTime(result);

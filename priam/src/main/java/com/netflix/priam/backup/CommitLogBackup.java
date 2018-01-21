@@ -29,43 +29,62 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
 //Providing this if we want to use it outside Quart
-public class CommitLogBackup {
+public class CommitLogBackup
+{
     private static final Logger logger = LoggerFactory.getLogger(CommitLogBackup.class);
-    private final Provider<AbstractBackupPath> pathFactory;
     static List<IMessageObserver> observers = new ArrayList();
+    private final Provider<AbstractBackupPath> pathFactory;
     private final List<String> clRemotePaths = new ArrayList();
     private final IBackupFileSystem fs;
 
     @Inject
-    public CommitLogBackup(Provider<AbstractBackupPath> pathFactory, @Named("backup") IBackupFileSystem fs) {
+    public CommitLogBackup(Provider<AbstractBackupPath> pathFactory, @Named("backup") IBackupFileSystem fs)
+    {
         this.pathFactory = pathFactory;
         this.fs = fs;
     }
 
+    public static void addObserver(IMessageObserver observer)
+    {
+        observers.add(observer);
+    }
+
+    public static void removeObserver(IMessageObserver observer)
+    {
+        observers.remove(observer);
+    }
+
     public List<AbstractBackupPath> upload(String archivedDir, final String snapshotName)
-            throws Exception {
+            throws Exception
+    {
         logger.info("Inside upload CommitLog files");
 
-        if (StringUtils.isBlank(archivedDir)) {
+        if (StringUtils.isBlank(archivedDir))
+        {
             throw new IllegalArgumentException("The archived commitlog director is blank or null");
         }
 
         File archivedCommitLogDir = new File(archivedDir);
-        if (!archivedCommitLogDir.exists()) {
+        if (!archivedCommitLogDir.exists())
+        {
             throw new IllegalArgumentException("The archived commitlog director does not exist: " + archivedDir);
         }
 
-        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled())
+        {
             logger.debug("Scanning for backup in: {}", archivedCommitLogDir.getAbsolutePath());
         }
         List bps = Lists.newArrayList();
-        for (final File file : archivedCommitLogDir.listFiles()) {
+        for (final File file : archivedCommitLogDir.listFiles())
+        {
             logger.debug("Uploading commit log {} for backup", file.getCanonicalFile());
-            try {
-                AbstractBackupPath abp = (AbstractBackupPath) new RetryableCallable(3, 100L) {
-                    public AbstractBackupPath retriableCall() throws Exception {
+            try
+            {
+                AbstractBackupPath abp = (AbstractBackupPath) new RetryableCallable(3, 100L)
+                {
+                    public AbstractBackupPath retriableCall() throws Exception
+                    {
 
                         AbstractBackupPath bp = pathFactory.get();
                         bp.parseLocal(file, BackupFileType.CL);
@@ -78,11 +97,14 @@ public class CommitLogBackup {
                 }
                         .call();
 
-                if (abp != null) {
+                if (abp != null)
+                {
                     bps.add(abp);
                 }
                 addToRemotePath(abp.getRemotePath());
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 logger.error("Failed to upload local file {}. Ignoring to continue with rest of backup.", file, e);
             }
         }
@@ -90,10 +112,13 @@ public class CommitLogBackup {
     }
 
     private void upload(final AbstractBackupPath bp)
-            throws Exception {
-        new RetryableCallable() {
+            throws Exception
+    {
+        new RetryableCallable()
+        {
             public Void retriableCall()
-                    throws Exception {
+                    throws Exception
+            {
                 fs.upload(bp, bp.localReader());
                 return null;
             }
@@ -101,25 +126,22 @@ public class CommitLogBackup {
                 .call();
     }
 
-    public static void addObserver(IMessageObserver observer) {
-        observers.add(observer);
-    }
-
-    public static void removeObserver(IMessageObserver observer) {
-        observers.remove(observer);
-    }
-
-    public void notifyObservers() {
+    public void notifyObservers()
+    {
         for (IMessageObserver observer : observers)
-            if (observer != null) {
+            if (observer != null)
+            {
                 logger.debug("Updating CommitLog observers now ...");
                 observer.update(IMessageObserver.BACKUP_MESSAGE_TYPE.COMMITLOG, this.clRemotePaths);
-            } else {
+            }
+            else
+            {
                 logger.debug("Observer is Null, hence can not notify ...");
             }
     }
 
-    protected void addToRemotePath(String remotePath) {
+    protected void addToRemotePath(String remotePath)
+    {
         this.clRemotePaths.add(remotePath);
     }
 }

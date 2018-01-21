@@ -31,7 +31,8 @@ import java.util.List;
 /**
  * Runs algorithms as finding closest token from a list of token (in a backup)
  */
-public class RestoreTokenSelector {
+public class RestoreTokenSelector
+{
     private final ITokenManager tokenManager;
     private final IBackupFileSystem fs;
 
@@ -52,7 +53,8 @@ public class RestoreTokenSelector {
      * @param startDate     Date for which the backups are available
      * @return Token as BigInteger
      */
-    public BigInteger getClosestToken(BigInteger tokenToSearch, Date startDate) {
+    public BigInteger getClosestToken(BigInteger tokenToSearch, Date startDate)
+    {
         List<BigInteger> tokenList = new ArrayList<BigInteger>();
         Iterator<AbstractBackupPath> iter = fs.listPrefixes(startDate);
         while (iter.hasNext())

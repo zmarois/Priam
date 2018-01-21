@@ -27,10 +27,12 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class DoubleRingTest extends InstanceTestUtils {
+public class DoubleRingTest extends InstanceTestUtils
+{
 
     @Test
-    public void testDouble() throws Exception {
+    public void testDouble() throws Exception
+    {
         createInstances();
         int originalSize = factory.getAllIds(config.getAppName()).size();
         new DoubleRing(config, factory, tokenManager).doubleSlots();
@@ -41,14 +43,17 @@ public class DoubleRingTest extends InstanceTestUtils {
         validate(doubled);
     }
 
-    private void validate(List<PriamInstance> doubled) {
+    private void validate(List<PriamInstance> doubled)
+    {
         List<String> validator = Lists.newArrayList();
-        for (int i = 0; i < doubled.size(); i++) {
+        for (int i = 0; i < doubled.size(); i++)
+        {
             validator.add(tokenManager.createToken(i, doubled.size(), config.getDC()));
 
         }
 
-        for (int i = 0; i < doubled.size(); i++) {
+        for (int i = 0; i < doubled.size(); i++)
+        {
             PriamInstance ins = doubled.get(i);
             assertEquals(validator.get(i), ins.getToken());
             int id = ins.getId() - tokenManager.regionOffset(config.getDC());
@@ -59,7 +64,8 @@ public class DoubleRingTest extends InstanceTestUtils {
     }
 
     @Test
-    public void testBR() throws Exception {
+    public void testBR() throws Exception
+    {
         createInstances();
         int intialSize = factory.getAllIds(config.getAppName()).size();
         DoubleRing ring = new DoubleRing(config, factory, tokenManager);

@@ -29,19 +29,24 @@ import java.text.ParseException;
  * Scheduling class to schedule Priam tasks. Uses Quartz scheduler
  */
 @Singleton
-public class PriamScheduler {
+public class PriamScheduler
+{
     private static final Logger logger = LoggerFactory.getLogger(PriamScheduler.class);
     private final Scheduler scheduler;
     private final GuiceJobFactory jobFactory;
     private final Sleeper sleeper;
 
     @Inject
-    public PriamScheduler(SchedulerFactory factory, GuiceJobFactory jobFactory, Sleeper sleeper) {
-        try {
+    public PriamScheduler(SchedulerFactory factory, GuiceJobFactory jobFactory, Sleeper sleeper)
+    {
+        try
+        {
             this.scheduler = factory.getScheduler();
             this.scheduler.setJobFactory(jobFactory);
             this.jobFactory = jobFactory;
-        } catch (SchedulerException e) {
+        }
+        catch (SchedulerException e)
+        {
             throw new RuntimeException(e);
         }
         this.sleeper = sleeper;
@@ -50,14 +55,20 @@ public class PriamScheduler {
     /**
      * Add a task to the scheduler
      */
-    public void addTask(String name, Class<? extends Task> taskclass, TaskTimer timer) throws SchedulerException, ParseException {
+    public void addTask(String name, Class<? extends Task> taskclass, TaskTimer timer)
+            throws SchedulerException, ParseException
+    {
         assert timer != null : "Cannot add scheduler task " + name + " as no timer is set";
-        JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass).build();//new JobDetail(name, Scheduler.DEFAULT_GROUP, taskclass);
-        if (timer.getCronExpression() != null && !timer.getCronExpression().isEmpty()) {
+        JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass)
+                .build();//new JobDetail(name, Scheduler.DEFAULT_GROUP, taskclass);
+        if (timer.getCronExpression() != null && !timer.getCronExpression().isEmpty())
+        {
             logger.info("Scheduled task metadata.  Task name: {}"
                     + ", cron expression: {}", taskclass.getName(), timer.getCronExpression());
 
-        } else {
+        }
+        else
+        {
             logger.info("Scheduled task metadata.  Task name: {}", taskclass.getName());
         }
         scheduler.scheduleJob(job, timer.getTrigger());
@@ -66,49 +77,70 @@ public class PriamScheduler {
     /**
      * Add a delayed task to the scheduler
      */
-    public void addTaskWithDelay(final String name, Class<? extends Task> taskclass, final TaskTimer timer, final int delayInSeconds) throws SchedulerException, ParseException {
+    public void addTaskWithDelay(final String name, Class<? extends Task> taskclass, final TaskTimer timer,
+            final int delayInSeconds) throws SchedulerException, ParseException
+    {
         assert timer != null : "Cannot add scheduler task " + name + " as no timer is set";
-        final JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass).build();//new JobDetail(name, Scheduler.DEFAULT_GROUP, taskclass);
+        final JobDetail job = JobBuilder.newJob().withIdentity(name, Scheduler.DEFAULT_GROUP).ofType(taskclass)
+                .build();//new JobDetail(name, Scheduler.DEFAULT_GROUP, taskclass);
 
         //we know Priam doesn't do too many new tasks, so this is probably easy/safe/simple
-        new Thread(new Runnable() {
-            public void run() {
-                try {
+        new Thread(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
                     sleeper.sleepQuietly(delayInSeconds * 1000L);
                     scheduler.scheduleJob(job, timer.getTrigger());
-                } catch (SchedulerException e) {
+                }
+                catch (SchedulerException e)
+                {
                     logger.warn("problem occurred while scheduling a job with name {}", name, e);
-                } catch (ParseException e) {
+                }
+                catch (ParseException e)
+                {
                     logger.warn("problem occurred while parsing a job with name {}", name, e);
                 }
             }
         }).start();
     }
 
-    public void runTaskNow(Class<? extends Task> taskclass) throws Exception {
+    public void runTaskNow(Class<? extends Task> taskclass) throws Exception
+    {
         jobFactory.guice.getInstance(taskclass).execute(null);
     }
 
-    public void deleteTask(String name) throws SchedulerException, ParseException {
+    public void deleteTask(String name) throws SchedulerException, ParseException
+    {
         scheduler.deleteJob(new JobKey(name, Scheduler.DEFAULT_GROUP));
     }
 
-    public final Scheduler getScheduler() {
+    public final Scheduler getScheduler()
+    {
         return scheduler;
     }
 
-    public void shutdown() {
-        try {
+    public void shutdown()
+    {
+        try
+        {
             scheduler.shutdown();
-        } catch (SchedulerException e) {
+        }
+        catch (SchedulerException e)
+        {
             throw new RuntimeException(e);
         }
     }
 
-    public void start() {
-        try {
+    public void start()
+    {
+        try
+        {
             scheduler.start();
-        } catch (SchedulerException ex) {
+        }
+        catch (SchedulerException ex)
+        {
             throw new RuntimeException(ex);
         }
     }

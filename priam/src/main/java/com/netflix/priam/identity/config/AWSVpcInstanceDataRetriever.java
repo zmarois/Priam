@@ -22,20 +22,28 @@ import org.slf4j.LoggerFactory;
 /**
  * Calls AWS metadata to get info on the location of the running instance within vpc environment.
  */
-public class AWSVpcInstanceDataRetriever extends InstanceDataRetrieverBase{
+public class AWSVpcInstanceDataRetriever extends InstanceDataRetrieverBase
+{
     private static final Logger logger = LoggerFactory.getLogger(AWSVpcInstanceDataRetriever.class);
 
     @Override
-    public String getVpcId() {
+    public String getVpcId()
+    {
         String nacId = getMac();
         if (nacId == null || nacId.isEmpty())
             return null;
 
         String vpcId = null;
-        try {
-            vpcId = SystemUtils.getDataFromUrl("http://169.254.169.254/latest/meta-data/network/interfaces/macs/" + nacId + "vpc-id").trim();
-        } catch (Exception e) {
-            logger.info("Vpc id does not exist for running instance, not fatal as running instance maybe not be in vpc.  Msg: {}", e.getLocalizedMessage());
+        try
+        {
+            vpcId = SystemUtils.getDataFromUrl(
+                    "http://169.254.169.254/latest/meta-data/network/interfaces/macs/" + nacId + "vpc-id").trim();
+        }
+        catch (Exception e)
+        {
+            logger.info(
+                    "Vpc id does not exist for running instance, not fatal as running instance maybe not be in vpc.  Msg: {}",
+                    e.getLocalizedMessage());
         }
 
         return vpcId;

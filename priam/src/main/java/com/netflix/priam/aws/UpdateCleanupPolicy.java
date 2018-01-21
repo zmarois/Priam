@@ -30,22 +30,32 @@ import com.netflix.priam.utils.RetryableCallable;
  * Updates the cleanup policy for the bucket
  */
 @Singleton
-public class UpdateCleanupPolicy extends Task {
+public class UpdateCleanupPolicy extends Task
+{
     public static final String JOBNAME = "UpdateCleanupPolicy";
     private IBackupFileSystem fs;
 
     @Inject
-    public UpdateCleanupPolicy(IConfiguration config, @Named("backup") IBackupFileSystem fs) {
+    public UpdateCleanupPolicy(IConfiguration config, @Named("backup") IBackupFileSystem fs)
+    {
         super(config);
         this.fs = fs;
     }
 
+    public static TaskTimer getTimer()
+    {
+        return new SimpleTimer(JOBNAME);
+    }
+
     @Override
-    public void execute() throws Exception {
+    public void execute() throws Exception
+    {
         // Set cleanup policy of retention is specified
-        new RetryableCallable<Void>() {
+        new RetryableCallable<Void>()
+        {
             @Override
-            public Void retriableCall() throws Exception {
+            public Void retriableCall() throws Exception
+            {
                 fs.cleanup();
                 return null;
             }
@@ -53,12 +63,9 @@ public class UpdateCleanupPolicy extends Task {
     }
 
     @Override
-    public String getName() {
+    public String getName()
+    {
         return JOBNAME;
-    }
-
-    public static TaskTimer getTimer() {
-        return new SimpleTimer(JOBNAME);
     }
 
 }

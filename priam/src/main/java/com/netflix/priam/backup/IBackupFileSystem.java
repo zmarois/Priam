@@ -24,7 +24,8 @@ import java.util.Iterator;
 /**
  * Interface representing a backup storage as a file system
  */
-public interface IBackupFileSystem {
+public interface IBackupFileSystem
+{
     /**
      * Write the contents of the specified remote path to the output stream and
      * close

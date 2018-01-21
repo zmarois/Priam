@@ -37,19 +37,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by aagrawal on 9/19/17.
  */
 @Singleton
-public class InstanceState {
+public class InstanceState
+{
     private static final Logger logger = LoggerFactory.getLogger(InstanceState.class);
-
-    public enum NODE_STATE {
-        JOIN, //This state to be used when Priam is joining the ring for the first time or was already assigned this token.
-        REPLACE //This state to be used when Priam replaces an instance from the token range.
-    }
-
     //Bootstrap status
     private final AtomicBoolean isBootstrapping = new AtomicBoolean(false);
-    private NODE_STATE nodeState;
-    private LocalDateTime bootstrapTime;
-
     //Cassandra process status
     private final AtomicBoolean isCassandraProcessAlive = new AtomicBoolean(false);
     private final AtomicBoolean shouldCassandraBeAlive = new AtomicBoolean(false);
@@ -59,147 +51,187 @@ public class InstanceState {
     private final AtomicBoolean isRequiredDirectoriesExist = new AtomicBoolean(false);
     private final AtomicBoolean isYmlWritten = new AtomicBoolean(false);
     private final AtomicBoolean isHealthy = new AtomicBoolean(false);
-
+    private NODE_STATE nodeState;
+    private LocalDateTime bootstrapTime;
     //Backup status
     private BackupMetadata backupStatus;
-
     //Restore status
     private RestoreStatus restoreStatus;
 
-    @Inject
-    InstanceState(RestoreStatus restoreStatus){
+    @Inject InstanceState(RestoreStatus restoreStatus)
+    {
         this.restoreStatus = restoreStatus;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return GsonJsonSerializer.getGson().toJson(this);
     }
 
-    public boolean isGossipActive() {
+    public boolean isGossipActive()
+    {
         return isGossipActive.get();
     }
 
-    public void setIsGossipActive(boolean isGossipActive) {
+    public void setIsGossipActive(boolean isGossipActive)
+    {
         this.isGossipActive.set(isGossipActive);
         setHealthy();
     }
 
-    public boolean isThriftActive() {
+    public boolean isThriftActive()
+    {
         return isThriftActive.get();
     }
 
-    public void setIsThriftActive(boolean isThriftActive) {
+    public void setIsThriftActive(boolean isThriftActive)
+    {
         this.isThriftActive.set(isThriftActive);
         setHealthy();
     }
 
-    public boolean isNativeTransportActive() {
+    public boolean isNativeTransportActive()
+    {
         return isNativeTransportActive.get();
     }
 
-    public void setIsNativeTransportActive(boolean isNativeTransportActive) {
+    public void setIsNativeTransportActive(boolean isNativeTransportActive)
+    {
         this.isNativeTransportActive.set(isNativeTransportActive);
         setHealthy();
     }
 
-    public boolean isRequiredDirectoriesExist() {
+    public boolean isRequiredDirectoriesExist()
+    {
         return isRequiredDirectoriesExist.get();
     }
 
-    public void setIsRequiredDirectoriesExist(boolean isRequiredDirectoriesExist) {
+    public void setIsRequiredDirectoriesExist(boolean isRequiredDirectoriesExist)
+    {
         this.isRequiredDirectoriesExist.set(isRequiredDirectoriesExist);
         setHealthy();
     }
 
-    public boolean isCassandraProcessAlive() {
+    public boolean isCassandraProcessAlive()
+    {
         return isCassandraProcessAlive.get();
     }
 
-    public void setCassandraProcessAlive(boolean isSideCarProcessAlive) {
+    public void setCassandraProcessAlive(boolean isSideCarProcessAlive)
+    {
         this.isCassandraProcessAlive.set(isSideCarProcessAlive);
         setHealthy();
     }
 
-    public boolean shouldCassandraBeAlive() {
+    public boolean shouldCassandraBeAlive()
+    {
         return shouldCassandraBeAlive.get();
     }
 
-    public void setShouldCassandraBeAlive(boolean shouldCassandraBeAlive) {
+    public void setShouldCassandraBeAlive(boolean shouldCassandraBeAlive)
+    {
         this.shouldCassandraBeAlive.set(shouldCassandraBeAlive);
     }
 
     /* Boostrap */
-    public boolean isBootstrapping() {
+    public boolean isBootstrapping()
+    {
         return isBootstrapping.get();
     }
 
-    public void setBootstrapping(boolean isBootstrapping) {
+    public void setBootstrapping(boolean isBootstrapping)
+    {
         this.isBootstrapping.set(isBootstrapping);
     }
 
-    public NODE_STATE getNodeState() {
+    public NODE_STATE getNodeState()
+    {
         return nodeState;
     }
 
-    public LocalDateTime getBootstrapTime() {
-        return bootstrapTime;
-    }
-
-    public void setBootstrapTime(LocalDateTime bootstrapTime) {
-        this.bootstrapTime = bootstrapTime;
-    }
-
-    public void setNodeState(NODE_STATE nodeState) {
+    public void setNodeState(NODE_STATE nodeState)
+    {
         this.nodeState = nodeState;
     }
 
+    public LocalDateTime getBootstrapTime()
+    {
+        return bootstrapTime;
+    }
+
+    public void setBootstrapTime(LocalDateTime bootstrapTime)
+    {
+        this.bootstrapTime = bootstrapTime;
+    }
+
     /* Backup */
-    public BackupMetadata getBackupStatus() {
+    public BackupMetadata getBackupStatus()
+    {
         return backupStatus;
     }
 
-    public void setBackupStatus(BackupMetadata backupMetadata) {
+    public void setBackupStatus(BackupMetadata backupMetadata)
+    {
         this.backupStatus = backupMetadata;
     }
 
     /* Restore */
-    public RestoreStatus getRestoreStatus() {
+    public RestoreStatus getRestoreStatus()
+    {
         return restoreStatus;
     }
 
     // A dirty way to set restore status. This is required as setting restore status implies health could change.
-    public void setRestoreStatus(Status status){
+    public void setRestoreStatus(Status status)
+    {
         restoreStatus.status = status;
         setHealthy();
     }
 
-    public boolean isHealthy() {
+    public boolean isHealthy()
+    {
         return isHealthy.get();
     }
 
-    private boolean isRestoring(){
-        return restoreStatus != null && restoreStatus.getStatus() != null && restoreStatus.getStatus() == Status.STARTED;
-    }
-    private void setHealthy() {
-        this.isHealthy.set(isRestoring() || (isCassandraProcessAlive() && isRequiredDirectoriesExist() && isGossipActive() && isYmlWritten() && (isThriftActive() || isNativeTransportActive())));
+    private boolean isRestoring()
+    {
+        return restoreStatus != null && restoreStatus.getStatus() != null
+                && restoreStatus.getStatus() == Status.STARTED;
     }
 
-    public boolean isYmlWritten() {
+    private void setHealthy()
+    {
+        this.isHealthy
+                .set(isRestoring() || (isCassandraProcessAlive() && isRequiredDirectoriesExist() && isGossipActive()
+                        && isYmlWritten() && (isThriftActive() || isNativeTransportActive())));
+    }
+
+    public boolean isYmlWritten()
+    {
         return this.isYmlWritten.get();
     }
 
-    public void setYmlWritten(boolean yml) {
+    public void setYmlWritten(boolean yml)
+    {
         this.isYmlWritten.set(yml);
     }
 
-    public static class RestoreStatus {
+    public enum NODE_STATE
+    {
+        JOIN, //This state to be used when Priam is joining the ring for the first time or was already assigned this token.
+        REPLACE //This state to be used when Priam replaces an instance from the token range.
+    }
+
+    public static class RestoreStatus
+    {
         private LocalDateTime startDateRange, endDateRange; //Date range to restore from
         private LocalDateTime executionStartTime, executionEndTime; //Start-end time of the actual restore execution
         private String snapshotMetaFile; //Location of the snapshot meta file selected for restore.
         private Status status;  //the state of a restore.  Note: this is different than the "status" of a Task.
 
-        public void resetStatus(){
+        public void resetStatus()
+        {
             this.snapshotMetaFile = null;
             this.status = null;
             this.startDateRange = endDateRange = null;
@@ -207,51 +239,63 @@ public class InstanceState {
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return GsonJsonSerializer.getGson().toJson(this);
         }
 
-        public Status getStatus() {
+        public Status getStatus()
+        {
             return status;
         }
 
-        public void setStartDateRange(LocalDateTime startDateRange) {
-            this.startDateRange = startDateRange;
-        }
-
-        public void setEndDateRange(LocalDateTime endDateRange) {
-            this.endDateRange = endDateRange;
-        }
-
-        public void setExecutionStartTime(LocalDateTime executionStartTime) {
-            this.executionStartTime = executionStartTime;
-        }
-
-        public void setExecutionEndTime(LocalDateTime executionEndTime) {
-            this.executionEndTime = executionEndTime;
-        }
-
-        public LocalDateTime getStartDateRange() {
+        public LocalDateTime getStartDateRange()
+        {
             return startDateRange;
         }
 
-        public LocalDateTime getEndDateRange() {
+        public void setStartDateRange(LocalDateTime startDateRange)
+        {
+            this.startDateRange = startDateRange;
+        }
+
+        public LocalDateTime getEndDateRange()
+        {
             return endDateRange;
         }
 
-        public LocalDateTime getExecutionStartTime() {
+        public void setEndDateRange(LocalDateTime endDateRange)
+        {
+            this.endDateRange = endDateRange;
+        }
+
+        public LocalDateTime getExecutionStartTime()
+        {
             return executionStartTime;
         }
 
-        public LocalDateTime getExecutionEndTime() {
+        public void setExecutionStartTime(LocalDateTime executionStartTime)
+        {
+            this.executionStartTime = executionStartTime;
+        }
+
+        public LocalDateTime getExecutionEndTime()
+        {
             return executionEndTime;
         }
 
-        public String getSnapshotMetaFile() {
+        public void setExecutionEndTime(LocalDateTime executionEndTime)
+        {
+            this.executionEndTime = executionEndTime;
+        }
+
+        public String getSnapshotMetaFile()
+        {
             return snapshotMetaFile;
         }
 
-        public void setSnapshotMetaFile(String snapshotMetaFile) {
+        public void setSnapshotMetaFile(String snapshotMetaFile)
+        {
             this.snapshotMetaFile = snapshotMetaFile;
         }
     }

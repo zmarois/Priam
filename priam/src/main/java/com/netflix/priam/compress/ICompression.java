@@ -24,7 +24,8 @@ import java.io.OutputStream;
 import java.util.Iterator;
 
 @ImplementedBy(SnappyCompression.class)
-public interface ICompression {
+public interface ICompression
+{
     /**
      * Uncompress the input stream and write to the output stream.
      * Closes both input and output streams
@@ -33,7 +34,8 @@ public interface ICompression {
 
     /**
      * Produces chunks of compressed data.
-     * @param is inputstream to be compressed.
+     *
+     * @param is        inputstream to be compressed.
      * @param chunkSize compress the stream and return it in parts of chunk
      * @return compressed byte array iterator
      * @throws IOException

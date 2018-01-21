@@ -41,7 +41,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadTokenRetriever {
+public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadTokenRetriever
+{
     private static final Logger logger = LoggerFactory.getLogger(DeadTokenRetriever.class);
     private IPriamInstanceFactory factory;
     private IMembership membership;
@@ -51,10 +52,10 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
     private ListMultimap<String, PriamInstance> locMap;
     private InstanceEnvIdentity insEnvIdentity;
 
-
     @Inject
     public DeadTokenRetriever(IPriamInstanceFactory factory, IMembership membership, IConfiguration config,
-                              Sleeper sleeper, InstanceEnvIdentity insEnvIdentity) {
+            Sleeper sleeper, InstanceEnvIdentity insEnvIdentity)
+    {
         this.factory = factory;
         this.membership = membership;
         this.config = config;
@@ -62,18 +63,24 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
         this.insEnvIdentity = insEnvIdentity;
     }
 
-    private List<String> getDualAccountRacMembership(List<String> asgInstances) {
+    private List<String> getDualAccountRacMembership(List<String> asgInstances)
+    {
         logger.info("Dual Account cluster");
 
         List<String> crossAccountAsgInstances = membership.getCrossAccountRacMembership();
 
-        if (logger.isInfoEnabled()) {
-            if (insEnvIdentity.isClassic()) {
+        if (logger.isInfoEnabled())
+        {
+            if (insEnvIdentity.isClassic())
+            {
                 logger.info("EC2 classic instances (local ASG): " + Arrays.toString(asgInstances.toArray()));
                 logger.info("VPC Account (cross-account ASG): " + Arrays.toString(crossAccountAsgInstances.toArray()));
-            } else {
+            }
+            else
+            {
                 logger.info("VPC Account (local ASG): " + Arrays.toString(asgInstances.toArray()));
-                logger.info("EC2 classic instances (cross-account ASG): " + Arrays.toString(crossAccountAsgInstances.toArray()));
+                logger.info("EC2 classic instances (cross-account ASG): " + Arrays
+                        .toString(crossAccountAsgInstances.toArray()));
             }
         }
 
@@ -88,26 +95,34 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
     }
 
     @Override
-    public PriamInstance get() throws Exception {
+    public PriamInstance get() throws Exception
+    {
 
         logger.info("Looking for a token from any dead node");
         final List<PriamInstance> allIds = factory.getAllIds(config.getAppName());
         List<String> asgInstances = membership.getRacMembership();
-        if (config.isDualAccount()) {
+        if (config.isDualAccount())
+        {
             asgInstances = getDualAccountRacMembership(asgInstances);
-        } else {
+        }
+        else
+        {
             logger.info("Single Account cluster");
         }
 
         // Sleep random interval - upto 15 sec
         sleeper.sleep(new Random().nextInt(5000) + 10000);
-        for (PriamInstance dead : allIds) {
+        for (PriamInstance dead : allIds)
+        {
             // test same zone and is it is alive.
-            if (!dead.getRac().equals(config.getRac()) || asgInstances.contains(dead.getInstanceId()) || super.isInstanceDummy(dead))
+            if (!dead.getRac().equals(config.getRac()) || asgInstances.contains(dead.getInstanceId()) || super
+                    .isInstanceDummy(dead))
                 continue;
             logger.info("Found dead instances: {}", dead.getInstanceId());
-            PriamInstance markAsDead = factory.create(dead.getApp() + "-dead", dead.getId(), dead.getInstanceId(), dead.getHostName(), dead.getHostIP(), dead.getRac(), dead.getVolumes(),
-                    dead.getToken());
+            PriamInstance markAsDead = factory
+                    .create(dead.getApp() + "-dead", dead.getId(), dead.getInstanceId(), dead.getHostName(),
+                            dead.getHostIP(), dead.getRac(), dead.getVolumes(),
+                            dead.getToken());
             // remove it as we marked it down...
             factory.delete(dead);
 
@@ -118,7 +133,9 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
 
             String payLoad = markAsDead.getToken();
             logger.info("Trying to grab slot {} with availability zone {}", markAsDead.getId(), markAsDead.getRac());
-            return factory.create(config.getAppName(), markAsDead.getId(), config.getInstanceName(), config.getHostname(), config.getHostIP(), config.getRac(), markAsDead.getVolumes(), payLoad);
+            return factory
+                    .create(config.getAppName(), markAsDead.getId(), config.getInstanceName(), config.getHostname(),
+                            config.getHostIP(), config.getRac(), markAsDead.getVolumes(), payLoad);
 
         }
 
@@ -126,25 +143,33 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
     }
 
     @Override
-    public String getReplaceIp() {
+    public String getReplaceIp()
+    {
         return this.replacedIp;
     }
 
-    private String findReplaceIp(List<PriamInstance> allIds, String token, String location) {
+    private String findReplaceIp(List<PriamInstance> allIds, String token, String location)
+    {
         String ip = null;
-        for (PriamInstance ins : allIds) {
+        for (PriamInstance ins : allIds)
+        {
             logger.info("Calling getIp on hostname[{}] and token[{}]", ins.getHostName(), token);
-            if (ins.getToken().equals(token) || !ins.getDC().equals(location)) { //avoid using dead instance and other regions' instances
+            if (ins.getToken().equals(token) || !ins.getDC().equals(location))
+            { //avoid using dead instance and other regions' instances
                 continue;
             }
 
-            try {
+            try
+            {
                 ip = getIp(ins.getHostName(), token);
-            } catch (ParseException e) {
+            }
+            catch (ParseException e)
+            {
                 ip = null;
             }
 
-            if (ip != null) {
+            if (ip != null)
+            {
                 logger.info("Found the IP: {}", ip);
                 return ip;
             }
@@ -153,7 +178,8 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
         return null;
     }
 
-    private String getIp(String host, String token) throws ParseException {
+    private String getIp(String host, String token) throws ParseException
+    {
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
         String baseURI = getBaseURI(host);
@@ -162,8 +188,10 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
         ClientResponse clientResp;
         String textEntity = null;
 
-        try {
-            clientResp = service.path("Priam/REST/v1/cassadmin/gossipinfo").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        try
+        {
+            clientResp = service.path("Priam/REST/v1/cassadmin/gossipinfo").accept(MediaType.APPLICATION_JSON)
+                    .get(ClientResponse.class);
 
             if (clientResp.getStatus() != 200)
                 return null;
@@ -174,7 +202,9 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
 
             if (StringUtils.isEmpty(textEntity))
                 return null;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.info("Error in reaching out to host: {}", baseURI);
             return null;
         }
@@ -186,16 +216,20 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
 
         Iterator iter = jsonObject.keySet().iterator();
 
-        while (iter.hasNext()) {
+        while (iter.hasNext())
+        {
             Object key = iter.next();
             JSONObject msg = (JSONObject) jsonObject.get(key);
-            if (msg.get("Token") == null) {
+            if (msg.get("Token") == null)
+            {
                 continue;
             }
             String tokenVal = (String) msg.get("Token");
 
-            if (token.equals(tokenVal)) {
-                logger.info("Using gossipinfo from host[{}] and token[{}], the replaced address is : {}", host, token, key);
+            if (token.equals(tokenVal))
+            {
+                logger.info("Using gossipinfo from host[{}] and token[{}], the replaced address is : {}", host, token,
+                        key);
                 return (String) key;
             }
 
@@ -203,12 +237,14 @@ public class DeadTokenRetriever extends TokenRetrieverBase implements IDeadToken
         return null;
     }
 
-    private String getBaseURI(String host) {
+    private String getBaseURI(String host)
+    {
         return "http://" + host + ":8080/";
     }
 
     @Override
-    public void setLocMap(ListMultimap<String, PriamInstance> locMap) {
+    public void setLocMap(ListMultimap<String, PriamInstance> locMap)
+    {
         this.locMap = locMap;
 
     }

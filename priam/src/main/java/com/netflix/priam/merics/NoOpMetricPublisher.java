@@ -20,9 +20,11 @@ package com.netflix.priam.merics;
  * <p>
  * Created by vinhn on 10/14/16.
  */
-public class NoOpMetricPublisher implements IMetricPublisher {
+public class NoOpMetricPublisher implements IMetricPublisher
+{
     @Override
-    public void publish(IMeasurement o) {
+    public void publish(IMeasurement o)
+    {
         //No OP
     }
 }

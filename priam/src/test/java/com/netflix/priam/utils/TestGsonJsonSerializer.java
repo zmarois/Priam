@@ -29,12 +29,14 @@ import java.util.Calendar;
 /**
  * Created by aagrawal on 10/12/17.
  */
-public class TestGsonJsonSerializer {
+public class TestGsonJsonSerializer
+{
 
     private static final Logger LOG = LoggerFactory.getLogger(TestGsonJsonSerializer.class);
 
     @Test
-    public void testBackupMetaData() throws Exception {
+    public void testBackupMetaData() throws Exception
+    {
         BackupMetadata metadata = new BackupMetadata("123", Calendar.getInstance().getTime());
         String json = metadata.toString();
         LOG.info(json);
@@ -46,14 +48,16 @@ public class TestGsonJsonSerializer {
     }
 
     @Test
-    public void testRestoreStatus() throws Exception {
+    public void testRestoreStatus() throws Exception
+    {
         InstanceState.RestoreStatus restoreStatus = new InstanceState.RestoreStatus();
         restoreStatus.setStartDateRange(LocalDateTime.now().minusDays(2).withSecond(0).withNano(0));
         restoreStatus.setEndDateRange(LocalDateTime.now().minusHours(3).withSecond(0).withNano(0));
         restoreStatus.setExecutionStartTime(LocalDateTime.now().withSecond(0).withNano(0));
         LOG.info(restoreStatus.toString());
 
-        InstanceState.RestoreStatus restoreStatus1 = GsonJsonSerializer.getGson().fromJson(restoreStatus.toString(), InstanceState.RestoreStatus.class);
+        InstanceState.RestoreStatus restoreStatus1 = GsonJsonSerializer.getGson()
+                .fromJson(restoreStatus.toString(), InstanceState.RestoreStatus.class);
         LOG.info(restoreStatus1.toString());
 
         Assert.assertEquals(restoreStatus.getExecutionStartTime(), restoreStatus1.getExecutionStartTime());

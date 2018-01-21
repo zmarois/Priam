@@ -33,45 +33,59 @@ import java.util.Map;
  * Dse tuner for audit log via YAML. Use this for DSE version 4.x
  * Created by aagrawal on 8/8/17.
  */
-public class AuditLogTunerYaml implements IAuditLogTuner {
+public class AuditLogTunerYaml implements IAuditLogTuner
+{
 
-    private IDseConfiguration dseConfig;
     protected static final String AUDIT_LOG_DSE_ENTRY = "audit_logging_options";
     private static final Logger logger = LoggerFactory.getLogger(AuditLogTunerYaml.class);
+    private IDseConfiguration dseConfig;
 
     @Inject
-    public AuditLogTunerYaml(IDseConfiguration dseConfig) {
+    public AuditLogTunerYaml(IDseConfiguration dseConfig)
+    {
         this.dseConfig = dseConfig;
     }
 
-    public void tuneAuditLog() {
+    public void tuneAuditLog()
+    {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml yaml = new Yaml(options);
         String dseYaml = dseConfig.getDseYamlLocation();
-        try {
+        try
+        {
             Map<String, Object> map = (Map<String, Object>) yaml.load(new FileInputStream(dseYaml));
 
-            if (map.containsKey(AUDIT_LOG_DSE_ENTRY)) {
+            if (map.containsKey(AUDIT_LOG_DSE_ENTRY))
+            {
                 Boolean isEnabled = (Boolean) ((Map<String, Object>) map.get(AUDIT_LOG_DSE_ENTRY)).get("enabled");
 
                 // Enable/disable audit logging (need this in addition to log4j-server.properties settings)
-                if (dseConfig.isAuditLogEnabled()) {
-                    if (!isEnabled) {
+                if (dseConfig.isAuditLogEnabled())
+                {
+                    if (!isEnabled)
+                    {
                         ((Map<String, Object>) map.get(AUDIT_LOG_DSE_ENTRY)).put("enabled", true);
                     }
-                } else if (isEnabled) {
+                }
+                else if (isEnabled)
+                {
                     ((Map<String, Object>) map.get(AUDIT_LOG_DSE_ENTRY)).put("enabled", false);
                 }
             }
 
-            if (logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled())
+            {
                 logger.info("Updating dse-yaml:\n" + yaml.dump(map));
             }
             yaml.dump(map, new FileWriter(dseYaml));
-        } catch (FileNotFoundException fileNotFound) {
+        }
+        catch (FileNotFoundException fileNotFound)
+        {
             logger.error("FileNotFound while trying to read yaml audit log for tuning: {}", dseYaml);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             logger.error("IOException while trying to write yaml file for audit log tuning: {}", dseYaml);
         }
     }

@@ -26,7 +26,8 @@ import java.io.IOException;
  * @author jason brown
  */
 @ImplementedBy(CassandraProcessManager.class)
-public interface ICassandraProcess {
+public interface ICassandraProcess
+{
     void start(boolean join_ring) throws IOException;
 
     void stop() throws IOException;

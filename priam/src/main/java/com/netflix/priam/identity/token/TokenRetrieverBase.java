@@ -19,17 +19,20 @@ import com.netflix.priam.identity.PriamInstance;
 
 import java.util.Random;
 
-public class TokenRetrieverBase {
+public class TokenRetrieverBase
+{
 
     public static final String DUMMY_INSTANCE_ID = "new_slot";
     private static final int MAX_VALUE_IN_MILISECS = 300000; //sleep up to 5 minutes
     protected Random randomizer;
 
-    public TokenRetrieverBase() {
+    public TokenRetrieverBase()
+    {
         this.randomizer = new Random();
     }
 
-    protected boolean isInstanceDummy(PriamInstance instance) {
+    protected boolean isInstanceDummy(PriamInstance instance)
+    {
         return instance.getInstanceId().equals(DUMMY_INSTANCE_ID);
     }
 
@@ -38,7 +41,8 @@ public class TokenRetrieverBase {
      * 
      * @return time in millisecs
      */
-    protected long getSleepTime() {
+    protected long getSleepTime()
+    {
         return (long) this.randomizer.nextInt(MAX_VALUE_IN_MILISECS);
     }
 }

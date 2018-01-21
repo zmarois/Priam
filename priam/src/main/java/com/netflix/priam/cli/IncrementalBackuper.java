@@ -20,19 +20,27 @@ import com.netflix.priam.backup.IncrementalBackup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IncrementalBackuper {
+public class IncrementalBackuper
+{
     private static final Logger logger = LoggerFactory.getLogger(IncrementalBackuper.class);
 
-    public static void main(String[] args) {
-        try {
+    public static void main(String[] args)
+    {
+        try
+        {
             Application.initialize();
             IncrementalBackup backuper = Application.getInjector().getInstance(IncrementalBackup.class);
-            try {
+            try
+            {
                 backuper.execute();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 logger.error("Unable to backup: ", e);
             }
-        } finally {
+        }
+        finally
+        {
             Application.shutdownAdditionalThreads();
         }
     }

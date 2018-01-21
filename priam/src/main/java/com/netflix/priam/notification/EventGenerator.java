@@ -22,12 +22,13 @@ package com.netflix.priam.notification;
  * Any class interested in state change for the event can subscribe by registering themselves.
  * Created by aagrawal on 8/11/17.
  */
-public interface EventGenerator<T> {
+public interface EventGenerator<T>
+{
     /**
      * Subscribes {@code observer} to receive generated events.
      *
      * @param observer {@link EventObserver} interested in receiving updates from
-     * this event generator. May not be <code>null</code>.
+     *                 this event generator. May not be <code>null</code>.
      */
     void addObserver(EventObserver<T> observer);
 
@@ -35,7 +36,7 @@ public interface EventGenerator<T> {
      * Removes {@code observer} from receiving any further events from this generator.
      *
      * @param observer {@link EventObserver} that is to stop receiving updates
-     * from this event generator. May not be <code>null</code>.
+     *                 from this event generator. May not be <code>null</code>.
      */
     void removeObserver(EventObserver<T> observer);
 

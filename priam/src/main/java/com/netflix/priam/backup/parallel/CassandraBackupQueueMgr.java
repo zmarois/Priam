@@ -39,7 +39,8 @@ import java.util.concurrent.BlockingQueue;
  */
 
 @Singleton
-public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath> {
+public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath>
+{
 
     private static final Logger logger = LoggerFactory.getLogger(CassandraBackupQueueMgr.class);
 
@@ -47,9 +48,11 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
     AbstractSet<String> tasksQueued; //A queue to determine what files have been queued, used for deduplication
 
     @Inject
-    public CassandraBackupQueueMgr(IConfiguration config) {
+    public CassandraBackupQueueMgr(IConfiguration config)
+    {
         tasks = new ArrayBlockingQueue<AbstractBackupPath>(config.getUncrementalBkupQueueSize());
-        tasksQueued = new HashSet<String>(config.getUncrementalBkupQueueSize()); //Key to task is the S3 absolute path (BASE/REGION/CLUSTER/TOKEN/[yyyymmddhhmm]/[SST|SNP|META]/KEYSPACE/COLUMNFAMILY/FILE
+        tasksQueued = new HashSet<String>(
+                config.getUncrementalBkupQueueSize()); //Key to task is the S3 absolute path (BASE/REGION/CLUSTER/TOKEN/[yyyymmddhhmm]/[SST|SNP|META]/KEYSPACE/COLUMNFAMILY/FILE
     }
 
     @Override
@@ -59,17 +62,26 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
 	 * 
 	 * Note: will block until there is space in the queue.
 	 */
-    public void add(AbstractBackupPath task) {
-        if (!tasksQueued.contains(task.getRemotePath())) {
+    public void add(AbstractBackupPath task)
+    {
+        if (!tasksQueued.contains(task.getRemotePath()))
+        {
             tasksQueued.add(task.getRemotePath());
-            try {
+            try
+            {
                 tasks.put(task); //block until space becomes available in queue
                 logger.debug("Queued file {} within CF {}", task.getFileName(), task.getColumnFamily());
 
-            } catch (InterruptedException e) {
-                logger.warn("Interrupted waiting for the task queue to have free space, not fatal will just move on.   Error Msg: {}", e.getLocalizedMessage());
             }
-        } else {
+            catch (InterruptedException e)
+            {
+                logger.warn(
+                        "Interrupted waiting for the task queue to have free space, not fatal will just move on.   Error Msg: {}",
+                        e.getLocalizedMessage());
+            }
+        }
+        else
+        {
             logger.debug("Already in queue, no-op.  File: {}", task.getRemotePath());
         }
 
@@ -77,16 +89,19 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
     }
 
     @Override
-	/*
+    /*
 	 * Guarantee delivery of a task to only one consumer.
 	 * 
 	 * @return task, null if task in queue.
 	 */
-    public AbstractBackupPath take() throws InterruptedException {
+    public AbstractBackupPath take() throws InterruptedException
+    {
         AbstractBackupPath task = null;
-        if (!tasks.isEmpty()) {
+        if (!tasks.isEmpty())
+        {
 
-            synchronized (tasks) {
+            synchronized (tasks)
+            {
                 task = tasks.poll(); //non-blocking call
             }
         }
@@ -103,7 +118,8 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
 	 * worse yet, create a deadlock.  For example, caller blocks to determine if there are more tasks and also blocks waiting to dequeue
 	 * the task.
 	 */
-    public Boolean hasTasks() {
+    public Boolean hasTasks()
+    {
         return !tasks.isEmpty();
     }
 
@@ -114,7 +130,8 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
 	 * 
 	 * *Note: "completed" here can mean success or failure.
 	 */
-    public void taskPostProcessing(AbstractBackupPath completedTask) {
+    public void taskPostProcessing(AbstractBackupPath completedTask)
+    {
         this.tasksQueued.remove(completedTask.getRemotePath());
     }
 
@@ -122,12 +139,14 @@ public class CassandraBackupQueueMgr implements ITaskQueueMgr<AbstractBackupPath
 	/*
 	 * @return num of pending tasks.  Note, the result is a best guess, don't rely on it to be 100% accurate.
 	 */
-    public Integer getNumOfTasksToBeProessed() {
+    public Integer getNumOfTasksToBeProessed()
+    {
         return tasks.size();
     }
 
     @Override
-    public Boolean tasksCompleted(Date date) {
+    public Boolean tasksCompleted(Date date)
+    {
         throw new UnsupportedOperationException();
     }
 

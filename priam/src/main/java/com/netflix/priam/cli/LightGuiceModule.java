@@ -35,9 +35,11 @@ import com.netflix.priam.utils.Sleeper;
 import com.netflix.priam.utils.ThreadSleeper;
 import com.netflix.priam.utils.TokenManager;
 
-class LightGuiceModule extends AbstractModule {
+class LightGuiceModule extends AbstractModule
+{
     @Override
-    protected void configure() {
+    protected void configure()
+    {
         bind(IConfiguration.class).to(PriamConfiguration.class).asEagerSingleton();
         bind(ICredential.class).to(ClearCredential.class);
         bind(IPriamInstanceFactory.class).to(SDBInstanceFactory.class);

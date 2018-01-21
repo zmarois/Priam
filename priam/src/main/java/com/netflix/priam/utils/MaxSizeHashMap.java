@@ -26,15 +26,18 @@ import java.util.Map;
 /*
  Limit the size of the hashmap using FIFO algorithm.
  */
-public class MaxSizeHashMap<K, V> extends LinkedHashMap<K, V> {
+public class MaxSizeHashMap<K, V> extends LinkedHashMap<K, V>
+{
     private final int maxSize;
 
-    public MaxSizeHashMap(int maxSize) {
+    public MaxSizeHashMap(int maxSize)
+    {
         this.maxSize = maxSize;
     }
 
     @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
+    {
         return size() > maxSize;
     }
 }

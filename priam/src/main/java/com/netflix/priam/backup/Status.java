@@ -19,7 +19,8 @@ package com.netflix.priam.backup;
 /**
  * Enum to describe the status of the snapshot/restore.
  */
-public enum Status {
+public enum Status
+{
     /**
      * Denotes snapshot/restore has started successfully and is running.
      */

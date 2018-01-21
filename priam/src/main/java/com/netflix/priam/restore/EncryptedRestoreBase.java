@@ -44,21 +44,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Provides common functionality applicable to all restore strategies
  */
-public abstract class EncryptedRestoreBase extends AbstractRestore{
+public abstract class EncryptedRestoreBase extends AbstractRestore
+{
     private static final Logger logger = LoggerFactory.getLogger(EncryptedRestoreBase.class);
-
+    private final ThreadPoolExecutor executor;
     private String jobName;
     private ICredentialGeneric pgpCredential;
     private IFileCryptography fileCryptography;
     private ICompression compress;
-    private final ThreadPoolExecutor executor;
     private AtomicInteger count = new AtomicInteger();
 
     protected EncryptedRestoreBase(IConfiguration config, IBackupFileSystem fs, String jobName, Sleeper sleeper,
-                                   ICassandraProcess cassProcess, Provider<AbstractBackupPath> pathProvider,
-                                   InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector, ICredentialGeneric pgpCredential,
-                                   IFileCryptography fileCryptography, ICompression compress, MetaData metaData, InstanceState instanceState) {
-        super(config, fs, jobName, sleeper, pathProvider, instanceIdentity, tokenSelector, cassProcess, metaData, instanceState);
+            ICassandraProcess cassProcess, Provider<AbstractBackupPath> pathProvider,
+            InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector, ICredentialGeneric pgpCredential,
+            IFileCryptography fileCryptography, ICompression compress, MetaData metaData, InstanceState instanceState)
+    {
+        super(config, fs, jobName, sleeper, pathProvider, instanceIdentity, tokenSelector, cassProcess, metaData,
+                instanceState);
 
         this.jobName = jobName;
         this.pgpCredential = pgpCredential;
@@ -66,69 +68,97 @@ public abstract class EncryptedRestoreBase extends AbstractRestore{
         this.compress = compress;
         executor = new NamedThreadPoolExecutor(config.getMaxBackupDownloadThreads(), jobName);
         executor.allowCoreThreadTimeOut(true);
-        logger.info("Trying to restore cassandra cluster with filesystem: {}, RestoreStrategy: {}, Encryption: ON, Compression: {}",
+        logger.info(
+                "Trying to restore cassandra cluster with filesystem: {}, RestoreStrategy: {}, Encryption: ON, Compression: {}",
                 fs.getClass(), jobName, compress.getClass());
     }
 
     @Override
-    protected final void downloadFile(final AbstractBackupPath path, final File restoreLocation) throws  Exception{
-        final char[] passPhrase = new String(this.pgpCredential.getValue(ICredentialGeneric.KEY.PGP_PASSWORD)).toCharArray();
+    protected final void downloadFile(final AbstractBackupPath path, final File restoreLocation) throws Exception
+    {
+        final char[] passPhrase = new String(this.pgpCredential.getValue(ICredentialGeneric.KEY.PGP_PASSWORD))
+                .toCharArray();
         File tempFile = new File(restoreLocation.getAbsolutePath() + ".tmp");
         count.incrementAndGet();
 
-        try {
-            executor.submit(new RetryableCallable<Integer>() {
+        try
+        {
+            executor.submit(new RetryableCallable<Integer>()
+            {
 
                 @Override
-                public Integer retriableCall() throws Exception {
+                public Integer retriableCall() throws Exception
+                {
 
                     //== download object from source bucket
-                    try {
+                    try
+                    {
 
-                        logger.info("Downloading file from: {} to: {}", path.getRemotePath(), tempFile.getAbsolutePath());
+                        logger.info("Downloading file from: {} to: {}", path.getRemotePath(),
+                                tempFile.getAbsolutePath());
                         fs.download(path, new FileOutputStream(tempFile), tempFile.getAbsolutePath());
                         tracker.adjustAndAdd(path);
-                        logger.info("Completed downloading file from: {} to: {}", path.getRemotePath(), tempFile.getAbsolutePath());
+                        logger.info("Completed downloading file from: {} to: {}", path.getRemotePath(),
+                                tempFile.getAbsolutePath());
 
-
-                    } catch (Exception ex) {
+                    }
+                    catch (Exception ex)
+                    {
                         //This behavior is retryable; therefore, lets get to a clean state before each retry.
-                        if (tempFile.exists()) {
+                        if (tempFile.exists())
+                        {
                             tempFile.createNewFile();
                         }
 
-                        throw new Exception("Exception downloading file from: " + path.getRemotePath() + " to: " + tempFile.getAbsolutePath(), ex);
+                        throw new Exception(
+                                "Exception downloading file from: " + path.getRemotePath() + " to: " + tempFile
+                                        .getAbsolutePath(), ex);
                     }
 
                     //== object downloaded successfully from source, decrypt it.
                     File decryptedFile = new File(tempFile.getAbsolutePath() + ".decrypted");
-                    try(OutputStream fOut = new BufferedOutputStream(new FileOutputStream(decryptedFile)); //destination file after decryption)
-                        InputStream in    = new BufferedInputStream(new FileInputStream(tempFile.getAbsolutePath()))) {
-                        InputStream encryptedDataInputStream = fileCryptography.decryptStream(in, passPhrase, tempFile.getAbsolutePath());
+                    try (OutputStream fOut = new BufferedOutputStream(
+                            new FileOutputStream(decryptedFile)); //destination file after decryption)
+                         InputStream in = new BufferedInputStream(new FileInputStream(tempFile.getAbsolutePath())))
+                    {
+                        InputStream encryptedDataInputStream = fileCryptography
+                                .decryptStream(in, passPhrase, tempFile.getAbsolutePath());
                         Streams.pipeAll(encryptedDataInputStream, fOut);
-                        logger.info("Completed decrypting file: {} to final file dest: {}", tempFile.getAbsolutePath(), decryptedFile.getAbsolutePath());
+                        logger.info("Completed decrypting file: {} to final file dest: {}", tempFile.getAbsolutePath(),
+                                decryptedFile.getAbsolutePath());
 
-                    } catch (Exception ex) {
+                    }
+                    catch (Exception ex)
+                    {
                         //This behavior is retryable; therefore, lets get to a clean state before each retry.
-                        if (tempFile.exists()) {
+                        if (tempFile.exists())
+                        {
                             tempFile.createNewFile();
                         }
 
-                        if (decryptedFile.exists()) {
+                        if (decryptedFile.exists())
+                        {
                             decryptedFile.createNewFile();
                         }
 
-                        throw new Exception("Exception during decryption file:  " + decryptedFile.getAbsolutePath(), ex);
+                        throw new Exception("Exception during decryption file:  " + decryptedFile.getAbsolutePath(),
+                                ex);
                     }
 
                     //== object downloaded and decrypted successfully, now uncompress it
-                    logger.info("Start uncompressing file: {} to the FINAL destination stream", decryptedFile.getAbsolutePath());
+                    logger.info("Start uncompressing file: {} to the FINAL destination stream",
+                            decryptedFile.getAbsolutePath());
 
-                    try(InputStream is = new BufferedInputStream(new FileInputStream(decryptedFile));
-                    BufferedOutputStream finalDestination = new BufferedOutputStream(new FileOutputStream(restoreLocation))) {
+                    try (InputStream is = new BufferedInputStream(new FileInputStream(decryptedFile));
+                         BufferedOutputStream finalDestination = new BufferedOutputStream(
+                                 new FileOutputStream(restoreLocation)))
+                    {
                         compress.decompressAndClose(is, finalDestination);
-                    } catch (Exception ex) {
-                        throw new Exception("Exception uncompressing file: " + decryptedFile.getAbsolutePath() + " to the FINAL destination stream", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Exception uncompressing file: " + decryptedFile.getAbsolutePath()
+                                + " to the FINAL destination stream", ex);
                     }
 
                     logger.info("Completed uncompressing file: {} to the FINAL destination stream "
@@ -137,7 +167,8 @@ public abstract class EncryptedRestoreBase extends AbstractRestore{
                     if (tempFile.exists())
                         tempFile.delete();
 
-                    if (decryptedFile.exists()) {
+                    if (decryptedFile.exists())
+                    {
                         decryptedFile.delete();
                     }
 
@@ -145,18 +176,26 @@ public abstract class EncryptedRestoreBase extends AbstractRestore{
                 }
 
             });
-        }catch (Exception e){
-            throw new Exception("Exception in download of:  " + path.getFileName() + ", msg: " + e.getLocalizedMessage(), e);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(
+                    "Exception in download of:  " + path.getFileName() + ", msg: " + e.getLocalizedMessage(), e);
         }
 
     }
 
     @Override
-    protected final void waitToComplete() {
-        while (count.get() != 0) {
-            try {
+    protected final void waitToComplete()
+    {
+        while (count.get() != 0)
+        {
+            try
+            {
                 sleeper.sleep(1000);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 logger.error("Interrupted: ", e);
                 Thread.currentThread().interrupt();
             }
@@ -164,7 +203,8 @@ public abstract class EncryptedRestoreBase extends AbstractRestore{
     }
 
     @Override
-    public String getName() {
+    public String getName()
+    {
         return this.jobName;
     }
 }

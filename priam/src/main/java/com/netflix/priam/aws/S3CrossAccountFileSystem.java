@@ -36,7 +36,8 @@ import org.slf4j.LoggerFactory;
  * - 
  */
 @Singleton
-public class S3CrossAccountFileSystem {
+public class S3CrossAccountFileSystem
+{
     private static final Logger logger = LoggerFactory.getLogger(S3CrossAccountFileSystem.class);
 
     private AmazonS3 s3Client;
@@ -45,8 +46,9 @@ public class S3CrossAccountFileSystem {
     private IS3Credential s3Credential;
 
     @Inject
-    public S3CrossAccountFileSystem(@Named("backup") IBackupFileSystem fs, @Named("awss3roleassumption") IS3Credential s3Credential, IConfiguration config) {
-
+    public S3CrossAccountFileSystem(@Named("backup") IBackupFileSystem fs,
+            @Named("awss3roleassumption") IS3Credential s3Credential, IConfiguration config)
+    {
 
         this.s3fs = (S3FileSystem) fs;
         this.config = config;
@@ -54,23 +56,34 @@ public class S3CrossAccountFileSystem {
 
     }
 
-    public IBackupFileSystem getBackupFileSystem() {
+    public IBackupFileSystem getBackupFileSystem()
+    {
         return this.s3fs;
     }
 
-    public AmazonS3 getCrossAcctS3Client() {
-        if (this.s3Client == null) {
+    public AmazonS3 getCrossAcctS3Client()
+    {
+        if (this.s3Client == null)
+        {
 
-            synchronized (this) {
+            synchronized (this)
+            {
 
-                if (this.s3Client == null) {
+                if (this.s3Client == null)
+                {
 
-                    try {
+                    try
+                    {
 
-                        this.s3Client = AmazonS3Client.builder().withCredentials(s3Credential.getAwsCredentialProvider()).withRegion(config.getDC()).build();
+                        this.s3Client = AmazonS3Client.builder()
+                                .withCredentials(s3Credential.getAwsCredentialProvider()).withRegion(config.getDC())
+                                .build();
 
-                    } catch (Exception e) {
-                        throw new IllegalStateException("Exception in getting handle to s3 client.  Msg: " + e.getLocalizedMessage(), e);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new IllegalStateException(
+                                "Exception in getting handle to s3 client.  Msg: " + e.getLocalizedMessage(), e);
 
                     }
 
@@ -82,7 +95,6 @@ public class S3CrossAccountFileSystem {
             }
 
         }
-
 
         return this.s3Client;
     }

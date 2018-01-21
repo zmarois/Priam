@@ -38,10 +38,12 @@ import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 
 @Ignore
-public class TestModule extends AbstractModule {
+public class TestModule extends AbstractModule
+{
 
     @Override
-    protected void configure() {
+    protected void configure()
+    {
         bind(IConfiguration.class).toInstance(
                 new FakeConfiguration(FakeConfiguration.FAKE_REGION, "fake-app", "az1", "fakeInstance1"));
         bind(IPriamInstanceFactory.class).to(FakePriamInstanceFactory.class);
@@ -56,7 +58,8 @@ public class TestModule extends AbstractModule {
         bind(InstanceEnvIdentity.class).to(AwsInstanceEnvIdentity.class);
         bind(IDeadTokenRetriever.class).to(DeadTokenRetriever.class);
         bind(IPreGeneratedTokenRetriever.class).to(PreGeneratedTokenRetriever.class);
-        bind(INewTokenRetriever.class).to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens
+        bind(INewTokenRetriever.class)
+                .to(NewTokenRetriever.class); //for backward compatibility, unit test always create new tokens
         // bind(IBackupStatusMgr.class).to(BackupStatusMgr.class);
     }
 }

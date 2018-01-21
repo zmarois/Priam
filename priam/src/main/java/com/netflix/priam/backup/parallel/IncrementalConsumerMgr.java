@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /*
  * Monitors files to be uploaded and assigns each file to a worker
  */
-public class IncrementalConsumerMgr implements Runnable {
+public class IncrementalConsumerMgr implements Runnable
+{
 
     private static final Logger logger = LoggerFactory.getLogger(IncrementalConsumerMgr.class);
 
@@ -40,7 +41,8 @@ public class IncrementalConsumerMgr implements Runnable {
 
     public IncrementalConsumerMgr(ITaskQueueMgr<AbstractBackupPath> taskQueueMgr, IBackupFileSystem fs
             , IConfiguration config
-    ) {
+    )
+    {
         this.taskQueueMgr = taskQueueMgr;
         this.fs = fs;
 
@@ -50,9 +52,10 @@ public class IncrementalConsumerMgr implements Runnable {
 		 */
         int maxWorkers = config.getIncrementalBkupMaxConsumers();
         /*
-		 * ThreadPoolExecutor will move the file to be uploaded as a Runnable task in the work queue.
+         * ThreadPoolExecutor will move the file to be uploaded as a Runnable task in the work queue.
 		 */
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(config.getIncrementalBkupMaxConsumers() * 2);
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(
+                config.getIncrementalBkupMaxConsumers() * 2);
 		/*
 		 * If there all workers are busy, the calling thread for the submit() will itself upload the file.  This is a way to throttle how many files are moved to the
 		 * worker queue.  Specifically, the calling will continue to perform the upload unless a worker is avaialble.
@@ -67,33 +70,44 @@ public class IncrementalConsumerMgr implements Runnable {
     /*
      * Stop looking for files to upload
      */
-    public void shutdown() {
+    public void shutdown()
+    {
         this.run.set(false);
-        this.executor.shutdown(); //will not accept new task and waits for active threads to be completed before shutdown.
+        this.executor
+                .shutdown(); //will not accept new task and waits for active threads to be completed before shutdown.
     }
 
     @Override
-    public void run() {
-        while (this.run.get()) {
+    public void run()
+    {
+        while (this.run.get())
+        {
 
-            while (this.taskQueueMgr.hasTasks()) {
-                try {
+            while (this.taskQueueMgr.hasTasks())
+            {
+                try
+                {
                     AbstractBackupPath bp = this.taskQueueMgr.take();
 
                     IncrementalConsumer task = new IncrementalConsumer(bp, this.fs, this.callback);
                     executor.submit(task); //non-blocking, will be rejected if the task cannot be scheduled
 
-
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e)
+                {
                     logger.warn("Was interrupted while wating to dequeued a task.  Msgl: {}", e.getLocalizedMessage());
                 }
             }
 
             //Lets not overwhelmend the node hence we will pause before checking the work queue again.
-            try {
+            try
+            {
                 Thread.currentThread().sleep(IIncrementalBackup.INCREMENTAL_INTERVAL_IN_MILLISECS);
-            } catch (InterruptedException e) {
-                logger.warn("Was interrupted while sleeping until next interval run.  Msgl: {}", e.getLocalizedMessage());
+            }
+            catch (InterruptedException e)
+            {
+                logger.warn("Was interrupted while sleeping until next interval run.  Msgl: {}",
+                        e.getLocalizedMessage());
             }
         }
 

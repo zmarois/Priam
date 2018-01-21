@@ -33,26 +33,30 @@ import org.quartz.SchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InjectedWebListener extends GuiceServletContextListener {
+public class InjectedWebListener extends GuiceServletContextListener
+{
     protected static final Logger logger = LoggerFactory.getLogger(InjectedWebListener.class);
     private Injector injector;
+
     @Override
-    protected Injector getInjector() {
+    protected Injector getInjector()
+    {
         List<Module> moduleList = Lists.newArrayList();
         moduleList.add(new JaxServletModule());
         moduleList.add(new PriamGuiceModule());
         injector = Guice.createInjector(moduleList);
-        try {
+        try
+        {
             injector.getInstance(IConfiguration.class).intialize();
             injector.getInstance(PriamServer.class).intialize();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -60,10 +64,12 @@ public class InjectedWebListener extends GuiceServletContextListener {
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+    public void contextDestroyed(ServletContextEvent servletContextEvent)
+    {
         try
         {
-            for (Scheduler scheduler : injector.getInstance(SchedulerFactory.class).getAllSchedulers()){
+            for (Scheduler scheduler : injector.getInstance(SchedulerFactory.class).getAllSchedulers())
+            {
                 scheduler.shutdown();
             }
         }
@@ -74,9 +80,11 @@ public class InjectedWebListener extends GuiceServletContextListener {
         super.contextDestroyed(servletContextEvent);
     }
 
-    public static class JaxServletModule extends ServletModule {
+    public static class JaxServletModule extends ServletModule
+    {
         @Override
-        protected void configureServlets() {
+        protected void configureServlets()
+        {
             Map<String, String> params = new HashMap<String, String>();
             params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "unbound");
             params.put("com.sun.jersey.config.property.packages", "com.netflix.priam.resources");

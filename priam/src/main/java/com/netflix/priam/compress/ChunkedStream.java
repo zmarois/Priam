@@ -28,15 +28,17 @@ import java.util.Iterator;
  * Byte iterator representing compressed data.
  * Uses snappy compression
  */
-public class ChunkedStream implements Iterator<byte[]> {
+public class ChunkedStream implements Iterator<byte[]>
+{
+    private static int BYTES_TO_READ = 2048;
     private boolean hasnext = true;
     private ByteArrayOutputStream bos;
     private SnappyOutputStream compress;
     private InputStream origin;
     private long chunkSize;
-    private static int BYTES_TO_READ = 2048;
 
-    public ChunkedStream(InputStream is, long chunkSize) throws IOException {
+    public ChunkedStream(InputStream is, long chunkSize) throws IOException
+    {
         this.origin = is;
         this.bos = new ByteArrayOutputStream();
         this.compress = new SnappyOutputStream(bos);
@@ -44,28 +46,35 @@ public class ChunkedStream implements Iterator<byte[]> {
     }
 
     @Override
-    public boolean hasNext() {
+    public boolean hasNext()
+    {
         return hasnext;
     }
 
     @Override
-    public byte[] next() {
-        try {
+    public byte[] next()
+    {
+        try
+        {
             byte data[] = new byte[BYTES_TO_READ];
             int count;
-            while ((count = origin.read(data, 0, data.length)) != -1) {
+            while ((count = origin.read(data, 0, data.length)) != -1)
+            {
                 compress.write(data, 0, count);
                 if (bos.size() >= chunkSize)
                     return returnSafe();
             }
             // We don't have anything else to read hence set to false.
             return done();
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException(e);
         }
     }
 
-    private byte[] done() throws IOException {
+    private byte[] done() throws IOException
+    {
         compress.flush();
         byte[] return_ = bos.toByteArray();
         hasnext = false;
@@ -75,14 +84,16 @@ public class ChunkedStream implements Iterator<byte[]> {
         return return_;
     }
 
-    private byte[] returnSafe() throws IOException {
+    private byte[] returnSafe() throws IOException
+    {
         byte[] return_ = bos.toByteArray();
         bos.reset();
         return return_;
     }
 
     @Override
-    public void remove() {
+    public void remove()
+    {
     }
 
 }

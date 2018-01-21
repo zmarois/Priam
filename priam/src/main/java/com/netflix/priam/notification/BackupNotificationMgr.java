@@ -28,7 +28,8 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Created by vinhn on 10/30/16.
  */
-public class BackupNotificationMgr implements EventObserver<BackupEvent> {
+public class BackupNotificationMgr implements EventObserver<BackupEvent>
+{
 
     public static final String SUCCESS_VAL = "success", FAILED_VAL = "failed", STARTED = "started";
     private static final Logger logger = LoggerFactory.getLogger(BackupNotificationMgr.class);
@@ -36,14 +37,17 @@ public class BackupNotificationMgr implements EventObserver<BackupEvent> {
     private INotificationService notificationService;
 
     @Inject
-    public BackupNotificationMgr(IConfiguration config, INotificationService notificationService) {
+    public BackupNotificationMgr(IConfiguration config, INotificationService notificationService)
+    {
         this.config = config;
         this.notificationService = notificationService;
     }
 
-    private void notify(AbstractBackupPath abp, String uploadStatus) {
+    private void notify(AbstractBackupPath abp, String uploadStatus)
+    {
         JSONObject jsonObject = new JSONObject();
-        try {
+        try
+        {
             jsonObject.put("s3bucketname", this.config.getBackupPrefix());
             jsonObject.put("s3clustername", abp.getClusterName());
             jsonObject.put("s3namespace", abp.getRemotePath());
@@ -58,28 +62,36 @@ public class BackupNotificationMgr implements EventObserver<BackupEvent> {
             jsonObject.put("backuptype", abp.getType().name());
             jsonObject.put("uploadstatus", uploadStatus);
             this.notificationService.notify(jsonObject.toString());
-        } catch (JSONException exception) {
-            logger.error("JSON exception during generation of notification for upload {}.  Local file {}. Ignoring to continue with rest of backup.  Msg: {}", uploadStatus, abp.getFileName(), exception.getLocalizedMessage());
+        }
+        catch (JSONException exception)
+        {
+            logger.error(
+                    "JSON exception during generation of notification for upload {}.  Local file {}. Ignoring to continue with rest of backup.  Msg: {}",
+                    uploadStatus, abp.getFileName(), exception.getLocalizedMessage());
         }
     }
 
     @Override
-    public void updateEventStart(BackupEvent event) {
+    public void updateEventStart(BackupEvent event)
+    {
         notify(event.getAbstractBackupPath(), STARTED);
     }
 
     @Override
-    public void updateEventFailure(BackupEvent event) {
+    public void updateEventFailure(BackupEvent event)
+    {
         notify(event.getAbstractBackupPath(), FAILED_VAL);
     }
 
     @Override
-    public void updateEventSuccess(BackupEvent event) {
+    public void updateEventSuccess(BackupEvent event)
+    {
         notify(event.getAbstractBackupPath(), SUCCESS_VAL);
     }
 
     @Override
-    public void updateEventStop(BackupEvent event) {
+    public void updateEventStop(BackupEvent event)
+    {
         // Do nothing.
     }
 

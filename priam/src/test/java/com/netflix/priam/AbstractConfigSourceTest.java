@@ -25,11 +25,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public final class AbstractConfigSourceTest {
+public final class AbstractConfigSourceTest
+{
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConfigSourceTest.class.getName());
 
     @Test
-    public void lists() {
+    public void lists()
+    {
         AbstractConfigSource source = new MemoryConfigSource();
         source.set("foo", "bar,baz, qux ");
         final List<String> values = source.getList("foo");
@@ -38,7 +40,8 @@ public final class AbstractConfigSourceTest {
     }
 
     @Test
-    public void oneItem() {
+    public void oneItem()
+    {
         AbstractConfigSource source = new MemoryConfigSource();
         source.set("foo", "bar");
         final List<String> values = source.getList("foo");
@@ -47,7 +50,8 @@ public final class AbstractConfigSourceTest {
     }
 
     @Test
-    public void oneItemWithSpace() {
+    public void oneItemWithSpace()
+    {
         AbstractConfigSource source = new MemoryConfigSource();
         source.set("foo", "\tbar ");
         final List<String> values = source.getList("foo");

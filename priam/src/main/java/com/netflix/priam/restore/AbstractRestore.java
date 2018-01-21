@@ -44,7 +44,8 @@ import java.util.*;
  * - This class can be scheduled, i.e. it is a "Task".
  * - When this class is executed, it uses its own thread pool to execute the restores.
  */
-public abstract class AbstractRestore extends Task implements IRestoreStrategy{
+public abstract class AbstractRestore extends Task implements IRestoreStrategy
+{
     // keeps track of the last few download which was executed.
     // TODO fix the magic number of 1000 => the idea of 80% of 1000 files limit per s3 query
     protected static final FifoQueue<AbstractBackupPath> tracker = new FifoQueue<AbstractBackupPath>(800);
@@ -63,9 +64,10 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
     private MetaData metaData;
 
     public AbstractRestore(IConfiguration config, IBackupFileSystem fs, String name, Sleeper sleeper,
-                           Provider<AbstractBackupPath> pathProvider,
-                           InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector,
-                           ICassandraProcess cassProcess, MetaData metaData, InstanceState instanceState) {
+            Provider<AbstractBackupPath> pathProvider,
+            InstanceIdentity instanceIdentity, RestoreTokenSelector tokenSelector,
+            ICassandraProcess cassProcess, MetaData metaData, InstanceState instanceState)
+    {
         super(config);
         this.fs = fs;
         this.sleeper = sleeper;
@@ -78,30 +80,41 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
         backupRestoreUtil = new BackupRestoreUtil(config.getRestoreKeyspaceFilter(), config.getRestoreCFFilter());
     }
 
-    public static final boolean isRestoreEnabled(IConfiguration conf) {
+    public static final boolean isRestoreEnabled(IConfiguration conf)
+    {
         boolean isRestoreMode = StringUtils.isNotBlank(conf.getRestoreSnapshot());
-        boolean isBackedupRac = (CollectionUtils.isEmpty(conf.getBackupRacs()) || conf.getBackupRacs().contains(conf.getRac()));
+        boolean isBackedupRac = (CollectionUtils.isEmpty(conf.getBackupRacs()) || conf.getBackupRacs()
+                .contains(conf.getRac()));
         return (isRestoreMode && isBackedupRac);
     }
 
-    private final void download(Iterator<AbstractBackupPath> fsIterator, BackupFileType bkupFileType) throws Exception {
-        while (fsIterator.hasNext()) {
+    private final void download(Iterator<AbstractBackupPath> fsIterator, BackupFileType bkupFileType) throws Exception
+    {
+        while (fsIterator.hasNext())
+        {
             AbstractBackupPath temp = fsIterator.next();
             if (temp.getType() == BackupFileType.SST && tracker.contains(temp))
                 continue;
 
-            if (backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.KEYSPACE, temp.getKeyspace())) { //keyspace filtered?
-                logger.info("Bypassing restoring file \"{}\" as its keyspace: \"{}\" is part of the filter list", temp.newRestoreFile(), temp.getKeyspace());
+            if (backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.KEYSPACE, temp.getKeyspace()))
+            { //keyspace filtered?
+                logger.info("Bypassing restoring file \"{}\" as its keyspace: \"{}\" is part of the filter list",
+                        temp.newRestoreFile(), temp.getKeyspace());
                 continue;
             }
 
-            if (backupRestoreUtil.isFiltered(BackupRestoreUtil.DIRECTORYTYPE.CF, temp.getKeyspace(), temp.getColumnFamily())) {
-                logger.info("Bypassing restoring file \"{}\" as it is part of the keyspace.columnfamily filter list.  Its keyspace:cf is: {}:{}",
+            if (backupRestoreUtil
+                    .isFiltered(BackupRestoreUtil.DIRECTORYTYPE.CF, temp.getKeyspace(), temp.getColumnFamily()))
+            {
+                logger.info(
+                        "Bypassing restoring file \"{}\" as it is part of the keyspace.columnfamily filter list.  Its keyspace:cf is: {}:{}",
                         temp.newRestoreFile(), temp.getKeyspace(), temp.getColumnFamily());
                 continue;
             }
 
-            if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(temp.getKeyspace()) || temp.getKeyspace().equals(SYSTEM_KEYSPACE))) {
+            if (config.getRestoreKeySpaces().size() != 0 && (!config.getRestoreKeySpaces().contains(temp.getKeyspace())
+                    || temp.getKeyspace().equals(SYSTEM_KEYSPACE)))
+            {
                 logger.info("Bypassing restoring file \"{}\" as it is system keyspace", temp.newRestoreFile());
                 continue;
             }
@@ -110,7 +123,8 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
             {
                 File localFileHandler = temp.newRestoreFile();
                 if (logger.isDebugEnabled())
-                    logger.debug("Created local file name: " + localFileHandler.getAbsolutePath() + File.pathSeparator + localFileHandler.getName());
+                    logger.debug("Created local file name: " + localFileHandler.getAbsolutePath() + File.pathSeparator
+                            + localFileHandler.getName());
                 downloadFile(temp, localFileHandler);
             }
         }
@@ -119,17 +133,21 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
         waitToComplete();
     }
 
-    private final void downloadCommitLogs(Iterator<AbstractBackupPath> fsIterator, BackupFileType filter, int lastN) throws Exception {
+    private final void downloadCommitLogs(Iterator<AbstractBackupPath> fsIterator, BackupFileType filter, int lastN)
+            throws Exception
+    {
         if (fsIterator == null)
             return;
 
         BoundedList bl = new BoundedList(lastN);
-        while (fsIterator.hasNext()) {
+        while (fsIterator.hasNext())
+        {
             AbstractBackupPath temp = fsIterator.next();
             if (temp.getType() == BackupFileType.SST && tracker.contains(temp))
                 continue;
 
-            if (temp.getType() == filter) {
+            if (temp.getType() == filter)
+            {
                 bl.add(temp);
             }
         }
@@ -137,12 +155,14 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
         download(bl.iterator(), filter);
     }
 
-    private final void stopCassProcess() throws IOException {
+    private final void stopCassProcess() throws IOException
+    {
         if (config.getRestoreKeySpaces().size() == 0)
             cassProcess.stop();
     }
 
-    private final String getRestorePrefix() {
+    private final String getRestorePrefix()
+    {
         String prefix = "";
 
         if (StringUtils.isNotBlank(config.getRestorePrefix()))
@@ -156,26 +176,32 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
     /*
      * Fetches meta.json used to store snapshots metadata.
      */
-    private final void fetchSnapshotMetaFile(String restorePrefix, List<AbstractBackupPath> out, Date startTime, Date endTime) throws IllegalStateException {
+    private final void fetchSnapshotMetaFile(String restorePrefix, List<AbstractBackupPath> out, Date startTime,
+            Date endTime) throws IllegalStateException
+    {
         logger.debug("Looking for snapshot meta file within restore prefix: {}", restorePrefix);
 
         Iterator<AbstractBackupPath> backupfiles = fs.list(restorePrefix, startTime, endTime);
-        if (!backupfiles.hasNext()) {
+        if (!backupfiles.hasNext())
+        {
             throw new IllegalStateException("meta.json not found, restore prefix: " + restorePrefix);
         }
 
-        while (backupfiles.hasNext()) {
+        while (backupfiles.hasNext())
+        {
             AbstractBackupPath path = backupfiles.next();
             if (path.getType() == BackupFileType.META)
                 //Since there are now meta file for incrementals as well as snapshot, we need to find the correct one (i.e. the snapshot meta file (meta.json))
-                if (path.getFileName().equalsIgnoreCase("meta.json")) {
+                if (path.getFileName().equalsIgnoreCase("meta.json"))
+                {
                     out.add(path);
                 }
         }
     }
 
     @Override
-    public void execute() throws Exception {
+    public void execute() throws Exception
+    {
         if (!isRestoreEnabled(config))
             return;
 
@@ -184,8 +210,10 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
         AbstractBackupPath path = pathProvider.get();
         final Date startTime = path.parseDate(restore[0]);
         final Date endTime = path.parseDate(restore[1]);
-        new RetryableCallable<Void>() {
-            public Void retriableCall() throws Exception {
+        new RetryableCallable<Void>()
+        {
+            public Void retriableCall() throws Exception
+            {
                 logger.info("Attempting restore");
                 restore(startTime, endTime);
                 logger.info("Restore completed");
@@ -198,7 +226,8 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
 
     }
 
-    public void restore(Date startTime, Date endTime) throws Exception {
+    public void restore(Date startTime, Date endTime) throws Exception
+    {
         //Set the restore status.
         instanceState.getRestoreStatus().resetStatus();
         instanceState.getRestoreStatus().setStartDateRange(DateUtil.convert(startTime));
@@ -207,8 +236,10 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
         instanceState.setRestoreStatus(Status.STARTED);
         String origToken = id.getInstance().getToken();
 
-        try {
-            if (config.isRestoreClosestToken()) {
+        try
+        {
+            if (config.isRestoreClosestToken())
+            {
                 restoreToken = tokenSelector.getClosestToken(new BigInteger(origToken), startTime);
                 id.getInstance().setToken(restoreToken.toString());
             }
@@ -224,7 +255,8 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
             String prefix = getRestorePrefix();
             fetchSnapshotMetaFile(prefix, metas, startTime, endTime);
 
-            if (metas.size() == 0) {
+            if (metas.size() == 0)
+            {
                 logger.info("[cass_backup] No snapshot meta file found, Restore Failed.");
                 instanceState.getRestoreStatus().setExecutionEndTime(LocalDateTime.now());
                 instanceState.setRestoreStatus(Status.FINISHED);
@@ -254,7 +286,8 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
             download(incrementals, BackupFileType.SST);
 
             //Downloading CommitLogs
-            if (config.isBackingUpCommitLogs()) {
+            if (config.isBackingUpCommitLogs())
+            {
                 logger.info("Delete all backuped commitlog files in {}", config.getBackupCommitLogLocation());
                 SystemUtils.cleanupDir(config.getBackupCommitLogLocation(), null);
 
@@ -272,18 +305,23 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
 
             //Start cassandra if restore is successful.
             cassProcess.start(true);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             instanceState.setRestoreStatus(Status.FAILED);
             instanceState.getRestoreStatus().setExecutionEndTime(LocalDateTime.now());
             logger.error("Error while trying to restore: {}", e.getMessage(), e);
             throw e;
-        } finally {
+        }
+        finally
+        {
             id.getInstance().setToken(origToken);
         }
     }
 
     /**
      * Download file to the location specified. After downloading the file will be decrypted(optionally) and decompressed before saving to final location.
+     *
      * @param path            - path of object to download from source S3/GCS.
      * @param restoreLocation - path to the final location of the decompressed and/or decrypted file.
      */
@@ -295,18 +333,22 @@ public abstract class AbstractRestore extends Task implements IRestoreStrategy{
      */
     protected abstract void waitToComplete();
 
-    public final class BoundedList<E> extends LinkedList<E> {
+    public final class BoundedList<E> extends LinkedList<E>
+    {
 
         private final int limit;
 
-        public BoundedList(int limit) {
+        public BoundedList(int limit)
+        {
             this.limit = limit;
         }
 
         @Override
-        public boolean add(E o) {
+        public boolean add(E o)
+        {
             super.add(o);
-            while (size() > limit) {
+            while (size() > limit)
+            {
                 super.remove();
             }
             return true;

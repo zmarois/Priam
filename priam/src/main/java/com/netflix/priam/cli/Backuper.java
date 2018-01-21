@@ -20,19 +20,27 @@ import com.netflix.priam.backup.SnapshotBackup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Backuper {
+public class Backuper
+{
     private static final Logger logger = LoggerFactory.getLogger(Backuper.class);
 
-    public static void main(String[] args) {
-        try {
+    public static void main(String[] args)
+    {
+        try
+        {
             Application.initialize();
             SnapshotBackup backuper = Application.getInjector().getInstance(SnapshotBackup.class);
-            try {
+            try
+            {
                 backuper.execute();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 logger.error("Unable to backup: ", e);
             }
-        } finally {
+        }
+        finally
+        {
             Application.shutdownAdditionalThreads();
         }
     }

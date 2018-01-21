@@ -26,7 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class S3RoleAssumptionCredential implements IS3Credential {
+public class S3RoleAssumptionCredential implements IS3Credential
+{
     private static final String AWS_ROLE_ASSUMPTION_SESSION_NAME = "S3RoleAssumptionSession";
     private static final Logger logger = LoggerFactory.getLogger(S3RoleAssumptionCredential.class);
 
@@ -35,15 +36,18 @@ public class S3RoleAssumptionCredential implements IS3Credential {
     private AWSCredentialsProvider stsSessionCredentialsProvider;
 
     @Inject
-    public S3RoleAssumptionCredential(ICredential cred, IConfiguration config) {
+    public S3RoleAssumptionCredential(ICredential cred, IConfiguration config)
+    {
         this.cred = cred;
         this.config = config;
     }
 
     @Override
-    public AWSCredentials getCredentials() throws Exception {
+    public AWSCredentials getCredentials() throws Exception
+    {
 
-        if (this.stsSessionCredentialsProvider == null) {
+        if (this.stsSessionCredentialsProvider == null)
+        {
             this.getAwsCredentialProvider();
         }
 
@@ -58,29 +62,45 @@ public class S3RoleAssumptionCredential implements IS3Credential {
      * TODO: this behavior needs to be part of the interface IS3Credential
      *
      */
-    public void refresh() {
+    public void refresh()
+    {
         this.cred.getAwsCredentialProvider().refresh();
     }
 
     @Override
-    public AWSCredentialsProvider getAwsCredentialProvider() {
-        if (this.stsSessionCredentialsProvider == null) {
-            synchronized (this) {
-                if (this.stsSessionCredentialsProvider == null) {
+    public AWSCredentialsProvider getAwsCredentialProvider()
+    {
+        if (this.stsSessionCredentialsProvider == null)
+        {
+            synchronized (this)
+            {
+                if (this.stsSessionCredentialsProvider == null)
+                {
 
-                    final String roleArn = this.config.getAWSRoleAssumptionArn();  //IAM role created for bucket own by account "awsprodbackup"
-                    if (roleArn == null || roleArn.isEmpty()) {
-                        logger.warn("Role ARN is null or empty probably due to missing config entry. Falling back to instance level credentials");
+                    final String roleArn = this.config
+                            .getAWSRoleAssumptionArn();  //IAM role created for bucket own by account "awsprodbackup"
+                    if (roleArn == null || roleArn.isEmpty())
+                    {
+                        logger.warn(
+                                "Role ARN is null or empty probably due to missing config entry. Falling back to instance level credentials");
                         this.stsSessionCredentialsProvider = this.cred.getAwsCredentialProvider();
                         //throw new NullPointerException("Role ARN is null or empty probably due to missing config entry");
-                    } else {
+                    }
+                    else
+                    {
                         //== Get handle to an implementation that uses AWS Security Token Service (STS) to create temporary, short-lived session with explicit refresh for session/token expiration.
-                        try {
+                        try
+                        {
 
-                            this.stsSessionCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider(this.cred.getAwsCredentialProvider(), roleArn, AWS_ROLE_ASSUMPTION_SESSION_NAME);
+                            this.stsSessionCredentialsProvider = new STSAssumeRoleSessionCredentialsProvider(
+                                    this.cred.getAwsCredentialProvider(), roleArn, AWS_ROLE_ASSUMPTION_SESSION_NAME);
 
-                        } catch (Exception ex) {
-                            throw new IllegalStateException("Exception in getting handle to AWS Security Token Service (STS).  Msg: " + ex.getLocalizedMessage(), ex);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new IllegalStateException(
+                                    "Exception in getting handle to AWS Security Token Service (STS).  Msg: " + ex
+                                            .getLocalizedMessage(), ex);
                         }
                     }
 

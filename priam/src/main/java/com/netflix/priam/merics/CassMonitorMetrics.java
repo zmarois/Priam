@@ -23,40 +23,46 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author vchella
  */
 @Singleton
-public class CassMonitorMetrics implements  ICassMonitorMetrics {
+public class CassMonitorMetrics implements ICassMonitorMetrics
+{
 
     AtomicInteger cassStop = new AtomicInteger(),
             cassAutoStart = new AtomicInteger(),
             cassStart = new AtomicInteger();
 
-
     @Override
-    public void incCassStop() {
+    public void incCassStop()
+    {
         cassStop.getAndIncrement();
     }
 
     @Override
-    public void incCassAutoStart() {
+    public void incCassAutoStart()
+    {
         cassAutoStart.getAndIncrement();
     }
 
     @Override
-    public void incCassStart() {
+    public void incCassStart()
+    {
         cassStart.getAndIncrement();
     }
 
     @Override
-    public int getCassStop() {
+    public int getCassStop()
+    {
         return cassStop.get();
     }
 
     @Override
-    public int getCassAutoStart() {
+    public int getCassAutoStart()
+    {
         return cassAutoStart.get();
     }
 
     @Override
-    public int getCassStart() {
+    public int getCassStart()
+    {
         return cassStart.get();
     }
 }

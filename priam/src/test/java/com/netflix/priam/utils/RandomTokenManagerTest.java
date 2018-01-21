@@ -31,40 +31,47 @@ import static com.netflix.priam.utils.TokenManager.MINIMUM_TOKEN_RANDOM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public class RandomTokenManagerTest {
+public class RandomTokenManagerTest
+{
     FakeConfiguration config;
     private TokenManager tokenManager;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         this.config = new FakeConfiguration();
         this.tokenManager = new TokenManager(config);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void initialToken_zeroSize() {
+    public void initialToken_zeroSize()
+    {
         tokenManager.initialToken(0, 0, 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void initialToken_negativePosition() {
+    public void initialToken_negativePosition()
+    {
         tokenManager.initialToken(1, -1, 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void initialToken_negativeOffset() {
+    public void initialToken_negativeOffset()
+    {
         tokenManager.initialToken(1, 0, -1);
     }
 
     @Test
-    public void initialToken_positionZero() {
+    public void initialToken_positionZero()
+    {
         assertEquals(MINIMUM_TOKEN_RANDOM, tokenManager.initialToken(1, 0, 0));
         assertEquals(MINIMUM_TOKEN_RANDOM, tokenManager.initialToken(10, 0, 0));
         assertEquals(MINIMUM_TOKEN_RANDOM, tokenManager.initialToken(133, 0, 0));
     }
 
     @Test
-    public void initialToken_offsets_zeroPosition() {
+    public void initialToken_offsets_zeroPosition()
+    {
         assertEquals(MINIMUM_TOKEN_RANDOM.add(BigInteger.valueOf(7)), tokenManager.initialToken(1, 0, 7));
         assertEquals(MINIMUM_TOKEN_RANDOM.add(BigInteger.valueOf(11)), tokenManager.initialToken(2, 0, 11));
         assertEquals(MINIMUM_TOKEN_RANDOM.add(BigInteger.valueOf(Integer.MAX_VALUE)),
@@ -72,7 +79,8 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void initialToken_cannotExceedMaximumToken() {
+    public void initialToken_cannotExceedMaximumToken()
+    {
         final int maxRingSize = Integer.MAX_VALUE;
         final int maxPosition = maxRingSize - 1;
         final int maxOffset = Integer.MAX_VALUE;
@@ -80,7 +88,8 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void createToken() {
+    public void createToken()
+    {
         assertEquals(MAXIMUM_TOKEN_RANDOM.divide(BigInteger.valueOf(8 * 32))
                         .multiply(BigInteger.TEN)
                         .add(BigInteger.valueOf(tokenManager.regionOffset("region")))
@@ -89,18 +98,21 @@ public class RandomTokenManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void findClosestToken_emptyTokenList() {
+    public void findClosestToken_emptyTokenList()
+    {
         tokenManager.findClosestToken(BigInteger.ZERO, Collections.emptyList());
     }
 
     @Test
-    public void findClosestToken_singleTokenList() {
+    public void findClosestToken_singleTokenList()
+    {
         final BigInteger onlyToken = BigInteger.valueOf(100);
         assertEquals(onlyToken, tokenManager.findClosestToken(BigInteger.TEN, ImmutableList.of(onlyToken)));
     }
 
     @Test
-    public void findClosestToken_multipleTokenList() {
+    public void findClosestToken_multipleTokenList()
+    {
         List<BigInteger> tokenList = ImmutableList.of(BigInteger.ONE, BigInteger.TEN, BigInteger.valueOf(100));
         assertEquals(BigInteger.ONE, tokenManager.findClosestToken(BigInteger.ONE, tokenList));
         assertEquals(BigInteger.TEN, tokenManager.findClosestToken(BigInteger.valueOf(9), tokenList));
@@ -112,13 +124,15 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void findClosestToken_tieGoesToLargerToken() {
+    public void findClosestToken_tieGoesToLargerToken()
+    {
         assertEquals(BigInteger.TEN, tokenManager.findClosestToken(BigInteger.valueOf(5),
                 ImmutableList.of(BigInteger.ZERO, BigInteger.TEN)));
     }
 
     @Test
-    public void test4Splits() {
+    public void test4Splits()
+    {
         // example tokens from http://wiki.apache.org/cassandra/Operations
 
         final String expectedTokens = "0,42535295865117307932921825928971026432,"
@@ -130,7 +144,8 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void test16Splits() {
+    public void test16Splits()
+    {
         final String expectedTokens = "0,10633823966279326983230456482242756608,"
                 + "21267647932558653966460912964485513216,31901471898837980949691369446728269824,"
                 + "42535295865117307932921825928971026432,53169119831396634916152282411213783040,"
@@ -146,11 +161,13 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void regionOffset() {
+    public void regionOffset()
+    {
         String allRegions = "us-west-2,us-east,us-west,eu-east,eu-west,ap-northeast,ap-southeast";
 
         for (String region1 : allRegions.split(","))
-            for (String region2 : allRegions.split(",")) {
+            for (String region2 : allRegions.split(","))
+            {
                 if (region1.equals(region2))
                     continue;
                 assertFalse("Diffrence seems to be low",
@@ -159,7 +176,8 @@ public class RandomTokenManagerTest {
     }
 
     @Test
-    public void testMultiToken() {
+    public void testMultiToken()
+    {
         int h1 = tokenManager.regionOffset("vijay");
         int h2 = tokenManager.regionOffset("vijay2");
         BigInteger t1 = tokenManager.initialToken(100, 10, h1);

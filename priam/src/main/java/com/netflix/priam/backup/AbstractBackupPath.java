@@ -34,19 +34,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 @ImplementedBy(S3BackupPath.class)
-public abstract class AbstractBackupPath implements Comparable<AbstractBackupPath> {
+public abstract class AbstractBackupPath implements Comparable<AbstractBackupPath>
+{
+    public static final char PATH_SEP = File.separatorChar;
     private static final Logger logger = LoggerFactory.getLogger(AbstractBackupPath.class);
     private static final String FMT = "yyyyMMddHHmm";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormat.forPattern(FMT);
-    public static final char PATH_SEP = File.separatorChar;
-
-    public enum BackupFileType {
-        SNAP, SST, CL, META
-    }
-
+    protected final InstanceIdentity factory;
+    protected final IConfiguration config;
     protected BackupFileType type;
     protected String clusterName;
     protected String keyspace;
@@ -59,32 +56,33 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
     protected long size; //uncompressed file size
     protected long compressedFileSize = 0;
     protected boolean isCassandra1_0;
-
-    protected final InstanceIdentity factory;
-    protected final IConfiguration config;
     protected File backupFile;
     protected Date uploadedTs;
     protected int awsSlowDownExceptionCounter = 0;
-
-    public AbstractBackupPath(IConfiguration config, InstanceIdentity factory) {
+    public AbstractBackupPath(IConfiguration config, InstanceIdentity factory)
+    {
         this.factory = factory;
         this.config = config;
     }
 
-    public static String formatDate(Date d) {
+    public static String formatDate(Date d)
+    {
         return new DateTime(d).toString(FMT);
     }
 
-    public Date parseDate(String s) {
+    public Date parseDate(String s)
+    {
         return DATE_FORMAT.parseDateTime(s).toDate();
     }
 
-    public InputStream localReader() throws IOException {
+    public InputStream localReader() throws IOException
+    {
         assert backupFile != null;
         return new RafInputStream(RandomAccessReader.open(backupFile));
     }
 
-    public void parseLocal(File file, BackupFileType type) throws ParseException {
+    public void parseLocal(File file, BackupFileType type) throws ParseException
+    {
         // TODO cleanup.
         this.backupFile = file;
 
@@ -95,7 +93,8 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
         this.region = config.getDC();
         this.token = factory.getInstance().getToken();
         this.type = type;
-        if (type != BackupFileType.META && type != BackupFileType.CL) {
+        if (type != BackupFileType.META && type != BackupFileType.CL)
+        {
             this.keyspace = elements[0];
             if (!isCassandra1_0)
                 this.columnFamily = elements[1];
@@ -112,7 +111,8 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
      * Given a date range, find a common string prefix Eg: 20120212, 20120213 =
      * 2012021
      */
-    public String match(Date start, Date end) {
+    public String match(Date start, Date end)
+    {
         String sString = formatDate(start);
         String eString = formatDate(end);
         int diff = StringUtils.indexOfDifference(sString, eString);
@@ -124,14 +124,19 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
     /**
      * Local restore file
      */
-    public File newRestoreFile() {
+    public File newRestoreFile()
+    {
         StringBuffer buff = new StringBuffer();
-        if (type == BackupFileType.CL) {
+        if (type == BackupFileType.CL)
+        {
             buff.append(config.getBackupCommitLogLocation()).append(PATH_SEP);
-        } else {
+        }
+        else
+        {
 
             buff.append(config.getDataFileLocation()).append(PATH_SEP);
-            if (type != BackupFileType.META) {
+            if (type != BackupFileType.META)
+            {
                 if (isCassandra1_0)
                     buff.append(keyspace).append(PATH_SEP);
                 else
@@ -149,12 +154,14 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
     }
 
     @Override
-    public int compareTo(AbstractBackupPath o) {
+    public int compareTo(AbstractBackupPath o)
+    {
         return getRemotePath().compareTo(o.getRemotePath());
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(Object obj)
+    {
         if (!obj.getClass().equals(this.getClass()))
             return false;
         return getRemotePath().equals(((AbstractBackupPath) obj).getRemotePath());
@@ -186,126 +193,160 @@ public abstract class AbstractBackupPath implements Comparable<AbstractBackupPat
      */
     public abstract String clusterPrefix(String location);
 
-    public BackupFileType getType() {
+    public BackupFileType getType()
+    {
         return type;
     }
 
-    public void setType(BackupFileType type) {
+    public void setType(BackupFileType type)
+    {
         this.type = type;
     }
 
-    public String getClusterName() {
+    public String getClusterName()
+    {
         return clusterName;
     }
 
-    public String getKeyspace() {
+    public String getKeyspace()
+    {
         return keyspace;
     }
 
-    public String getColumnFamily() {
+    public String getColumnFamily()
+    {
         return columnFamily;
     }
 
-    public String getFileName() {
+    public String getFileName()
+    {
         return fileName;
     }
 
-    public String getBaseDir() {
+    public void setFileName(String fileName)
+    {
+        this.fileName = fileName;
+    }
+
+    public String getBaseDir()
+    {
         return baseDir;
     }
 
-    public String getToken() {
+    public String getToken()
+    {
         return token;
     }
 
-    public String getRegion() {
+    public String getRegion()
+    {
         return region;
     }
 
-    public Date getTime() {
+    public Date getTime()
+    {
         return time;
     }
 
     /*
     @return original, uncompressed file size
      */
-    public long getSize() {
+    public long getSize()
+    {
         return size;
     }
 
-    public void setSize(long size) {
+    public void setSize(long size)
+    {
         this.size = size;
     }
 
-    public long getCompressedFileSize() {
+    public long getCompressedFileSize()
+    {
         return this.compressedFileSize;
     }
 
-    public void setCompressedFileSize(long val) {
+    public void setCompressedFileSize(long val)
+    {
         this.compressedFileSize = val;
     }
 
-    public File getBackupFile() {
+    public File getBackupFile()
+    {
         return backupFile;
     }
 
-    public boolean isCassandra1_0() {
+    public boolean isCassandra1_0()
+    {
         return isCassandra1_0;
     }
 
-    public void setCassandra1_0(boolean isCassandra1_0) {
+    public void setCassandra1_0(boolean isCassandra1_0)
+    {
         this.isCassandra1_0 = isCassandra1_0;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public InstanceIdentity getInstanceIdentity() {
+    public InstanceIdentity getInstanceIdentity()
+    {
         return this.factory;
     }
 
-    public void setUploadedTs(Date uploadedTs) {
-        this.uploadedTs = uploadedTs;
-    }
-
-    public Date getUploadedTs() {
+    public Date getUploadedTs()
+    {
         return this.uploadedTs;
     }
 
-    public static class RafInputStream extends InputStream {
+    public void setUploadedTs(Date uploadedTs)
+    {
+        this.uploadedTs = uploadedTs;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "From: " + getRemotePath() + " To: " + newRestoreFile().getPath();
+    }
+
+    public int getAWSSlowDownExceptionCounter()
+    {
+        return this.awsSlowDownExceptionCounter;
+    }
+
+    public void setAWSSlowDownExceptionCounter(int val)
+    {
+        this.awsSlowDownExceptionCounter = val;
+    }
+
+    public enum BackupFileType
+    {
+        SNAP, SST, CL, META
+    }
+
+    public static class RafInputStream extends InputStream
+    {
         private RandomAccessReader raf;
 
-        public RafInputStream(RandomAccessReader raf) {
+        public RafInputStream(RandomAccessReader raf)
+        {
             this.raf = raf;
         }
 
         @Override
-        public synchronized int read(byte[] bytes, int off, int len) throws IOException {
+        public synchronized int read(byte[] bytes, int off, int len) throws IOException
+        {
             return raf.read(bytes, off, len);
         }
 
         @Override
-        public void close() {
+        public void close()
+        {
             FileUtils.closeQuietly(raf);
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() throws IOException
+        {
             return 0;
         }
-    }
-
-    @Override
-    public String toString() {
-        return "From: " + getRemotePath() + " To: " + newRestoreFile().getPath();
-    }
-
-    public int getAWSSlowDownExceptionCounter() {
-        return this.awsSlowDownExceptionCounter;
-    }
-
-    public void setAWSSlowDownExceptionCounter(int val) {
-        this.awsSlowDownExceptionCounter = val;
     }
 }

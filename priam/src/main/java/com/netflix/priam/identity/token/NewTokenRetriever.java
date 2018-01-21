@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Random;
 
-public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRetriever {
+public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRetriever
+{
 
     private static final Logger logger = LoggerFactory.getLogger(NewTokenRetriever.class);
     private IPriamInstanceFactory<PriamInstance> factory;
@@ -41,7 +42,9 @@ public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRe
 
     @Inject
     //Note: do not parameterized the generic type variable to an implementation as it confuses Guice in the binding.
-    public NewTokenRetriever(IPriamInstanceFactory factory, IMembership membership, IConfiguration config, Sleeper sleeper, ITokenManager tokenManager) {
+    public NewTokenRetriever(IPriamInstanceFactory factory, IMembership membership, IConfiguration config,
+            Sleeper sleeper, ITokenManager tokenManager)
+    {
         this.factory = factory;
         this.membership = membership;
         this.config = config;
@@ -50,7 +53,8 @@ public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRe
     }
 
     @Override
-    public PriamInstance get() throws Exception {
+    public PriamInstance get() throws Exception
+    {
 
         logger.info("Generating my own and grabbing new token");
         // Sleep random interval - upto 15 sec
@@ -66,18 +70,22 @@ public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRe
         int maxSlot = max - hash;
         int my_slot = 0;
 
-        if (hash == max && locMap.get(config.getRac()).size() == 0) {
+        if (hash == max && locMap.get(config.getRac()).size() == 0)
+        {
             int idx = config.getRacs().indexOf(config.getRac());
             if (idx < 0)
                 throw new Exception(String.format("Rac %s is not in Racs %s", config.getRac(), config.getRacs()));
             my_slot = idx + maxSlot;
-        } else
+        }
+        else
             my_slot = config.getRacs().size() + maxSlot;
 
         logger.info("Trying to createToken with slot {} with rac count {} with rac membership size {} with dc {}",
                 my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getDC());
-        String payload = tokenManager.createToken(my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getDC());
-        return factory.create(config.getAppName(), my_slot + hash, config.getInstanceName(), config.getHostname(), config.getHostIP(), config.getRac(), null, payload);
+        String payload = tokenManager
+                .createToken(my_slot, membership.getRacCount(), membership.getRacMembershipSize(), config.getDC());
+        return factory.create(config.getAppName(), my_slot + hash, config.getInstanceName(), config.getHostname(),
+                config.getHostIP(), config.getRac(), null, payload);
 
     }
 
@@ -85,7 +93,8 @@ public class NewTokenRetriever extends TokenRetrieverBase implements INewTokenRe
      * @param A map of the rac for each instance.
      */
     @Override
-    public void setLocMap(ListMultimap<String, PriamInstance> locMap) {
+    public void setLocMap(ListMultimap<String, PriamInstance> locMap)
+    {
         this.locMap = locMap;
     }
 

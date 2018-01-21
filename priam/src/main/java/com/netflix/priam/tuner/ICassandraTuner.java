@@ -20,7 +20,8 @@ import com.google.inject.ImplementedBy;
 import java.io.IOException;
 
 @ImplementedBy(StandardTuner.class)
-public interface ICassandraTuner {
+public interface ICassandraTuner
+{
     void writeAllProperties(String yamlLocation, String hostname, String seedProvider) throws Exception;
 
     void updateAutoBootstrap(String yamlLocation, boolean autobootstrap) throws IOException;

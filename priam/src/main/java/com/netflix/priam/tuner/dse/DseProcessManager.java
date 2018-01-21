@@ -18,23 +18,27 @@ package com.netflix.priam.tuner.dse;
 import com.google.inject.Inject;
 import com.netflix.priam.IConfiguration;
 import com.netflix.priam.defaultimpl.CassandraProcessManager;
+import com.netflix.priam.health.InstanceState;
 import com.netflix.priam.merics.ICassMonitorMetrics;
 import com.netflix.priam.tuner.dse.IDseConfiguration.NodeType;
-import com.netflix.priam.health.InstanceState;
 
 import java.util.Map;
 
-public class DseProcessManager extends CassandraProcessManager {
+public class DseProcessManager extends CassandraProcessManager
+{
     private final IDseConfiguration dseConfig;
     private InstanceState instanceState;
 
     @Inject
-    public DseProcessManager(IConfiguration config, IDseConfiguration dseConfig, InstanceState instanceState, ICassMonitorMetrics cassMonitorMetrics) {
+    public DseProcessManager(IConfiguration config, IDseConfiguration dseConfig, InstanceState instanceState,
+            ICassMonitorMetrics cassMonitorMetrics)
+    {
         super(config, instanceState, cassMonitorMetrics);
         this.dseConfig = dseConfig;
     }
 
-    protected void setEnv(Map<String, String> env) {
+    protected void setEnv(Map<String, String> env)
+    {
         super.setEnv(env);
 
         NodeType nodeType = dseConfig.getNodeType();

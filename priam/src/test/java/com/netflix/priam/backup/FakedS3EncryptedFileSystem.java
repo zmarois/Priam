@@ -32,73 +32,86 @@ import java.util.Date;
 import java.util.Iterator;
 
 @Singleton
-public class FakedS3EncryptedFileSystem implements IBackupFileSystem {
+public class FakedS3EncryptedFileSystem implements IBackupFileSystem
+{
 
     @Inject
-    public FakedS3EncryptedFileSystem(Provider<AbstractBackupPath> pathProvider, ICompression compress, final IConfiguration config, ICredential cred
+    public FakedS3EncryptedFileSystem(Provider<AbstractBackupPath> pathProvider, ICompression compress,
+            final IConfiguration config, ICredential cred
             , @Named("filecryptoalgorithm") IFileCryptography fileCryptography
-    ) {
+    )
+    {
 
     }
 
     @Override
     public void download(AbstractBackupPath path, OutputStream os)
-            throws BackupRestoreException {
+            throws BackupRestoreException
+    {
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public void download(AbstractBackupPath path, OutputStream os,
-                         String filePath) throws BackupRestoreException {
+            String filePath) throws BackupRestoreException
+    {
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public void upload(AbstractBackupPath path, InputStream in)
-            throws BackupRestoreException {
+            throws BackupRestoreException
+    {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public Iterator<AbstractBackupPath> list(String path, Date start, Date till) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Iterator<AbstractBackupPath> listPrefixes(Date date) {
+    public Iterator<AbstractBackupPath> list(String path, Date start, Date till)
+    {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void cleanup() {
+    public Iterator<AbstractBackupPath> listPrefixes(Date date)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void cleanup()
+    {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public int getActivecount() {
+    public int getActivecount()
+    {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public void shutdown() {
+    public void shutdown()
+    {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public long getBytesUploaded() {
+    public long getBytesUploaded()
+    {
         return 0;
     }
 
     @Override
-    public int getAWSSlowDownExceptionCounter() {
+    public int getAWSSlowDownExceptionCounter()
+    {
         return 0;
     }
 
